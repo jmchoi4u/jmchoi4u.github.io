@@ -8,6 +8,10 @@ vendor/cache/
 .jekyll-metadata
 .sass-cache/
 _site/
+_drafts/*.md
+!_drafts/.placeholder
+_trash/*
+!_trash/.placeholder
 
 # RubyGems
 *.gem

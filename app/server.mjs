@@ -21,10 +21,9 @@ const logsDir = path.join(__dirname, "logs");
 const logFile = path.join(logsDir, "editor.log");
 const postsDir = path.join(repoRoot, "_posts");
 const draftsDir = path.join(repoRoot, "_drafts");
+const trashDir = path.join(repoRoot, "_trash");
 const templatesDir = path.join(repoRoot, "src", "templates");
 const assetsDir = path.join(repoRoot, "assets", "img");
-const localDataDir = path.join(process.env.LOCALAPPDATA || path.join(__dirname, ".local-data"), "JM-Blog-Editor");
-const recycleBinDir = path.join(localDataDir, "recycle-bin");
 
 const rawFiles = {
   config: path.join(repoRoot, "_config.yml"),
@@ -58,7 +57,7 @@ const mime = {
 
 await fs.mkdir(logsDir, { recursive: true });
 await fs.mkdir(draftsDir, { recursive: true });
-await fs.mkdir(recycleBinDir, { recursive: true });
+await fs.mkdir(trashDir, { recursive: true });
 await pruneOldLogs();
 
 function stamp() {
@@ -501,7 +500,7 @@ async function savePost(data) {
 
 async function deletePost(data) {
   const { normalized, fullPath } = resolveManagedPostPath(data.relativePath);
-  const trashPath = path.join(recycleBinDir, makeTimeSlug(new Date().toISOString().replace("T", " ").replace("Z", "")), normalized);
+  const trashPath = path.join(trashDir, makeTimeSlug(new Date().toISOString().replace("T", " ").replace("Z", "")), normalized);
   await moveFile(fullPath, trashPath);
   rememberLog("POST", `${normalized} 로컬 휴지통 이동 완료`);
   return { ok: true, relativePath: normalized, trashPath };

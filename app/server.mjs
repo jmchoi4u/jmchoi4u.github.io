@@ -240,7 +240,23 @@ function slugify(value) {
     .replace(/[^a-z0-9-_ ]/g, "")
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "") || "new-post";
+    .replace(/^-|-$/g, "");
+}
+
+function makeTimeSlug(dateText = "") {
+  const source = String(dateText || "");
+  const match = source.match(/^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})/);
+  if (match) {
+    return `${match[1]}${match[2]}${match[3]}-${match[4]}${match[5]}${match[6]}`;
+  }
+
+  const now = new Date();
+  const pad = (value) => String(value).padStart(2, "0");
+  return `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+}
+
+function resolvePostSlug(slugValue, titleValue, dateText) {
+  return slugify(slugValue) || slugify(titleValue) || makeTimeSlug(dateText);
 }
 
 async function run(command, cwd = repoRoot) {
@@ -362,7 +378,7 @@ async function saveTemplateText(name, content) {
 async function savePost(data) {
   const draft = Boolean(data.draft);
   const date = String(data.date || "").trim() || `${new Date().toISOString().slice(0, 16).replace("T", " ")}:00 +0900`;
-  const slug = slugify(data.slug || data.title);
+  const slug = resolvePostSlug(data.slug, data.title, date);
   const fileName = draft ? `${slug}.md` : `${date.slice(0, 10)}-${slug}.md`;
   const target = path.join(draft ? draftsDir : postsDir, fileName);
   const categories = (data.categories || []).map((x) => String(x).trim()).filter(Boolean).slice(0, 2);

@@ -61,7 +61,23 @@ function slugify(value) {
     .replace(/[^a-z0-9-_ ]/g, "")
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "") || "new-post";
+    .replace(/^-|-$/g, "");
+}
+
+function makeTimeSlug(dateText = "") {
+  const source = String(dateText || formatNow());
+  const match = source.match(/^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})/);
+  if (match) {
+    return `${match[1]}${match[2]}${match[3]}-${match[4]}${match[5]}${match[6]}`;
+  }
+
+  const compact = formatNow().replace(/[-: ]/g, "").replace("+0900", "");
+  return `${compact.slice(0, 8)}-${compact.slice(8, 14)}`;
+}
+
+function resolvePostSlug(slugValue, titleValue, dateText) {
+  const slug = slugify(slugValue) || slugify(titleValue);
+  return slug || makeTimeSlug(dateText);
 }
 
 function escapeHtml(value) {
@@ -400,7 +416,7 @@ async function savePost() {
     body: JSON.stringify({
       originalRelativePath: el.originalPath.value || "",
       title: el.title.value.trim(),
-      slug: el.slug.value.trim() || slugify(el.title.value),
+      slug: resolvePostSlug(el.slug.value.trim(), el.title.value.trim(), el.date.value.trim()),
       date: el.date.value.trim() || formatNow(),
       draft: el.draft.checked,
       categories: parseCategories(),

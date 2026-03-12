@@ -4,6 +4,12 @@ const state = {
   panel: "overview"
 };
 
+const markdownEngine = window.marked;
+markdownEngine.setOptions({
+  gfm: true,
+  breaks: true
+});
+
 const el = {
   postsList: document.querySelector("#posts-list"),
   templatesList: document.querySelector("#templates-list"),
@@ -28,6 +34,7 @@ const el = {
   dateRefresh: document.querySelector("#post-date-refresh"),
   extra: document.querySelector("#post-extra"),
   body: document.querySelector("#post-body"),
+  bodyPreview: document.querySelector("#post-body-preview"),
   originalPath: document.querySelector("#original-path"),
   imageArea: document.querySelector("#image-area"),
   imageFolder: document.querySelector("#image-folder"),
@@ -37,7 +44,8 @@ const el = {
   rawEditor: document.querySelector("#raw-editor"),
   templateSelect: document.querySelector("#template-select"),
   templateName: document.querySelector("#template-name"),
-  templateEditor: document.querySelector("#template-editor")
+  templateEditor: document.querySelector("#template-editor"),
+  templatePreview: document.querySelector("#template-preview")
 };
 
 function formatNow() {
@@ -62,6 +70,50 @@ function escapeHtml(value) {
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;");
+}
+
+function stripFrontMatter(text) {
+  const normalized = String(text || "").replace(/\r\n/g, "\n");
+  if (!normalized.startsWith("---\n")) return normalized;
+  const end = normalized.indexOf("\n---\n", 4);
+  if (end === -1) return normalized;
+  return normalized.slice(end + 5).replace(/^\n/, "");
+}
+
+function enhancePreview(target) {
+  target.querySelectorAll("a").forEach((link) => {
+    link.setAttribute("target", "_blank");
+    link.setAttribute("rel", "noopener");
+  });
+}
+
+function renderMarkdown(target, markdownText, options = {}) {
+  if (!target) return;
+  const source = options.stripFrontMatter ? stripFrontMatter(markdownText) : String(markdownText || "");
+  const trimmed = source.trim();
+
+  if (!trimmed) {
+    target.innerHTML = "<p class='preview-empty'>아직 내용이 없습니다.</p>";
+    return;
+  }
+
+  target.innerHTML = markdownEngine.parse(source);
+  enhancePreview(target);
+}
+
+function updateBodyPreview() {
+  renderMarkdown(el.bodyPreview, el.body.value);
+}
+
+function updateTemplatePreview() {
+  renderMarkdown(el.templatePreview, el.templateEditor.value, { stripFrontMatter: true });
+}
+
+function renderHelpPreviews() {
+  document.querySelectorAll("[data-md-source]").forEach((sourceBox) => {
+    const preview = sourceBox.parentElement.querySelector("[data-md-preview]");
+    renderMarkdown(preview, sourceBox.textContent);
+  });
 }
 
 async function api(url, options = {}) {
@@ -118,6 +170,7 @@ function resetEditor() {
   el.extra.value = "";
   el.body.value = "";
   el.originalPath.value = "";
+  updateBodyPreview();
 }
 
 function fillEditor(data) {
@@ -137,6 +190,7 @@ function fillEditor(data) {
   el.extra.value = data.extra || "";
   el.body.value = data.body || "";
   el.originalPath.value = data.relativePath || "";
+  updateBodyPreview();
 }
 
 function insertAtCursor(text) {
@@ -149,6 +203,28 @@ function insertAtCursor(text) {
   const needsLineAfter = after && !after.startsWith("\n") ? "\n" : "";
   area.value = `${before}${needsLineBefore}${text}${needsLineAfter}${after}`;
   area.focus();
+  updateBodyPreview();
+}
+
+function wrapSelection(before, after = before, placeholder = "텍스트") {
+  const area = el.body;
+  const start = area.selectionStart;
+  const end = area.selectionEnd;
+  const selectedText = area.value.slice(start, end);
+  const content = selectedText || placeholder;
+  const replacement = `${before}${content}${after}`;
+
+  area.value = `${area.value.slice(0, start)}${replacement}${area.value.slice(end)}`;
+  area.focus();
+
+  const selectionStart = start + before.length;
+  const selectionEnd = selectionStart + content.length;
+  area.setSelectionRange(selectionStart, selectionEnd);
+  updateBodyPreview();
+}
+
+function applyTextColor(color) {
+  wrapSelection(`<span style="color: ${color};">`, "</span>", "색상 글자");
 }
 
 function renderPosts(posts) {
@@ -287,6 +363,7 @@ async function loadTemplateText(name = el.templateSelect.value) {
   const data = await api(`/api/template-raw?name=${encodeURIComponent(name)}`);
   el.templateName.value = data.name || name;
   el.templateEditor.value = data.content || "";
+  updateTemplatePreview();
 }
 
 async function saveTemplateText() {
@@ -301,11 +378,13 @@ async function saveTemplateText() {
   await loadTemplates();
   el.templateSelect.value = name;
   setOutput("템플릿 저장 완료", name);
+  updateTemplatePreview();
 }
 
 function newTemplate() {
   el.templateName.value = "post-template-new.md";
   el.templateEditor.value = `---\ntitle: "새 템플릿 제목"\ndate: ${formatNow()}\ncategories: [개발]\ntags: [sample]\ndescription: "설명"\ntoc: true\ncomments: true\npin: false\nmermaid: false\nmath: false\n---\n\n## 소개\n\n내용을 작성하세요.\n`;
+  updateTemplatePreview();
 }
 
 function applyTemplateEditorContent() {
@@ -377,6 +456,21 @@ async function publishSite() {
   await loadSummary();
 }
 
+async function shutdownApp() {
+  const shouldClose = window.confirm("웹앱과 연결된 미리보기/터미널을 같이 종료할까요?");
+  if (!shouldClose) return;
+
+  await api("/api/shutdown", { method: "POST", body: "{}" });
+  document.body.innerHTML = `
+    <div style="padding: 48px; font-family: 'Segoe UI', 'Malgun Gothic', sans-serif; color: #1f2937;">
+      <h1 style="margin-top: 0;">웹앱을 종료했습니다.</h1>
+      <p>관련 서버와 미리보기 종료 요청을 보냈습니다. 열려 있던 터미널 창도 곧 닫힙니다.</p>
+      <p>다시 열려면 <strong>app/start-editor.bat</strong> 또는 <strong>app/start.bat</strong> 을 실행하세요.</p>
+    </div>
+  `;
+  setTimeout(() => window.close(), 400);
+}
+
 async function uploadImage() {
   const file = el.imageFile.files?.[0];
   if (!file) {
@@ -425,6 +519,7 @@ function bind() {
   document.querySelector("#stop-preview-btn").addEventListener("click", () => run(stopPreview));
   document.querySelector("#open-preview-btn").addEventListener("click", () => window.open("http://127.0.0.1:4000/", "_blank", "noopener"));
   document.querySelector("#publish-btn").addEventListener("click", () => run(publishSite));
+  document.querySelector("#shutdown-app-btn").addEventListener("click", () => run(shutdownApp));
   document.querySelector("#save-raw-btn").addEventListener("click", () => run(saveRaw));
   document.querySelector("#load-template-btn").addEventListener("click", () => run(loadTemplateText));
   document.querySelector("#new-template-btn").addEventListener("click", newTemplate);
@@ -435,9 +530,28 @@ function bind() {
     button.addEventListener("click", () => insertAtCursor(button.dataset.insert.replaceAll("&#10;", "\n")));
   });
 
+  document.querySelectorAll(".toolbar [data-wrap-before]").forEach((button) => {
+    button.addEventListener("click", () => {
+      wrapSelection(
+        button.dataset.wrapBefore || "",
+        button.dataset.wrapAfter || "",
+        button.dataset.wrapPlaceholder || "텍스트"
+      );
+    });
+  });
+
+  document.querySelectorAll(".toolbar [data-text-color]").forEach((button) => {
+    button.addEventListener("click", () => {
+      applyTextColor(button.dataset.textColor || "#111827");
+    });
+  });
+
   el.title.addEventListener("input", () => {
     if (!el.slug.value.trim()) el.slug.value = slugify(el.title.value);
   });
+
+  el.body.addEventListener("input", updateBodyPreview);
+  el.templateEditor.addEventListener("input", updateTemplatePreview);
 
   el.postsList.addEventListener("click", (event) => {
     const button = event.target.closest("[data-path]");
@@ -473,6 +587,9 @@ async function init() {
   if (el.templateSelect.value) {
     await loadTemplateText(el.templateSelect.value);
   }
+  renderHelpPreviews();
+  updateBodyPreview();
+  updateTemplatePreview();
 }
 
 init();

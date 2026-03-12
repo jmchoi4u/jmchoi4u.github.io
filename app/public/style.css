@@ -61,6 +61,10 @@ button.danger {
   border-color: #e7c0c0;
 }
 
+button.wide {
+  width: 100%;
+}
+
 input,
 textarea,
 select {
@@ -164,6 +168,10 @@ textarea {
   margin: 16px 0 0;
 }
 
+.sidebar-actions {
+  margin-top: 12px;
+}
+
 .nav-tab {
   text-align: left;
 }
@@ -203,8 +211,133 @@ label {
   margin-bottom: 14px;
 }
 
+.toolbar {
+  align-items: center;
+}
+
+.toolbar-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 8px;
+  border: 1px solid #e7ebf0;
+  border-radius: 10px;
+  background: #fcfcfb;
+}
+
 .toolbar button {
   background: #fafaf9;
+}
+
+.mini-label {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.color-toolbar {
+  gap: 6px;
+}
+
+.color-preset {
+  position: relative;
+  padding-left: 28px;
+}
+
+.color-preset::before {
+  content: "";
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--swatch);
+  transform: translateY(-50%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+}
+
+.toolbar-tip {
+  margin-top: -4px;
+  margin-bottom: 14px;
+  font-size: 13px;
+}
+
+.editor-layout {
+  display: grid;
+  gap: 14px;
+}
+
+.editor-block {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.editor-block-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: start;
+  margin-bottom: 14px;
+}
+
+.editor-block-header h3 {
+  margin: 0 0 4px;
+}
+
+.editor-block-header p {
+  margin: 0;
+}
+
+.editor-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #38505a;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(113, 128, 150, 0.18);
+}
+
+.tone-blue {
+  background: linear-gradient(180deg, #f2f7fc 0%, #ffffff 100%);
+  border-color: #d7e5f7;
+}
+
+.tone-green {
+  background: linear-gradient(180deg, #f1f9f3 0%, #ffffff 100%);
+  border-color: #d7ead8;
+}
+
+.tone-sand {
+  background: linear-gradient(180deg, #fcf7ee 0%, #ffffff 100%);
+  border-color: #eee1c9;
+}
+
+.tone-rose {
+  background: linear-gradient(180deg, #fdf2f5 0%, #ffffff 100%);
+  border-color: #f2d8e0;
+}
+
+.tone-slate {
+  background: linear-gradient(180deg, #f5f7fa 0%, #ffffff 100%);
+  border-color: #dce4ee;
+}
+
+.tone-ink {
+  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+  border-color: #d8e1ea;
+}
+
+.option-grid .checkbox {
+  min-height: 44px;
+  padding-top: 0;
 }
 
 .tab.active {

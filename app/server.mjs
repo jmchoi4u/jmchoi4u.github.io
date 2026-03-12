@@ -12,6 +12,8 @@ const APP_PORT = 4317;
 const PREVIEW_PORT = 4000;
 const APP_URL = `http://127.0.0.1:${APP_PORT}`;
 const PREVIEW_URL = `http://127.0.0.1:${PREVIEW_PORT}`;
+const LOG_RETENTION_DAYS = 7;
+const LOG_CLEANUP_INTERVAL_MS = 6 * 60 * 60 * 1000;
 
 const repoRoot = path.resolve(__dirname, "..");
 const publicDir = path.join(__dirname, "public");
@@ -31,7 +33,9 @@ const rawFiles = {
 const state = {
   previewProcess: null,
   previewLogs: [],
-  appLogs: []
+  appLogs: [],
+  shuttingDown: false,
+  lastLogCleanupAt: 0
 };
 
 const mime = {
@@ -52,6 +56,7 @@ const mime = {
 
 await fs.mkdir(logsDir, { recursive: true });
 await fs.mkdir(draftsDir, { recursive: true });
+await pruneOldLogs();
 
 function stamp() {
   return new Date().toLocaleString("ko-KR");
@@ -60,6 +65,41 @@ function stamp() {
 async function appendLog(scope, message) {
   const line = `[${new Date().toISOString()}] [${scope}] ${message}\n`;
   await fs.appendFile(logFile, line, "utf8");
+  triggerLogCleanup();
+}
+
+async function pruneOldLogs() {
+  const cutoff = Date.now() - LOG_RETENTION_DAYS * 24 * 60 * 60 * 1000;
+  let content = "";
+
+  try {
+    content = await fs.readFile(logFile, "utf8");
+  } catch {
+    state.lastLogCleanupAt = Date.now();
+    return;
+  }
+
+  const keptLines = content
+    .split(/\r?\n/)
+    .filter(Boolean)
+    .filter((line) => {
+      const match = line.match(/^\[([^\]]+)\]/);
+      if (!match) return true;
+      const time = Date.parse(match[1]);
+      return Number.isNaN(time) || time >= cutoff;
+    });
+
+  await fs.writeFile(logFile, keptLines.length ? `${keptLines.join("\n")}\n` : "", "utf8");
+  state.lastLogCleanupAt = Date.now();
+}
+
+function triggerLogCleanup() {
+  if (Date.now() - state.lastLogCleanupAt < LOG_CLEANUP_INTERVAL_MS) {
+    return;
+  }
+
+  // 오래된 로그만 주기적으로 정리해 두면 파일이 계속 비대해지지 않습니다.
+  pruneOldLogs().catch(() => {});
 }
 
 function rememberLog(scope, message) {
@@ -401,6 +441,28 @@ async function stopPreview() {
   return { ok: true, message: "중지 요청을 보냈습니다." };
 }
 
+async function shutdownApp() {
+  if (state.shuttingDown) {
+    return { ok: true, message: "이미 종료 중입니다." };
+  }
+
+  state.shuttingDown = true;
+  rememberLog("APP", "웹앱 종료 요청");
+
+  try {
+    await stopPreview();
+  } catch (error) {
+    rememberLog("ERROR", error instanceof Error ? error.message : "미리보기 종료 중 오류");
+  }
+
+  setTimeout(() => {
+    server.close(() => process.exit(0));
+    setTimeout(() => process.exit(0), 1500);
+  }, 200);
+
+  return { ok: true, message: "웹앱 종료를 시작했습니다." };
+}
+
 async function buildSite() {
   rememberLog("BUILD", "정적 빌드 실행");
   return await run("bundle exec jekyll b");
@@ -446,6 +508,7 @@ async function handleApi(req, res, url) {
   if (req.method === "POST" && url.pathname === "/api/start-preview") return sendJson(res, 200, await startPreview());
   if (req.method === "POST" && url.pathname === "/api/stop-preview") return sendJson(res, 200, await stopPreview());
   if (req.method === "POST" && url.pathname === "/api/build") return sendJson(res, 200, await buildSite());
+  if (req.method === "POST" && url.pathname === "/api/shutdown") return sendJson(res, 200, await shutdownApp());
   if (req.method === "POST" && url.pathname === "/api/publish") {
     const result = await publish(payload.message);
     return sendJson(res, result.ok ? 200 : 500, result);
@@ -477,6 +540,21 @@ const server = http.createServer(async (req, res) => {
     sendJson(res, 500, { error: message });
   }
 });
+
+async function cleanupBeforeExit() {
+  if (state.shuttingDown) return;
+  state.shuttingDown = true;
+  try {
+    await stopPreview();
+  } catch {}
+}
+
+for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"]) {
+  process.on(signal, async () => {
+    await cleanupBeforeExit();
+    process.exit(0);
+  });
+}
 
 function openBrowser(url) {
   spawn(`start "" "${url}"`, { shell: true, detached: true, stdio: "ignore" }).unref();

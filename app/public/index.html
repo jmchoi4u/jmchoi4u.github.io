@@ -61,7 +61,7 @@
             </div>
             <div class="title-actions">
               <div class="row wrap">
-                <button id="save-post-btn" type="button" class="primary">저장</button>
+                <button id="save-post-btn" type="button" class="primary">로컬 저장</button>
                 <button id="delete-post-btn" type="button" class="danger" disabled>글 삭제</button>
                 <button id="reset-editor-btn" type="button">새 글 작성</button>
               </div>
@@ -81,7 +81,7 @@
 
               <div class="grid two">
                 <label>글 제목<input id="post-title" type="text" placeholder="예: Chirpy 블로그 설정 기록"></label>
-                <label>파일 이름 slug<input id="post-slug" type="text" placeholder="예: chirpy-setup-note"></label>
+                <label>파일 이름 (.md)<input id="post-slug" type="text" placeholder="예: chirpy-setup-note.md"></label>
               </div>
 
               <div class="grid two">
@@ -228,12 +228,12 @@
               <input id="post-search" type="text" placeholder="제목, 파일명, 경로로 검색">
             </label>
             <div class="soft-box manager-tip">
-              <strong>삭제 안내</strong>
-              <p class="muted">삭제한 글은 GitHub에 바로 반영되지 않고, 로컬 휴지통 폴더로 먼저 이동합니다.</p>
+              <strong>상태 안내</strong>
+              <p class="muted">`_posts` 에 저장되어도 바로 사이트에 올라가는 것은 아닙니다. GitHub에 아직 안 올라간 글은 아래 `배포 전 발행 글`에서 따로 보입니다.</p>
             </div>
           </div>
 
-          <div class="grid two manager-grid">
+          <div class="grid three manager-grid">
             <section class="soft-box">
               <div class="manager-section-head">
                 <div>
@@ -247,8 +247,18 @@
             <section class="soft-box">
               <div class="manager-section-head">
                 <div>
-                  <h3>발행 글</h3>
-                  <p class="muted">이미 `_posts` 에 들어간 글입니다.</p>
+                  <h3>배포 전 발행 글</h3>
+                  <p class="muted">`_posts` 에 있지만 아직 GitHub 배포 전인 글입니다.</p>
+                </div>
+              </div>
+              <div id="pending-published-list" class="list-box"></div>
+            </section>
+
+            <section class="soft-box">
+              <div class="manager-section-head">
+                <div>
+                  <h3>배포 완료 글</h3>
+                  <p class="muted">로컬 git 기준으로 이미 원격과 맞춰진 글입니다.</p>
                 </div>
               </div>
               <div id="published-posts-list" class="list-box"></div>
@@ -301,7 +311,7 @@
 
           <div class="publish-box">
             <label class="grow">배포 커밋 메시지<input id="publish-message" type="text" placeholder="예: 블로그 글 추가 및 설정 정리"></label>
-            <button id="publish-btn" type="button" class="danger">GitHub 배포</button>
+            <button id="publish-btn" type="button" class="danger">전체 변경 GitHub 배포</button>
           </div>
 
           <div class="soft-box helper-box">

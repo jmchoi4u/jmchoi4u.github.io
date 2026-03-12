@@ -262,6 +262,65 @@ function resolvePostSlug(slugValue, titleValue, dateText) {
   return slugify(slugValue) || slugify(titleValue) || makeTimeSlug(dateText);
 }
 
+function collectManagedPostPath(targetSet, filePath) {
+  const normalized = String(filePath || "")
+    .trim()
+    .replace(/^"(.*)"$/g, "$1")
+    .replace(/\\"/g, "\"")
+    .replace(/\\/g, "/");
+  if (normalized.startsWith("_posts/") && normalized.endsWith(".md")) {
+    targetSet.add(normalized);
+  }
+}
+
+function collectManagedPostPathsFromStatus(text) {
+  const result = new Set();
+  for (const line of String(text || "").split(/\r?\n/).filter(Boolean)) {
+    const body = line.slice(3).trim();
+    if (!body) continue;
+
+    if (body.includes(" -> ")) {
+      const [before, after] = body.split(" -> ");
+      collectManagedPostPath(result, before);
+      collectManagedPostPath(result, after);
+      continue;
+    }
+
+    collectManagedPostPath(result, body);
+  }
+  return result;
+}
+
+async function listPendingPublishedPaths() {
+  const pending = new Set();
+  const workingTree = await run("git status --porcelain=v1 --untracked-files=all -- _posts");
+
+  if (workingTree.code === 0) {
+    for (const filePath of collectManagedPostPathsFromStatus(workingTree.stdout)) {
+      pending.add(filePath);
+    }
+  }
+
+  const upstream = await run("git rev-parse --abbrev-ref --symbolic-full-name @{u}");
+  if (upstream.code !== 0) {
+    return pending;
+  }
+
+  const remoteRef = upstream.stdout.trim();
+  if (!remoteRef) {
+    return pending;
+  }
+
+  const ahead = await run(`git diff --name-only ${remoteRef}..HEAD -- _posts`);
+  if (ahead.code === 0) {
+    for (const filePath of String(ahead.stdout || "").split(/\r?\n/).filter(Boolean)) {
+      collectManagedPostPath(pending, filePath);
+    }
+  }
+
+  return pending;
+}
+
 async function moveFile(source, target) {
   await fs.mkdir(path.dirname(target), { recursive: true });
   try {
@@ -331,6 +390,7 @@ async function summary() {
 
 async function listPosts() {
   const result = [];
+  const pendingPublishedPaths = await listPendingPublishedPaths();
   for (const [dir, draft] of [[postsDir, false], [draftsDir, true]]) {
     let entries = [];
     try {
@@ -346,7 +406,8 @@ async function listPosts() {
         relativePath: path.relative(repoRoot, full).replace(/\\/g, "/"),
         title: parsed.title || entry.name.replace(/\.md$/i, ""),
         date: parsed.date,
-        draft
+        draft,
+        pendingDeploy: !draft && pendingPublishedPaths.has(path.relative(repoRoot, full).replace(/\\/g, "/"))
       });
     }
   }

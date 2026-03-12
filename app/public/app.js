@@ -19,6 +19,7 @@ markdownEngine.setOptions({
 
 const el = {
   draftsList: document.querySelector("#drafts-list"),
+  pendingPublishedList: document.querySelector("#pending-published-list"),
   publishedPostsList: document.querySelector("#published-posts-list"),
   siteSummary: document.querySelector("#site-summary"),
   previewSummary: document.querySelector("#preview-summary"),
@@ -74,6 +75,18 @@ function slugify(value) {
     .replace(/^-|-$/g, "");
 }
 
+function normalizeSlugInput(value) {
+  return String(value || "")
+    .trim()
+    .replace(/\.md$/i, "")
+    .replace(/^\d{4}-\d{2}-\d{2}-/, "");
+}
+
+function formatPostFileName(value) {
+  const stem = normalizeSlugInput(value);
+  return stem ? `${stem}.md` : "";
+}
+
 function makeTimeSlug(dateText = "") {
   const source = String(dateText || formatNow());
   const match = source.match(/^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})/);
@@ -86,7 +99,7 @@ function makeTimeSlug(dateText = "") {
 }
 
 function resolvePostSlug(slugValue, titleValue, dateText) {
-  const slug = slugify(slugValue) || slugify(titleValue);
+  const slug = slugify(normalizeSlugInput(slugValue)) || slugify(titleValue);
   return slug || makeTimeSlug(dateText);
 }
 
@@ -334,7 +347,7 @@ function resetEditor() {
 
 function fillEditor(data) {
   el.title.value = data.title || "";
-  el.slug.value = data.slug || slugify((data.fileName || "").replace(/^\d{4}-\d{2}-\d{2}-/, "").replace(/\.md$/i, ""));
+  el.slug.value = formatPostFileName(data.slug || slugify((data.fileName || "").replace(/^\d{4}-\d{2}-\d{2}-/, "").replace(/\.md$/i, "")));
   el.date.value = data.date || formatNow();
   el.draft.checked = Boolean(data.draft);
   el.categoryMain.value = data.categories?.[0] || "";
@@ -427,9 +440,11 @@ function renderPosts(posts) {
     : posts;
 
   const drafts = filtered.filter((post) => post.draft);
-  const published = filtered.filter((post) => !post.draft);
+  const pendingPublished = filtered.filter((post) => !post.draft && post.pendingDeploy);
+  const published = filtered.filter((post) => !post.draft && !post.pendingDeploy);
 
   renderPostGroup(el.draftsList, drafts, { draft: true, emptyText: "임시저장 글이 없습니다." });
+  renderPostGroup(el.pendingPublishedList, pendingPublished, { emptyText: "아직 GitHub 배포 전인 발행 글이 없습니다." });
   renderPostGroup(el.publishedPostsList, published, { emptyText: "발행 글이 없습니다." });
 }
 
@@ -643,11 +658,13 @@ async function savePost() {
     el.originalPath.value = data.relativePath;
     setEditorBaseline();
     clearAutosave(el.draft.checked ? "임시저장 글 저장 완료" : "발행 글 저장 완료");
-    setOutput("글 저장 완료", data.relativePath);
+    setOutput("글 저장 완료", el.draft.checked ? data.relativePath : `${data.relativePath}\n\n현재는 로컬 저장만 된 상태입니다.\n사이트 반영은 '전체 변경 GitHub 배포'를 해야 합니다.`);
   } else {
     clearAutosave("저장 완료 후 입력창을 비웠습니다.");
     resetEditor();
-    setOutput("글 저장 완료", `${data.relativePath}\n\n다음 글 작성을 위해 입력창을 비웠습니다.`);
+    setOutput("글 저장 완료", el.draft.checked
+      ? `${data.relativePath}\n\n다음 글 작성을 위해 입력창을 비웠습니다.`
+      : `${data.relativePath}\n\n현재는 로컬 저장만 된 상태입니다.\n사이트 반영은 '전체 변경 GitHub 배포'를 해야 합니다.\n\n다음 글 작성을 위해 입력창을 비웠습니다.`);
   }
 
   await Promise.all([loadPosts(), loadSummary()]);
@@ -843,7 +860,7 @@ function bind() {
   });
 
   el.title.addEventListener("input", () => {
-    if (!el.slug.value.trim()) el.slug.value = slugify(el.title.value);
+    if (!el.slug.value.trim()) el.slug.value = formatPostFileName(slugify(el.title.value));
   });
 
   [

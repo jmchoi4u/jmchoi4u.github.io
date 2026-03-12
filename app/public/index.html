@@ -13,10 +13,11 @@
         <p class="muted">글 작성, 이미지 저장, 로컬 테스트, GitHub 발행까지 한 번에 처리합니다.</p>
 
         <div class="nav-grid">
-          <button type="button" class="nav-tab active" data-panel="overview">개요</button>
-          <button type="button" class="nav-tab" data-panel="editor">글 작성</button>
+          <button type="button" class="nav-tab nav-important active" data-panel="editor">글 작성</button>
+          <button type="button" class="nav-tab nav-important nav-manage" data-panel="posts-manager">글 관리</button>
+          <button type="button" class="nav-tab nav-important nav-publish" data-panel="deploy">테스트/배포</button>
+          <button type="button" class="nav-tab" data-panel="overview">개요</button>
           <button type="button" class="nav-tab" data-panel="images">이미지</button>
-          <button type="button" class="nav-tab" data-panel="deploy">테스트/배포</button>
           <button type="button" class="nav-tab" data-panel="template-manager">템플릿 관리</button>
           <button type="button" class="nav-tab" data-panel="markdown-help">문법 도움말</button>
           <button type="button" class="nav-tab" data-panel="settings">설정 파일</button>
@@ -25,22 +26,6 @@
         <div class="sidebar-actions">
           <button id="shutdown-app-btn" type="button" class="danger wide">웹앱 종료</button>
         </div>
-
-        <section class="card compact">
-          <div class="title-row">
-            <h2>글 목록</h2>
-            <div class="row">
-              <button id="refresh-posts-btn" type="button">새로고침</button>
-              <button id="new-post-btn" type="button">새 글</button>
-            </div>
-          </div>
-          <div id="posts-list" class="list-box"></div>
-        </section>
-
-        <section class="card compact">
-          <h2>템플릿</h2>
-          <div id="templates-list" class="list-box"></div>
-        </section>
       </aside>
 
       <main class="content">
@@ -74,9 +59,13 @@
               <h2>글 작성</h2>
               <p class="muted">옵시디언에서 초안 작성 후 붙여넣거나, 여기에서 바로 작성해도 됩니다.</p>
             </div>
-            <div class="row">
-              <button id="save-post-btn" type="button" class="primary">저장</button>
-              <button id="reset-editor-btn" type="button">초기화</button>
+            <div class="title-actions">
+              <div class="row wrap">
+                <button id="save-post-btn" type="button" class="primary">저장</button>
+                <button id="delete-post-btn" type="button" class="danger" disabled>글 삭제</button>
+                <button id="reset-editor-btn" type="button">새 글 작성</button>
+              </div>
+              <p id="autosave-status" class="muted status-text">자동 임시저장 준비 중</p>
             </div>
           </div>
 
@@ -142,18 +131,6 @@
               </div>
             </section>
 
-            <section class="editor-block tone-rose">
-              <div class="editor-block-header">
-                <div>
-                  <h3>추가 front matter</h3>
-                  <p class="muted">대표 이미지, alt 설명 같은 옵션을 직접 적고 싶을 때만 사용합니다.</p>
-                </div>
-                <span class="editor-chip">선택</span>
-              </div>
-
-              <label>추가 front matter<textarea id="post-extra" class="small-area" placeholder="image:&#10;  path: /assets/img/posts/sample/cover.png&#10;  alt: 대표 이미지 설명"></textarea></label>
-            </section>
-
             <section class="editor-block tone-slate">
               <div class="editor-block-header">
                 <div>
@@ -217,9 +194,66 @@
                 </section>
               </div>
             </section>
+
+            <section class="editor-block tone-rose">
+              <div class="editor-block-header">
+                <div>
+                  <h3>추가 front matter</h3>
+                  <p class="muted">대표 이미지, alt 설명 같은 옵션을 직접 적고 싶을 때만 사용합니다.</p>
+                </div>
+                <span class="editor-chip">선택</span>
+              </div>
+
+              <label>추가 front matter<textarea id="post-extra" class="small-area" placeholder="image:&#10;  path: /assets/img/posts/sample/cover.png&#10;  alt: 대표 이미지 설명"></textarea></label>
+            </section>
           </div>
 
           <input id="original-path" type="hidden">
+        </section>
+
+        <section id="posts-manager" class="card screen">
+          <div class="title-row">
+            <div>
+              <h2>글 관리</h2>
+              <p class="muted">글이 많아져도 찾기 쉽도록 발행 글과 임시저장 글을 나눠서 관리합니다.</p>
+            </div>
+            <div class="row wrap">
+              <button id="refresh-posts-btn" type="button">새로고침</button>
+              <button id="new-post-btn" type="button" class="primary">새 글</button>
+            </div>
+          </div>
+
+          <div class="manager-toolbar">
+            <label class="grow">글 검색
+              <input id="post-search" type="text" placeholder="제목, 파일명, 경로로 검색">
+            </label>
+            <div class="soft-box manager-tip">
+              <strong>삭제 안내</strong>
+              <p class="muted">삭제한 글은 GitHub에 바로 반영되지 않고, 로컬 휴지통 폴더로 먼저 이동합니다.</p>
+            </div>
+          </div>
+
+          <div class="grid two manager-grid">
+            <section class="soft-box">
+              <div class="manager-section-head">
+                <div>
+                  <h3>임시저장 글</h3>
+                  <p class="muted">여기 있는 글만 골라서 발행할 수 있습니다.</p>
+                </div>
+              </div>
+              <div id="drafts-list" class="list-box"></div>
+            </section>
+
+            <section class="soft-box">
+              <div class="manager-section-head">
+                <div>
+                  <h3>발행 글</h3>
+                  <p class="muted">이미 `_posts` 에 들어간 글입니다.</p>
+                </div>
+              </div>
+              <div id="published-posts-list" class="list-box"></div>
+            </section>
+          </div>
         </section>
 
         <section id="images" class="card screen">

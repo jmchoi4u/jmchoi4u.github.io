@@ -1,7 +1,14 @@
+const AUTOSAVE_KEY = "jm-blog-editor-autosave-v1";
+const AUTOSAVE_DELAY_MS = 1500;
+
 const state = {
   rawKind: "config",
   uploadedMarkdown: "",
-  panel: "overview"
+  panel: "editor",
+  posts: [],
+  searchQuery: "",
+  editorBaseline: "",
+  autosaveTimer: null
 };
 
 const markdownEngine = window.marked;
@@ -11,8 +18,8 @@ markdownEngine.setOptions({
 });
 
 const el = {
-  postsList: document.querySelector("#posts-list"),
-  templatesList: document.querySelector("#templates-list"),
+  draftsList: document.querySelector("#drafts-list"),
+  publishedPostsList: document.querySelector("#published-posts-list"),
   siteSummary: document.querySelector("#site-summary"),
   previewSummary: document.querySelector("#preview-summary"),
   gitSummary: document.querySelector("#git-summary"),
@@ -36,11 +43,14 @@ const el = {
   body: document.querySelector("#post-body"),
   bodyPreview: document.querySelector("#post-body-preview"),
   originalPath: document.querySelector("#original-path"),
+  deletePostButton: document.querySelector("#delete-post-btn"),
+  autosaveStatus: document.querySelector("#autosave-status"),
   imageArea: document.querySelector("#image-area"),
   imageFolder: document.querySelector("#image-folder"),
   imageFile: document.querySelector("#image-file"),
   imageResult: document.querySelector("#image-result"),
   publishMessage: document.querySelector("#publish-message"),
+  postSearch: document.querySelector("#post-search"),
   rawEditor: document.querySelector("#raw-editor"),
   templateSelect: document.querySelector("#template-select"),
   templateName: document.querySelector("#template-name"),
@@ -149,13 +159,20 @@ function setOutput(title, text) {
 }
 
 function setActivePanel(panelId) {
-  state.panel = panelId;
+  const fallbackPanel = document.querySelector(".nav-tab.active")?.dataset.panel
+    || document.querySelector(".nav-tab")?.dataset.panel
+    || "editor";
+  const nextPanel = document.getElementById(panelId) ? panelId : fallbackPanel;
+
+  state.panel = nextPanel;
   document.querySelectorAll(".nav-tab").forEach((button) => {
-    button.classList.toggle("active", button.dataset.panel === panelId);
+    button.classList.toggle("active", button.dataset.panel === nextPanel);
   });
   document.querySelectorAll(".screen").forEach((section) => {
-    section.classList.toggle("active-screen", section.id === panelId);
+    section.classList.toggle("active-screen", section.id === nextPanel);
   });
+
+  return nextPanel;
 }
 
 function parseTags(value) {
@@ -167,6 +184,130 @@ function parseTags(value) {
 
 function parseCategories() {
   return [el.categoryMain.value.trim(), el.categorySub.value.trim()].filter(Boolean);
+}
+
+function currentEditorData() {
+  return {
+    title: el.title.value.trim(),
+    slug: el.slug.value.trim(),
+    date: el.date.value.trim(),
+    draft: el.draft.checked,
+    categories: parseCategories(),
+    tags: parseTags(el.tags.value),
+    description: el.description.value.trim(),
+    toc: el.toc.checked,
+    comments: el.comments.checked,
+    pin: el.pin.checked,
+    mermaid: el.mermaid.checked,
+    math: el.math.checked,
+    extra: el.extra.value,
+    body: el.body.value,
+    relativePath: el.originalPath.value || ""
+  };
+}
+
+function updateDeleteButton() {
+  if (!el.deletePostButton) return;
+  el.deletePostButton.disabled = !el.originalPath.value;
+}
+
+function setAutosaveStatus(text) {
+  if (el.autosaveStatus) {
+    el.autosaveStatus.textContent = text;
+  }
+}
+
+function setEditorBaseline() {
+  state.editorBaseline = JSON.stringify(currentEditorData());
+  updateDeleteButton();
+}
+
+function hasUnsavedChanges() {
+  return JSON.stringify(currentEditorData()) !== state.editorBaseline;
+}
+
+function clearAutosaveTimer() {
+  if (state.autosaveTimer) {
+    window.clearTimeout(state.autosaveTimer);
+    state.autosaveTimer = null;
+  }
+}
+
+function saveAutosaveToBrowser(statusText = "") {
+  if (!hasUnsavedChanges()) {
+    return;
+  }
+
+  const payload = {
+    savedAt: new Date().toISOString(),
+    data: currentEditorData()
+  };
+
+  window.localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(payload));
+  const timeLabel = new Date(payload.savedAt).toLocaleTimeString("ko-KR", {
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+  setAutosaveStatus(statusText || `브라우저 임시 저장됨 · ${timeLabel}`);
+}
+
+function scheduleAutosave() {
+  clearAutosaveTimer();
+  state.autosaveTimer = window.setTimeout(() => {
+    saveAutosaveToBrowser();
+  }, AUTOSAVE_DELAY_MS);
+}
+
+function clearAutosave(statusText = "자동 임시저장 없음") {
+  clearAutosaveTimer();
+  window.localStorage.removeItem(AUTOSAVE_KEY);
+  setAutosaveStatus(statusText);
+}
+
+async function confirmReplaceEditor(actionLabel) {
+  if (!hasUnsavedChanges()) {
+    return true;
+  }
+
+  const ok = window.confirm(`작성 중인 내용이 있습니다.\n${actionLabel} 전에 현재 내용을 브라우저 임시저장에 남기고 이동할까요?`);
+  if (!ok) {
+    return false;
+  }
+
+  saveAutosaveToBrowser("작성 중인 내용 임시 저장됨");
+  return true;
+}
+
+function restoreAutosaveIfNeeded() {
+  const raw = window.localStorage.getItem(AUTOSAVE_KEY);
+  if (!raw) {
+    setAutosaveStatus("자동 임시저장 없음");
+    return;
+  }
+
+  try {
+    const saved = JSON.parse(raw);
+    if (!saved?.data) {
+      clearAutosave();
+      return;
+    }
+
+    const timeLabel = saved.savedAt
+      ? new Date(saved.savedAt).toLocaleString("ko-KR")
+      : "시간 정보 없음";
+
+    if (!window.confirm(`임시 저장된 작성 중 글이 있습니다.\n불러올까요?\n\n저장 시각: ${timeLabel}`)) {
+      clearAutosave("임시저장을 비웠습니다.");
+      return;
+    }
+
+    fillEditor(saved.data);
+    setEditorBaseline();
+    setAutosaveStatus(`복원된 임시저장 · ${timeLabel}`);
+    setOutput("임시저장 복원", "이전에 작성 중이던 내용을 다시 불러왔습니다.");
+  } catch {
+    clearAutosave();
+  }
 }
 
 function resetEditor() {
@@ -187,11 +328,13 @@ function resetEditor() {
   el.body.value = "";
   el.originalPath.value = "";
   updateBodyPreview();
+  setEditorBaseline();
+  setAutosaveStatus("새 글 작성 대기 중");
 }
 
 function fillEditor(data) {
   el.title.value = data.title || "";
-  el.slug.value = slugify((data.fileName || "").replace(/^\d{4}-\d{2}-\d{2}-/, "").replace(/\.md$/i, ""));
+  el.slug.value = data.slug || slugify((data.fileName || "").replace(/^\d{4}-\d{2}-\d{2}-/, "").replace(/\.md$/i, ""));
   el.date.value = data.date || formatNow();
   el.draft.checked = Boolean(data.draft);
   el.categoryMain.value = data.categories?.[0] || "";
@@ -207,6 +350,8 @@ function fillEditor(data) {
   el.body.value = data.body || "";
   el.originalPath.value = data.relativePath || "";
   updateBodyPreview();
+  setEditorBaseline();
+  setAutosaveStatus(data.draft ? "임시저장 글을 편집 중" : "발행 글을 편집 중");
 }
 
 function insertAtCursor(text) {
@@ -243,35 +388,67 @@ function applyTextColor(color) {
   wrapSelection(`<span style="color: ${color};">`, "</span>", "색상 글자");
 }
 
-function renderPosts(posts) {
-  el.postsList.innerHTML = posts.length
+function renderPostGroup(target, posts, options = {}) {
+  if (!target) return;
+
+  target.innerHTML = posts.length
     ? posts
         .map(
           (post) => `
-            <button type="button" class="list-item" data-path="${escapeHtml(post.relativePath)}">
-              <strong>${escapeHtml(post.title)}</strong>
-              <span>${escapeHtml(post.relativePath)}</span>
-            </button>
+            <article class="managed-post">
+              <button type="button" class="list-item" data-path="${escapeHtml(post.relativePath)}">
+                <strong>${escapeHtml(post.title)}</strong>
+                <span>${escapeHtml(post.relativePath)}</span>
+              </button>
+              <div class="list-entry-actions">
+                <button type="button" data-path="${escapeHtml(post.relativePath)}">열기</button>
+                ${
+                  options.draft
+                    ? `<button type="button" class="primary" data-publish-path="${escapeHtml(post.relativePath)}">발행</button>`
+                    : ""
+                }
+                <button type="button" class="danger" data-delete-path="${escapeHtml(post.relativePath)}" data-title="${escapeHtml(post.title)}">삭제</button>
+              </div>
+            </article>
           `
         )
         .join("")
-    : "<div class='muted'>아직 글이 없습니다.</div>";
+    : `<div class='muted'>${options.emptyText || "표시할 글이 없습니다."}</div>`;
+}
+
+function renderPosts(posts) {
+  const query = state.searchQuery.trim().toLowerCase();
+  const filtered = query
+    ? posts.filter((post) =>
+        [post.title, post.relativePath, post.fileName]
+          .filter(Boolean)
+          .some((value) => String(value).toLowerCase().includes(query))
+      )
+    : posts;
+
+  const drafts = filtered.filter((post) => post.draft);
+  const published = filtered.filter((post) => !post.draft);
+
+  renderPostGroup(el.draftsList, drafts, { draft: true, emptyText: "임시저장 글이 없습니다." });
+  renderPostGroup(el.publishedPostsList, published, { emptyText: "발행 글이 없습니다." });
 }
 
 function renderTemplates(templates) {
   el.templateSelect.innerHTML = templates
     .map((name) => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`)
     .join("");
-  el.templatesList.innerHTML = templates
-    .map(
-      (name) => `
-        <button type="button" class="list-item" data-template="${escapeHtml(name)}">
-          <strong>${escapeHtml(name)}</strong>
-          <span>클릭하면 편집기에 불러옵니다.</span>
-        </button>
-      `
-    )
-    .join("");
+  if (el.templatesList) {
+    el.templatesList.innerHTML = templates
+      .map(
+        (name) => `
+          <button type="button" class="list-item" data-template="${escapeHtml(name)}">
+            <strong>${escapeHtml(name)}</strong>
+            <span>클릭하면 편집기에 불러옵니다.</span>
+          </button>
+        `
+      )
+      .join("");
+  }
 }
 
 function renderInfoList(target, rows) {
@@ -346,7 +523,29 @@ async function loadSummary() {
 
 async function loadPosts() {
   const data = await api("/api/posts");
-  renderPosts(data.posts || []);
+  state.posts = data.posts || [];
+  renderPosts(state.posts);
+}
+
+async function refreshPanelData(panelId = state.panel) {
+  if (panelId === "posts-manager") {
+    await loadPosts();
+    return;
+  }
+
+  if (panelId === "overview") {
+    await loadSummary();
+    return;
+  }
+
+  if (panelId === "template-manager") {
+    await loadTemplates();
+    return;
+  }
+
+  if (panelId === "settings") {
+    await loadRaw(state.rawKind);
+  }
 }
 
 async function loadTemplates() {
@@ -364,13 +563,20 @@ async function loadRaw(kind = state.rawKind) {
 }
 
 async function openPost(path) {
+  if (!(await confirmReplaceEditor("다른 글을 열기"))) {
+    return;
+  }
   fillEditor(await api(`/api/post?path=${encodeURIComponent(path)}`));
   setActivePanel("editor");
 }
 
 async function applyTemplate(name) {
+  if (!(await confirmReplaceEditor("템플릿을 적용하기"))) {
+    return;
+  }
   fillEditor(await api(`/api/template?name=${encodeURIComponent(name)}`));
   el.originalPath.value = "";
+  setEditorBaseline();
   setActivePanel("editor");
 }
 
@@ -411,6 +617,7 @@ function applyTemplateEditorContent() {
 }
 
 async function savePost() {
+  const wasExisting = Boolean(el.originalPath.value);
   const data = await api("/api/save-post", {
     method: "POST",
     body: JSON.stringify({
@@ -431,9 +638,80 @@ async function savePost() {
       body: el.body.value
     })
   });
-  el.originalPath.value = data.relativePath;
-  setOutput("글 저장 완료", data.relativePath);
+
+  if (wasExisting) {
+    el.originalPath.value = data.relativePath;
+    setEditorBaseline();
+    clearAutosave(el.draft.checked ? "임시저장 글 저장 완료" : "발행 글 저장 완료");
+    setOutput("글 저장 완료", data.relativePath);
+  } else {
+    clearAutosave("저장 완료 후 입력창을 비웠습니다.");
+    resetEditor();
+    setOutput("글 저장 완료", `${data.relativePath}\n\n다음 글 작성을 위해 입력창을 비웠습니다.`);
+  }
+
   await Promise.all([loadPosts(), loadSummary()]);
+}
+
+async function publishDraft(relativePath) {
+  if (el.originalPath.value === relativePath && hasUnsavedChanges()) {
+    alert("현재 열어 둔 임시저장 글에 저장되지 않은 변경이 있습니다. 먼저 저장한 뒤 발행해 주세요.");
+    return;
+  }
+
+  if (!window.confirm("이 임시저장 글을 발행 글로 옮길까요? 발행 후에는 `_posts` 로 이동합니다.")) {
+    return;
+  }
+
+  const result = await api("/api/publish-post", {
+    method: "POST",
+    body: JSON.stringify({ relativePath })
+  });
+
+  if (el.originalPath.value === relativePath) {
+    fillEditor(await api(`/api/post?path=${encodeURIComponent(result.relativePath)}`));
+    clearAutosave("발행 완료");
+  }
+
+  setOutput("임시저장 글 발행 완료", `${relativePath}\n→ ${result.relativePath}`);
+  await Promise.all([loadPosts(), loadSummary()]);
+}
+
+async function deletePostByPath(relativePath, title = "") {
+  const label = title ? `\"${title}\"` : relativePath;
+  const ok = window.confirm(`${label} 글을 삭제하시겠습니까?\n\n삭제된 글은 GitHub에 바로 반영되지 않고 로컬 휴지통 폴더로 이동합니다.`);
+  if (!ok) {
+    return;
+  }
+
+  const result = await api("/api/delete-post", {
+    method: "POST",
+    body: JSON.stringify({ relativePath })
+  });
+
+  if (el.originalPath.value === relativePath) {
+    clearAutosave("삭제 후 입력창을 비웠습니다.");
+    resetEditor();
+  }
+
+  setOutput("글 삭제 완료", `${result.relativePath}\n\n로컬 휴지통 위치:\n${result.trashPath}`);
+  await Promise.all([loadPosts(), loadSummary()]);
+}
+
+async function deleteCurrentPost() {
+  if (!el.originalPath.value) {
+    alert("삭제할 글을 먼저 열어 주세요.");
+    return;
+  }
+  await deletePostByPath(el.originalPath.value, el.title.value.trim());
+}
+
+async function beginNewPost() {
+  if (!(await confirmReplaceEditor("새 글 작성 화면으로 바꾸기"))) {
+    return;
+  }
+  resetEditor();
+  setActivePanel("editor");
 }
 
 async function saveRaw() {
@@ -515,16 +793,18 @@ async function uploadImage() {
 
 function bind() {
   document.querySelectorAll(".nav-tab").forEach((button) => {
-    button.addEventListener("click", () => {
-      setActivePanel(button.dataset.panel);
-    });
+    button.addEventListener("click", () => run(async () => {
+      const nextPanel = setActivePanel(button.dataset.panel);
+      await refreshPanelData(nextPanel);
+    }));
   });
 
   document.querySelector("#refresh-summary-btn").addEventListener("click", () => run(loadSummary));
   document.querySelector("#refresh-posts-btn").addEventListener("click", () => run(loadPosts));
-  document.querySelector("#new-post-btn").addEventListener("click", resetEditor);
+  document.querySelector("#new-post-btn").addEventListener("click", () => run(beginNewPost));
   document.querySelector("#save-post-btn").addEventListener("click", () => run(savePost));
-  document.querySelector("#reset-editor-btn").addEventListener("click", resetEditor);
+  document.querySelector("#delete-post-btn").addEventListener("click", () => run(deleteCurrentPost));
+  document.querySelector("#reset-editor-btn").addEventListener("click", () => run(beginNewPost));
   document.querySelector("#upload-image-btn").addEventListener("click", () => run(uploadImage));
   document.querySelector("#insert-image-btn").addEventListener("click", () => {
     if (!state.uploadedMarkdown) return alert("먼저 이미지를 저장하세요.");
@@ -566,15 +846,64 @@ function bind() {
     if (!el.slug.value.trim()) el.slug.value = slugify(el.title.value);
   });
 
-  el.body.addEventListener("input", updateBodyPreview);
-  el.templateEditor.addEventListener("input", updateTemplatePreview);
-
-  el.postsList.addEventListener("click", (event) => {
-    const button = event.target.closest("[data-path]");
-    if (button) run(() => openPost(button.dataset.path));
+  [
+    el.title,
+    el.slug,
+    el.date,
+    el.categoryMain,
+    el.categorySub,
+    el.tags,
+    el.description,
+    el.extra
+  ].forEach((field) => {
+    field?.addEventListener("input", scheduleAutosave);
   });
 
-  el.templatesList.addEventListener("click", (event) => {
+  [
+    el.draft,
+    el.toc,
+    el.comments,
+    el.pin,
+    el.mermaid,
+    el.math,
+    el.dateRefresh
+  ].forEach((field) => {
+    field?.addEventListener("change", scheduleAutosave);
+  });
+
+  el.postSearch?.addEventListener("input", (event) => {
+    state.searchQuery = event.target.value || "";
+    renderPosts(state.posts);
+  });
+
+  el.body.addEventListener("input", () => {
+    updateBodyPreview();
+    scheduleAutosave();
+  });
+  el.templateEditor.addEventListener("input", updateTemplatePreview);
+
+  [el.draftsList, el.publishedPostsList].forEach((list) => {
+    list?.addEventListener("click", (event) => {
+      const publishButton = event.target.closest("[data-publish-path]");
+      if (publishButton) {
+        run(() => publishDraft(publishButton.dataset.publishPath));
+        return;
+      }
+
+      const deleteButton = event.target.closest("[data-delete-path]");
+      if (deleteButton) {
+        run(() => deletePostByPath(deleteButton.dataset.deletePath, deleteButton.dataset.title));
+        return;
+      }
+
+      const openButton = event.target.closest("[data-path]");
+      if (openButton) {
+        run(() => openPost(openButton.dataset.path));
+      }
+    });
+  });
+
+  el.templatesList?.addEventListener("click", (event) => {
     const button = event.target.closest("[data-template]");
     if (button) run(() => applyTemplate(button.dataset.template));
   });
@@ -598,8 +927,9 @@ async function run(task) {
 async function init() {
   resetEditor();
   bind();
-  setActivePanel("overview");
+  setActivePanel(state.panel);
   await Promise.all([loadSummary(), loadPosts(), loadTemplates(), loadRaw("config")]);
+  restoreAutosaveIfNeeded();
   if (el.templateSelect.value) {
     await loadTemplateText(el.templateSelect.value);
   }

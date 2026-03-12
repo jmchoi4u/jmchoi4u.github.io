@@ -208,7 +208,7 @@ label {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .toolbar {
@@ -218,9 +218,9 @@ label {
 .toolbar-group {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
-  padding: 8px;
+  padding: 6px;
   border: 1px solid #e7ebf0;
   border-radius: 10px;
   background: #fcfcfb;
@@ -260,19 +260,19 @@ label {
 
 .toolbar-tip {
   margin-top: -4px;
-  margin-bottom: 14px;
+  margin-bottom: 8px;
   font-size: 13px;
 }
 
 .editor-layout {
   display: grid;
-  gap: 14px;
+  gap: 10px;
 }
 
 .editor-block {
   border: 1px solid var(--line);
   border-radius: 14px;
-  padding: 16px;
+  padding: 14px 16px;
 }
 
 .editor-block-header {
@@ -280,7 +280,7 @@ label {
   justify-content: space-between;
   gap: 12px;
   align-items: start;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .editor-block-header h3 {
@@ -335,8 +335,21 @@ label {
   border-color: #d8e1ea;
 }
 
+.editor-block .grid {
+  gap: 10px 12px;
+}
+
+.editor-block label {
+  margin-bottom: 10px;
+}
+
+.option-grid {
+  gap: 8px 18px;
+}
+
 .option-grid .checkbox {
-  min-height: 44px;
+  min-height: 34px;
+  margin-bottom: 0;
   padding-top: 0;
 }
 
@@ -359,7 +372,7 @@ label {
 }
 
 .small-area {
-  min-height: 120px;
+  min-height: 96px;
 }
 
 .raw-area {

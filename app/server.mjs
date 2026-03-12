@@ -23,6 +23,8 @@ const postsDir = path.join(repoRoot, "_posts");
 const draftsDir = path.join(repoRoot, "_drafts");
 const templatesDir = path.join(repoRoot, "src", "templates");
 const assetsDir = path.join(repoRoot, "assets", "img");
+const localDataDir = path.join(process.env.LOCALAPPDATA || path.join(__dirname, ".local-data"), "JM-Blog-Editor");
+const recycleBinDir = path.join(localDataDir, "recycle-bin");
 
 const rawFiles = {
   config: path.join(repoRoot, "_config.yml"),
@@ -56,6 +58,7 @@ const mime = {
 
 await fs.mkdir(logsDir, { recursive: true });
 await fs.mkdir(draftsDir, { recursive: true });
+await fs.mkdir(recycleBinDir, { recursive: true });
 await pruneOldLogs();
 
 function stamp() {
@@ -259,6 +262,20 @@ function resolvePostSlug(slugValue, titleValue, dateText) {
   return slugify(slugValue) || slugify(titleValue) || makeTimeSlug(dateText);
 }
 
+async function moveFile(source, target) {
+  await fs.mkdir(path.dirname(target), { recursive: true });
+  try {
+    await fs.rename(source, target);
+  } catch (error) {
+    if (error && error.code === "EXDEV") {
+      await fs.copyFile(source, target);
+      await fs.unlink(source);
+      return;
+    }
+    throw error;
+  }
+}
+
 async function run(command, cwd = repoRoot) {
   return await new Promise((resolve) => {
     const child = spawn(command, { cwd, shell: true, env: process.env });
@@ -375,6 +392,20 @@ async function saveTemplateText(name, content) {
   rememberLog("TEMPLATE", `${fileName} 저장 완료`);
 }
 
+function resolveManagedPostPath(relativePath) {
+  const normalized = String(relativePath || "").trim().replace(/\\/g, "/");
+  if (!normalized) {
+    throw new Error("삭제할 글 경로가 비어 있습니다.");
+  }
+  if (!(normalized.startsWith("_posts/") || normalized.startsWith("_drafts/")) || !normalized.endsWith(".md")) {
+    throw new Error("삭제할 수 없는 글 경로입니다.");
+  }
+  return {
+    normalized,
+    fullPath: safeJoin(repoRoot, normalized)
+  };
+}
+
 async function savePost(data) {
   const draft = Boolean(data.draft);
   const date = String(data.date || "").trim() || `${new Date().toISOString().slice(0, 16).replace("T", " ")}:00 +0900`;
@@ -405,6 +436,43 @@ async function savePost(data) {
   }
   rememberLog("POST", `${fileName} 저장 완료`);
   return { ok: true, relativePath: path.relative(repoRoot, target).replace(/\\/g, "/"), fileName };
+}
+
+async function deletePost(data) {
+  const { normalized, fullPath } = resolveManagedPostPath(data.relativePath);
+  const trashPath = path.join(recycleBinDir, makeTimeSlug(new Date().toISOString().replace("T", " ").replace("Z", "")), normalized);
+  await moveFile(fullPath, trashPath);
+  rememberLog("POST", `${normalized} 로컬 휴지통 이동 완료`);
+  return { ok: true, relativePath: normalized, trashPath };
+}
+
+async function publishDraft(data) {
+  const { normalized, fullPath } = resolveManagedPostPath(data.relativePath);
+  if (!normalized.startsWith("_drafts/")) {
+    throw new Error("임시저장 글만 발행할 수 있습니다.");
+  }
+
+  const raw = await fs.readFile(fullPath, "utf8");
+  const parsed = parseDoc(raw, path.basename(fullPath));
+  const draftBaseName = path.basename(fullPath, ".md").replace(/^autosave-\d{8}-\d{6}-/, "");
+
+  return await savePost({
+    originalRelativePath: normalized,
+    title: parsed.title,
+    slug: resolvePostSlug(draftBaseName, parsed.title, parsed.date),
+    date: parsed.date,
+    draft: false,
+    categories: parsed.categories,
+    tags: parsed.tags,
+    description: parsed.description,
+    toc: parsed.toc !== false,
+    comments: parsed.comments !== false,
+    pin: Boolean(parsed.pin),
+    mermaid: Boolean(parsed.mermaid),
+    math: Boolean(parsed.math),
+    extra: parsed.extra,
+    body: parsed.body
+  });
 }
 
 async function saveImage(data) {
@@ -518,6 +586,8 @@ async function handleApi(req, res, url) {
 
   const payload = JSON.parse((await readBody(req)) || "{}");
   if (req.method === "POST" && url.pathname === "/api/save-post") return sendJson(res, 200, await savePost(payload));
+  if (req.method === "POST" && url.pathname === "/api/delete-post") return sendJson(res, 200, await deletePost(payload));
+  if (req.method === "POST" && url.pathname === "/api/publish-post") return sendJson(res, 200, await publishDraft(payload));
   if (req.method === "POST" && url.pathname === "/api/save-raw-file") { await saveTextFile(payload.kind, payload.content || ""); return sendJson(res, 200, { ok: true }); }
   if (req.method === "POST" && url.pathname === "/api/save-template") { await saveTemplateText(payload.name, payload.content || ""); return sendJson(res, 200, { ok: true }); }
   if (req.method === "POST" && url.pathname === "/api/upload-image") return sendJson(res, 200, await saveImage(payload));
@@ -535,7 +605,8 @@ async function handleApi(req, res, url) {
 
 function serveStatic(req, res, url) {
   const relativePath = url.pathname === "/" ? "index.html" : `.${url.pathname}`;
-  const filePath = safeJoin(publicDir, relativePath);
+  const staticBaseDir = url.pathname.startsWith("/assets/") ? repoRoot : publicDir;
+  const filePath = safeJoin(staticBaseDir, relativePath);
   createReadStream(filePath)
     .on("error", () => sendText(res, 404, "Not Found"))
     .once("open", () => {

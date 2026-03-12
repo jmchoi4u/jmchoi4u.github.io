@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>JM 블로그 편집기</title>
+    <link rel="stylesheet" href="/style.css">
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <h1>JM 블로그 편집기</h1>
+        <p class="muted">글 작성, 이미지 저장, 로컬 테스트, GitHub 발행까지 한 번에 처리합니다.</p>
+
+        <div class="nav-grid">
+          <button type="button" data-scroll="#overview">개요</button>
+          <button type="button" data-scroll="#editor">글 작성</button>
+          <button type="button" data-scroll="#images">이미지</button>
+          <button type="button" data-scroll="#deploy">테스트/배포</button>
+          <button type="button" data-scroll="#settings">설정 파일</button>
+        </div>
+
+        <section class="card compact">
+          <div class="title-row">
+            <h2>글 목록</h2>
+            <div class="row">
+              <button id="refresh-posts-btn" type="button">새로고침</button>
+              <button id="new-post-btn" type="button">새 글</button>
+            </div>
+          </div>
+          <div id="posts-list" class="list-box"></div>
+        </section>
+
+        <section class="card compact">
+          <h2>템플릿</h2>
+          <div id="templates-list" class="list-box"></div>
+        </section>
+      </aside>
+
+      <main class="content">
+        <section id="overview" class="card">
+          <div class="title-row">
+            <div>
+              <h2>사이트 개요</h2>
+              <p class="muted">현재 설정값과 git 상태를 빠르게 확인합니다.</p>
+            </div>
+            <button id="refresh-summary-btn" type="button">상태 새로고침</button>
+          </div>
+          <div class="grid three">
+            <article class="soft-box">
+              <h3>사이트 정보</h3>
+              <dl id="site-summary" class="info-list"></dl>
+            </article>
+            <article class="soft-box">
+              <h3>미리보기 상태</h3>
+              <dl id="preview-summary" class="info-list"></dl>
+            </article>
+            <article class="soft-box">
+              <h3>Git 상태</h3>
+              <pre id="git-summary" class="code-box short"></pre>
+            </article>
+          </div>
+        </section>
+
+        <section id="editor" class="card">
+          <div class="title-row">
+            <div>
+              <h2>글 작성</h2>
+              <p class="muted">옵시디언에서 초안 작성 후 붙여넣거나, 여기에서 바로 작성해도 됩니다.</p>
+            </div>
+            <div class="row">
+              <button id="save-post-btn" type="button" class="primary">저장</button>
+              <button id="reset-editor-btn" type="button">초기화</button>
+            </div>
+          </div>
+
+          <div class="grid two">
+            <label>글 제목<input id="post-title" type="text" placeholder="예: Chirpy 블로그 설정 기록"></label>
+            <label>파일 이름 slug<input id="post-slug" type="text" placeholder="예: chirpy-setup-note"></label>
+          </div>
+
+          <div class="grid two">
+            <label>날짜<input id="post-date" type="text" placeholder="2026-03-13 09:00:00 +0900"></label>
+            <label class="checkbox"><input id="post-draft" type="checkbox">임시글로 저장 (_drafts)</label>
+          </div>
+
+          <div class="grid two">
+            <label>카테고리 1
+              <input id="post-category-main" type="text" list="category-options" placeholder="예: 개발">
+            </label>
+            <label>카테고리 2
+              <input id="post-category-sub" type="text" list="category-options" placeholder="예: Jekyll">
+            </label>
+          </div>
+
+          <label>태그<input id="post-tags" type="text" placeholder="예: chirpy, github-pages, seo"></label>
+          <label>설명<input id="post-description" type="text" placeholder="검색 결과에 보일 짧은 설명"></label>
+
+          <div class="grid three option-grid">
+            <label class="checkbox"><input id="post-toc" type="checkbox" checked>TOC 표시</label>
+            <label class="checkbox"><input id="post-comments" type="checkbox" checked>댓글 허용</label>
+            <label class="checkbox"><input id="post-pin" type="checkbox">상단 고정</label>
+            <label class="checkbox"><input id="post-mermaid" type="checkbox">Mermaid 사용</label>
+            <label class="checkbox"><input id="post-math" type="checkbox">수식(Math) 사용</label>
+            <label class="checkbox"><input id="post-date-refresh" type="checkbox" checked>새 글 때 현재 시각 자동 입력</label>
+          </div>
+
+          <label>추가 front matter<textarea id="post-extra" class="small-area" placeholder="image:&#10;  path: /assets/img/posts/sample/cover.png&#10;  alt: 대표 이미지 설명"></textarea></label>
+
+          <div class="toolbar">
+            <button type="button" data-insert="# 제목">제목</button>
+            <button type="button" data-insert="## 소제목">소제목</button>
+            <button type="button" data-insert="**강조**">굵게</button>
+            <button type="button" data-insert="- 항목">목록</button>
+            <button type="button" data-insert="> 인용문">인용</button>
+            <button type="button" data-insert="`코드`">코드</button>
+            <button type="button" data-insert="```bash&#10;bundle exec jekyll serve&#10;```">코드 블록</button>
+            <button type="button" data-insert="![이미지 설명](/assets/img/posts/sample/image.png)">이미지</button>
+            <button type="button" data-insert="## English Summary&#10;&#10;This post explains the main idea in English.">영어 요약</button>
+          </div>
+
+          <label>본문<textarea id="post-body" class="body-area" placeholder="여기에 글 내용을 작성하세요."></textarea></label>
+          <input id="original-path" type="hidden">
+        </section>
+
+        <section id="images" class="card">
+          <div class="title-row">
+            <div>
+              <h2>이미지 저장</h2>
+              <p class="muted">업로드 후 바로 마크다운 문법으로 본문에 넣을 수 있습니다.</p>
+            </div>
+          </div>
+
+          <div class="grid two">
+            <label>업로드 위치
+              <select id="image-area">
+                <option value="posts">게시글 이미지</option>
+                <option value="profile">프로필 이미지</option>
+              </select>
+            </label>
+            <label>게시글 이미지 폴더명<input id="image-folder" type="text" placeholder="예: 2026-03-13-first-post"></label>
+          </div>
+
+          <label>파일 선택<input id="image-file" type="file" accept=".png,.jpg,.jpeg,.webp,.gif"></label>
+
+          <div class="row">
+            <button id="upload-image-btn" type="button" class="primary">이미지 저장</button>
+            <button id="insert-image-btn" type="button">본문에 이미지 문법 넣기</button>
+          </div>
+
+          <label>결과<textarea id="image-result" class="small-area" readonly></textarea></label>
+        </section>
+
+        <section id="deploy" class="card">
+          <div class="title-row">
+            <div>
+              <h2>테스트 / 배포</h2>
+              <p class="muted">로컬 미리보기, 정적 빌드 테스트, GitHub 발행 버튼을 제공합니다.</p>
+            </div>
+          </div>
+
+          <div class="row wrap">
+            <button id="start-preview-btn" type="button" class="primary">미리보기 시작</button>
+            <button id="stop-preview-btn" type="button">미리보기 중지</button>
+            <button id="build-btn" type="button">정적 빌드 테스트</button>
+            <button id="open-preview-btn" type="button">미리보기 열기</button>
+          </div>
+
+          <div class="publish-box">
+            <label class="grow">커밋 메시지<input id="publish-message" type="text" placeholder="예: 블로그 글 추가 및 설정 정리"></label>
+            <button id="publish-btn" type="button" class="danger">GitHub 발행</button>
+          </div>
+
+          <div class="grid two">
+            <div>
+              <h3>미리보기 화면</h3>
+              <iframe id="preview-frame" title="블로그 미리보기" src="about:blank"></iframe>
+            </div>
+            <div>
+              <h3>명령 결과</h3>
+              <pre id="command-output" class="code-box"></pre>
+              <h3>미리보기 로그</h3>
+              <pre id="preview-log-output" class="code-box"></pre>
+            </div>
+          </div>
+        </section>
+
+        <section id="settings" class="card">
+          <div class="title-row">
+            <div>
+              <h2>설정 파일 편집</h2>
+              <p class="muted">블로그 전체 설정 파일을 앱 안에서 바로 수정할 수 있습니다.</p>
+            </div>
+          </div>
+
+          <div class="row wrap tabs">
+            <button type="button" class="tab active" data-kind="config">_config.yml</button>
+            <button type="button" class="tab" data-kind="contact">_data/contact.yml</button>
+            <button type="button" class="tab" data-kind="about">_tabs/about.md</button>
+          </div>
+
+          <label>파일 내용<textarea id="raw-editor" class="raw-area"></textarea></label>
+          <div class="row">
+            <button id="save-raw-btn" type="button" class="primary">파일 저장</button>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <datalist id="category-options">
+      <option value="개발"></option>
+      <option value="문제해결"></option>
+      <option value="Jekyll"></option>
+      <option value="GitHub Pages"></option>
+      <option value="JavaScript"></option>
+      <option value="Python"></option>
+      <option value="Windows"></option>
+      <option value="AI"></option>
+      <option value="리뷰"></option>
+      <option value="회고"></option>
+      <option value="메모"></option>
+      <option value="노트"></option>
+    </datalist>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

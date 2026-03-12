@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>블로그 개발자 사용 설명서</title>
+    <style>
+      :root {
+        --bg: #f4f6f8;
+        --card: #ffffff;
+        --text: #15202b;
+        --muted: #5f6b76;
+        --line: #d7dee7;
+        --point: #0e7490;
+        --soft: #eaf7fa;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", "Malgun Gothic", sans-serif;
+        background: linear-gradient(180deg, #ebf6f9 0, var(--bg) 260px);
+        color: var(--text);
+        line-height: 1.7;
+      }
+
+      .wrap {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 28px 18px 60px;
+      }
+
+      .hero,
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        box-shadow: 0 10px 28px rgba(16, 24, 40, 0.06);
+      }
+
+      .hero {
+        padding: 28px;
+        margin-bottom: 18px;
+      }
+
+      .hero h1,
+      .card h2 {
+        margin-top: 0;
+      }
+
+      .grid {
+        display: grid;
+        gap: 18px;
+      }
+
+      .card {
+        padding: 24px;
+      }
+
+      h1 {
+        font-size: 34px;
+      }
+
+      h2 {
+        font-size: 24px;
+      }
+
+      h3 {
+        font-size: 18px;
+        margin-top: 22px;
+      }
+
+      ul,
+      ol {
+        padding-left: 22px;
+      }
+
+      code,
+      pre {
+        font-family: Consolas, "Courier New", monospace;
+      }
+
+      code {
+        background: #eef2f7;
+        padding: 2px 6px;
+        border-radius: 6px;
+      }
+
+      pre {
+        background: #0f172a;
+        color: #e2e8f0;
+        padding: 16px;
+        border-radius: 12px;
+        overflow: auto;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        border: 1px solid var(--line);
+        padding: 10px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        background: #f2f7f9;
+      }
+
+      .note {
+        margin-top: 14px;
+        padding: 14px 16px;
+        border-radius: 12px;
+        background: var(--soft);
+        border-left: 5px solid var(--point);
+      }
+
+      .path {
+        color: var(--point);
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <section class="hero">
+        <h1>블로그 개발자 사용 설명서</h1>
+        <p>
+          이 문서는 Jekyll + Chirpy + GitHub Pages 구조를 기준으로 작성한 상세 설명서입니다.
+          실제 동작 방식, 수정 포인트, 배포 흐름, SEO, 템플릿 관리 위치를 개발자 관점에서 정리했습니다.
+        </p>
+      </section>
+
+      <div class="grid">
+        <section class="card">
+          <h2>1. 현재 구조 요약</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>경로</th>
+                <th>역할</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="path">_config.yml</span></td>
+                <td>사이트 전체 설정. 제목, 설명, URL, 소셜 링크, 프로필 이미지 경로, Jekyll exclude 설정</td>
+              </tr>
+              <tr>
+                <td><span class="path">_data/contact.yml</span></td>
+                <td>사이드바 하단 연락처 아이콘 목록</td>
+              </tr>
+              <tr>
+                <td><span class="path">_posts</span></td>
+                <td>게시글 원본 마크다운</td>
+              </tr>
+              <tr>
+                <td><span class="path">_tabs</span></td>
+                <td>About, Archives, Categories, Tags 등 상단/사이드 탭 페이지</td>
+              </tr>
+              <tr>
+                <td><span class="path">assets/img</span></td>
+                <td>프로필 이미지와 글 이미지 보관</td>
+              </tr>
+              <tr>
+                <td><span class="path">src/templates</span></td>
+                <td>게시글/페이지 템플릿 및 마크다운 예제 보관. Jekyll 출력 제외</td>
+              </tr>
+              <tr>
+                <td><span class="path">app</span></td>
+                <td>블로그 작성 도우미 웹앱. 글 작성, 이미지 저장, 미리보기, 빌드 테스트, git push 담당</td>
+              </tr>
+              <tr>
+                <td><span class="path">.github/workflows/pages-deploy.yml</span></td>
+                <td>GitHub Pages 배포 워크플로</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="card">
+          <h2>2. 프로필 이미지 동작 방식</h2>
+          <p>Chirpy는 <code>_config.yml</code>의 <code>avatar:</code> 값을 읽어 사이드바 프로필 이미지를 렌더링합니다.</p>
+          <pre><code>avatar: /assets/img/profile/avatar.png</code></pre>
+
+          <p>실제 렌더링 시 원형 썸네일로 작게 보이므로, 아래 조건을 만족하는 파일이 가장 안정적입니다.</p>
+          <ul>
+            <li>정사각형 PNG 또는 JPG</li>
+            <li>얼굴 중심 크롭</li>
+            <li>권장 크기 512px 이상</li>
+            <li>ASCII 파일 이름 사용</li>
+          </ul>
+
+          <div class="note">
+            현재 로컬 빌드 기준으로 <code>avatar.png</code>는 이미 정상 렌더링됩니다. 적용이 안 된 것이 아니라, 전신형 그림이 112px 원형으로 축소되어 체감이 약한 상태로 보는 편이 정확합니다.
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>3. 연락처와 소셜 링크</h2>
+          <h3><span class="path">_config.yml</span></h3>
+          <ul>
+            <li><code>social.name</code>: 사이트 작성자 이름, 푸터 저작권명</li>
+            <li><code>social.email</code>: 메일 아이콘 링크 생성에 사용</li>
+            <li><code>social.links</code>: SEO용 대표 외부 링크 목록</li>
+            <li><code>github.username</code>: GitHub 아이콘 URL 자동 생성에 사용</li>
+          </ul>
+
+          <h3><span class="path">_data/contact.yml</span></h3>
+          <ul>
+            <li><code>type: github</code> 같은 기본 타입은 테마 내부 로직이 URL을 자동 생성</li>
+            <li><code>type: linkedin</code>, <code>type: instagram</code> 같은 커스텀 항목은 <code>url:</code>을 직접 넣어야 함</li>
+            <li>아이콘은 Font Awesome 클래스 기반</li>
+          </ul>
+        </section>
+
+        <section class="card">
+          <h2>4. 글 작성 규칙</h2>
+          <h3>파일 이름</h3>
+          <pre><code>_posts/YYYY-MM-DD-slug.md</code></pre>
+
+          <h3>기본 front matter</h3>
+          <pre><code>---
+title: "글 제목"
+date: 2026-03-13 09:00:00 +0900
+categories: [개발, Jekyll]
+tags: [chirpy, github-pages]
+description: "검색 결과에 보일 짧은 설명"
+---
+</code></pre>
+
+          <h3>템플릿 보관 위치</h3>
+          <p>
+            템플릿은 <span class="path">src/templates</span> 에 보관합니다.
+            해당 폴더는 <code>_config.yml</code>의 <code>exclude</code> 목록에 추가되어 사이트에 그대로 노출되지 않습니다.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>5. Markdown 템플릿 전략</h2>
+          <ul>
+            <li><span class="path">post-template-basic.md</span>: 일반 개발 기록용</li>
+            <li><span class="path">post-template-troubleshooting.md</span>: 문제 해결 기록용</li>
+            <li><span class="path">post-template-ko-with-english-summary.md</span>: 한국어 본문 + 짧은 영어 요약용</li>
+            <li><span class="path">page-template.md</span>: 고정 페이지용</li>
+            <li><span class="path">markdown-cheatsheet.md</span>: 문법 예제 모음</li>
+          </ul>
+        </section>
+
+        <section class="card">
+          <h2>6. 로컬 빌드와 테스트</h2>
+          <h3>웹앱 실행</h3>
+          <pre><code>app/start-editor.bat</code></pre>
+
+          <p>
+            웹앱은 Node.js 내장 기능만 사용하도록 구성되어 있으며, 브라우저에서 로컬 UI를 열고
+            Jekyll 명령과 git 명령을 백엔드에서 실행하는 방식입니다.
+          </p>
+
+          <h3>기본 명령</h3>
+          <pre><code>bundle install
+bundle exec jekyll b
+bundle exec jekyll serve --livereload --open-url</code></pre>
+
+          <h3>참고 사항</h3>
+          <ul>
+            <li><code>bundle exec jekyll b</code> 는 정적 빌드 검사용</li>
+            <li><code>bundle exec jekyll serve</code> 는 로컬 미리보기용</li>
+            <li>Windows에서 detached serve는 Ruby fork 제약으로 실패할 수 있음</li>
+            <li>현재 환경에서 <code>htmlproofer</code>는 Windows Ruby 3.4 조합에서 로컬 실패 가능성이 있음</li>
+          </ul>
+        </section>
+
+        <section class="card">
+          <h2>7. GitHub Pages 배포</h2>
+          <p>
+            이 저장소는 <span class="path">.github/workflows/pages-deploy.yml</span> 로 GitHub Pages를 배포합니다.
+            브랜치에 푸시하면 GitHub Actions가 빌드 후 배포합니다.
+          </p>
+
+          <h3>체크 포인트</h3>
+          <ul>
+            <li>GitHub 저장소 설정의 Pages source는 <code>GitHub Actions</code></li>
+            <li>기본 브랜치 푸시 후 Actions 성공 여부 확인</li>
+            <li>배포 URL: <code>https://jmchoi4u.github.io</code></li>
+          </ul>
+        </section>
+
+        <section class="card">
+          <h2>8. Gemfile.lock과 플랫폼</h2>
+          <p>
+            로컬이 Windows이고 배포 환경은 Ubuntu이므로 <code>Gemfile.lock</code>에는 Linux 플랫폼 정보도 있어야 빌드 안정성이 높습니다.
+          </p>
+          <pre><code>bundle lock --add-platform x86_64-linux</code></pre>
+
+          <div class="note">
+            기존 <code>.gitignore</code>에서 <code>Gemfile.lock</code>을 무시하면 배포 환경 차이를 잡기 어렵습니다. 이 프로젝트에서는 lockfile을 추적하는 편이 더 안전합니다.
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>9. SEO와 다국어 전략</h2>
+          <h3>현재 가능한 것</h3>
+          <ul>
+            <li>정적 HTML 사이트라서 검색엔진 크롤링 자체는 가능</li>
+            <li>Chirpy와 <code>jekyll-seo-tag</code> 기반 메타 태그 자동 생성</li>
+            <li>사이트맵과 피드 생성 기반 확보</li>
+          </ul>
+
+          <h3>현재 한계</h3>
+          <ul>
+            <li>사이트 기본 언어가 <code>ko-KR</code> 이므로 영어 검색 유입은 글 내용에 따라 제한적</li>
+            <li>영어권 대상 확장을 제대로 하려면 같은 글의 영어 버전을 다른 URL로 제공하는 구조가 가장 좋음</li>
+            <li>한국어 본문인데 제목만 영어로 바꾸는 방식은 권장되지 않음</li>
+          </ul>
+
+          <h3>추천 운영 방식</h3>
+          <ul>
+            <li>한국어 기술 블로그를 기본으로 유지</li>
+            <li>각 글에 짧은 영어 요약 섹션 추가</li>
+            <li>검색 유입이 중요해진 글만 영어 버전 별도 작성</li>
+            <li>대표 이미지, 설명, 제목을 글마다 다르게 작성</li>
+          </ul>
+        </section>
+
+        <section class="card">
+          <h2>10. 한글 호환성과 안정성 원칙</h2>
+          <ul>
+            <li>설명서와 본문은 한국어 가능, 배치 파일은 비ASCII 금지</li>
+            <li>파일 이름은 되도록 영어 사용</li>
+            <li>CSV나 외부 내보내기는 UTF-8 기반 유지</li>
+            <li>이미지 파일명, 슬러그, 폴더명은 짧고 단순하게 유지</li>
+            <li>옵시디언 초안은 자유롭게 쓰되, 블로그 최종 저장은 웹앱에서 경로와 front matter를 정리하는 방식 권장</li>
+          </ul>
+        </section>
+      </div>
+    </div>
+  </body>
+</html>

@@ -204,9 +204,13 @@ exclude:
   - "*.gem"
   - "*.gemspec"
   - docs
+  - src
   - tools
   - README.md
   - LICENSE
+  - user-guide.html
+  - developer-guide.html
+  - obsidian-guide.html
   - purgecss.js
   - "*.config.js"
   - "package*.json"

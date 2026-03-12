@@ -219,7 +219,12 @@ async function summary() {
   const contact = await fs.readFile(rawFiles.contact, "utf8");
   const pick = (regex) => {
     const m = config.match(regex);
-    return m ? m[1].trim().replace(/^["']|["']$/g, "") : "";
+    return m
+      ? m[1]
+          .replace(/\s+#.*$/g, "")
+          .trim()
+          .replace(/^["']|["']$/g, "")
+      : "";
   };
   const git = await run("git status --short --branch");
   const remote = await run("git remote get-url origin");
@@ -280,6 +285,14 @@ async function listTemplates() {
   return entries.filter((x) => x.isFile() && x.name.endsWith(".md")).map((x) => x.name).sort();
 }
 
+function normalizeTemplateName(name) {
+  const fileName = path.basename(String(name || "").trim());
+  if (!fileName.endsWith(".md")) {
+    throw new Error("템플릿 파일명은 .md 로 끝나야 합니다.");
+  }
+  return fileName;
+}
+
 async function readTextFile(kind) {
   const file = rawFiles[kind];
   if (!file) throw new Error("허용되지 않은 파일입니다.");
@@ -291,6 +304,19 @@ async function saveTextFile(kind, content) {
   if (!file) throw new Error("허용되지 않은 파일입니다.");
   await fs.writeFile(file, content, "utf8");
   rememberLog("SAVE", `${kind} 파일 저장 완료`);
+}
+
+async function readTemplateText(name) {
+  const fileName = normalizeTemplateName(name);
+  const filePath = safeJoin(templatesDir, fileName);
+  return await fs.readFile(filePath, "utf8");
+}
+
+async function saveTemplateText(name, content) {
+  const fileName = normalizeTemplateName(name);
+  const filePath = safeJoin(templatesDir, fileName);
+  await fs.writeFile(filePath, content, "utf8");
+  rememberLog("TEMPLATE", `${fileName} 저장 완료`);
 }
 
 async function savePost(data) {
@@ -340,10 +366,15 @@ async function saveImage(data) {
   return { ok: true, sitePath, markdown: `![이미지 설명](${sitePath})` };
 }
 
-function startPreview() {
+async function killPreviewPort() {
+  await run(`powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort ${PREVIEW_PORT} -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess | Sort-Object -Unique | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }"`);
+}
+
+async function startPreview() {
   if (state.previewProcess) {
     return { ok: true, message: "이미 실행 중입니다.", url: PREVIEW_URL };
   }
+  await killPreviewPort();
   state.previewLogs = [];
   state.previewProcess = spawn(`bundle exec jekyll serve --livereload --host 127.0.0.1 --port ${PREVIEW_PORT}`, {
     cwd: repoRoot,
@@ -360,11 +391,12 @@ function startPreview() {
   return { ok: true, message: "미리보기 서버 시작", url: PREVIEW_URL };
 }
 
-function stopPreview() {
-  if (!state.previewProcess) {
-    return { ok: true, message: "실행 중인 서버가 없습니다." };
+async function stopPreview() {
+  if (state.previewProcess) {
+    state.previewProcess.kill();
   }
-  state.previewProcess.kill();
+  await killPreviewPort();
+  state.previewProcess = null;
   rememberLog("PREVIEW", "미리보기 서버 중지 요청");
   return { ok: true, message: "중지 요청을 보냈습니다." };
 }
@@ -402,15 +434,17 @@ async function handleApi(req, res, url) {
     const full = safeJoin(templatesDir, name);
     return sendJson(res, 200, parseDoc(await fs.readFile(full, "utf8"), name));
   }
+  if (req.method === "GET" && url.pathname === "/api/template-raw") return sendJson(res, 200, { name: url.searchParams.get("name"), content: await readTemplateText(url.searchParams.get("name")) });
   if (req.method === "GET" && url.pathname === "/api/raw-file") return sendJson(res, 200, { kind: url.searchParams.get("kind"), content: await readTextFile(url.searchParams.get("kind")) });
   if (req.method === "GET" && url.pathname === "/api/preview-status") return sendJson(res, 200, { running: Boolean(state.previewProcess), url: PREVIEW_URL, logs: state.previewLogs });
 
   const payload = JSON.parse((await readBody(req)) || "{}");
   if (req.method === "POST" && url.pathname === "/api/save-post") return sendJson(res, 200, await savePost(payload));
   if (req.method === "POST" && url.pathname === "/api/save-raw-file") { await saveTextFile(payload.kind, payload.content || ""); return sendJson(res, 200, { ok: true }); }
+  if (req.method === "POST" && url.pathname === "/api/save-template") { await saveTemplateText(payload.name, payload.content || ""); return sendJson(res, 200, { ok: true }); }
   if (req.method === "POST" && url.pathname === "/api/upload-image") return sendJson(res, 200, await saveImage(payload));
-  if (req.method === "POST" && url.pathname === "/api/start-preview") return sendJson(res, 200, startPreview());
-  if (req.method === "POST" && url.pathname === "/api/stop-preview") return sendJson(res, 200, stopPreview());
+  if (req.method === "POST" && url.pathname === "/api/start-preview") return sendJson(res, 200, await startPreview());
+  if (req.method === "POST" && url.pathname === "/api/stop-preview") return sendJson(res, 200, await stopPreview());
   if (req.method === "POST" && url.pathname === "/api/build") return sendJson(res, 200, await buildSite());
   if (req.method === "POST" && url.pathname === "/api/publish") {
     const result = await publish(payload.message);

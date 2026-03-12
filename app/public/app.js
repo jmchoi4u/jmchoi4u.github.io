@@ -1,6 +1,7 @@
 const state = {
   rawKind: "config",
-  uploadedMarkdown: ""
+  uploadedMarkdown: "",
+  panel: "overview"
 };
 
 const el = {
@@ -11,7 +12,6 @@ const el = {
   gitSummary: document.querySelector("#git-summary"),
   commandOutput: document.querySelector("#command-output"),
   previewLogOutput: document.querySelector("#preview-log-output"),
-  previewFrame: document.querySelector("#preview-frame"),
   title: document.querySelector("#post-title"),
   slug: document.querySelector("#post-slug"),
   date: document.querySelector("#post-date"),
@@ -34,7 +34,10 @@ const el = {
   imageFile: document.querySelector("#image-file"),
   imageResult: document.querySelector("#image-result"),
   publishMessage: document.querySelector("#publish-message"),
-  rawEditor: document.querySelector("#raw-editor")
+  rawEditor: document.querySelector("#raw-editor"),
+  templateSelect: document.querySelector("#template-select"),
+  templateName: document.querySelector("#template-name"),
+  templateEditor: document.querySelector("#template-editor")
 };
 
 function formatNow() {
@@ -75,6 +78,16 @@ async function api(url, options = {}) {
 
 function setOutput(title, text) {
   el.commandOutput.textContent = `${title}\n\n${text || "(출력 없음)"}`;
+}
+
+function setActivePanel(panelId) {
+  state.panel = panelId;
+  document.querySelectorAll(".nav-tab").forEach((button) => {
+    button.classList.toggle("active", button.dataset.panel === panelId);
+  });
+  document.querySelectorAll(".screen").forEach((section) => {
+    section.classList.toggle("active-screen", section.id === panelId);
+  });
 }
 
 function parseTags(value) {
@@ -154,6 +167,9 @@ function renderPosts(posts) {
 }
 
 function renderTemplates(templates) {
+  el.templateSelect.innerHTML = templates
+    .map((name) => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`)
+    .join("");
   el.templatesList.innerHTML = templates
     .map(
       (name) => `
@@ -168,6 +184,54 @@ function renderTemplates(templates) {
 
 function renderInfoList(target, rows) {
   target.innerHTML = rows.map(([k, v]) => `<dt>${escapeHtml(k)}</dt><dd>${escapeHtml(v)}</dd>`).join("");
+}
+
+function parseTemplateText(text, fileName = "") {
+  const normalized = String(text || "").replace(/\r\n/g, "\n");
+  if (!normalized.startsWith("---\n")) {
+    return { fileName, title: "", date: formatNow(), categories: [], tags: [], description: "", toc: true, comments: true, pin: false, mermaid: false, math: false, extra: "", body: normalized };
+  }
+  const end = normalized.indexOf("\n---\n", 4);
+  if (end === -1) {
+    return { fileName, title: "", date: formatNow(), categories: [], tags: [], description: "", toc: true, comments: true, pin: false, mermaid: false, math: false, extra: "", body: normalized };
+  }
+  const head = normalized.slice(4, end);
+  const body = normalized.slice(end + 5).replace(/^\n/, "");
+  const pick = (regex) => {
+    const match = head.match(regex);
+    return match ? match[1].trim().replace(/^["']|["']$/g, "") : "";
+  };
+  const pickBool = (key, fallback) => {
+    const value = pick(new RegExp(`^${key}:\\s*(.+)$`, "m"));
+    return value ? value === "true" : fallback;
+  };
+  const parseList = (value) =>
+    String(value || "")
+      .replace(/^\[/, "")
+      .replace(/\]$/, "")
+      .split(",")
+      .map((item) => item.trim().replace(/^["']|["']$/g, ""))
+      .filter(Boolean);
+  const extra = head
+    .split("\n")
+    .filter((line) => !/^(title|date|categories|tags|description|toc|comments|pin|mermaid|math):/.test(line.trim()))
+    .join("\n")
+    .trim();
+  return {
+    fileName,
+    title: pick(/^title:\s*(.+)$/m),
+    date: pick(/^date:\s*(.+)$/m) || formatNow(),
+    categories: parseList(pick(/^categories:\s*(.+)$/m)),
+    tags: parseList(pick(/^tags:\s*(.+)$/m)),
+    description: pick(/^description:\s*(.+)$/m),
+    toc: pickBool("toc", true),
+    comments: pickBool("comments", true),
+    pin: pickBool("pin", false),
+    mermaid: pickBool("mermaid", false),
+    math: pickBool("math", false),
+    extra,
+    body
+  };
 }
 
 async function loadSummary() {
@@ -209,13 +273,46 @@ async function loadRaw(kind = state.rawKind) {
 
 async function openPost(path) {
   fillEditor(await api(`/api/post?path=${encodeURIComponent(path)}`));
-  document.querySelector("#editor").scrollIntoView({ behavior: "smooth", block: "start" });
+  setActivePanel("editor");
 }
 
 async function applyTemplate(name) {
   fillEditor(await api(`/api/template?name=${encodeURIComponent(name)}`));
   el.originalPath.value = "";
-  document.querySelector("#editor").scrollIntoView({ behavior: "smooth", block: "start" });
+  setActivePanel("editor");
+}
+
+async function loadTemplateText(name = el.templateSelect.value) {
+  if (!name) return;
+  const data = await api(`/api/template-raw?name=${encodeURIComponent(name)}`);
+  el.templateName.value = data.name || name;
+  el.templateEditor.value = data.content || "";
+}
+
+async function saveTemplateText() {
+  const name = el.templateName.value.trim();
+  if (!name) {
+    throw new Error("템플릿 파일명을 먼저 입력하세요.");
+  }
+  await api("/api/save-template", {
+    method: "POST",
+    body: JSON.stringify({ name, content: el.templateEditor.value })
+  });
+  await loadTemplates();
+  el.templateSelect.value = name;
+  setOutput("템플릿 저장 완료", name);
+}
+
+function newTemplate() {
+  el.templateName.value = "post-template-new.md";
+  el.templateEditor.value = `---\ntitle: "새 템플릿 제목"\ndate: ${formatNow()}\ncategories: [개발]\ntags: [sample]\ndescription: "설명"\ntoc: true\ncomments: true\npin: false\nmermaid: false\nmath: false\n---\n\n## 소개\n\n내용을 작성하세요.\n`;
+}
+
+function applyTemplateEditorContent() {
+  const parsed = parseTemplateText(el.templateEditor.value, el.templateName.value.trim());
+  fillEditor(parsed);
+  el.originalPath.value = "";
+  setActivePanel("editor");
 }
 
 async function savePost() {
@@ -261,7 +358,6 @@ async function buildSite() {
 
 async function startPreview() {
   await api("/api/start-preview", { method: "POST", body: "{}" });
-  el.previewFrame.src = "http://127.0.0.1:4000/";
   setOutput("미리보기 시작", "Jekyll 미리보기 서버 시작 요청을 보냈습니다.");
   setTimeout(loadSummary, 1200);
 }
@@ -308,9 +404,9 @@ async function uploadImage() {
 }
 
 function bind() {
-  document.querySelectorAll("[data-scroll]").forEach((button) => {
+  document.querySelectorAll(".nav-tab").forEach((button) => {
     button.addEventListener("click", () => {
-      document.querySelector(button.dataset.scroll)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      setActivePanel(button.dataset.panel);
     });
   });
 
@@ -330,6 +426,10 @@ function bind() {
   document.querySelector("#open-preview-btn").addEventListener("click", () => window.open("http://127.0.0.1:4000/", "_blank", "noopener"));
   document.querySelector("#publish-btn").addEventListener("click", () => run(publishSite));
   document.querySelector("#save-raw-btn").addEventListener("click", () => run(saveRaw));
+  document.querySelector("#load-template-btn").addEventListener("click", () => run(loadTemplateText));
+  document.querySelector("#new-template-btn").addEventListener("click", newTemplate);
+  document.querySelector("#save-template-btn").addEventListener("click", () => run(saveTemplateText));
+  document.querySelector("#apply-template-btn").addEventListener("click", applyTemplateEditorContent);
 
   document.querySelectorAll(".toolbar [data-insert]").forEach((button) => {
     button.addEventListener("click", () => insertAtCursor(button.dataset.insert.replaceAll("&#10;", "\n")));
@@ -352,6 +452,8 @@ function bind() {
   document.querySelectorAll(".tab").forEach((button) => {
     button.addEventListener("click", () => run(() => loadRaw(button.dataset.kind)));
   });
+
+  el.templateSelect.addEventListener("change", () => run(loadTemplateText));
 }
 
 async function run(task) {
@@ -366,7 +468,11 @@ async function run(task) {
 async function init() {
   resetEditor();
   bind();
+  setActivePanel("overview");
   await Promise.all([loadSummary(), loadPosts(), loadTemplates(), loadRaw("config")]);
+  if (el.templateSelect.value) {
+    await loadTemplateText(el.templateSelect.value);
+  }
 }
 
 init();

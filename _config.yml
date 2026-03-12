@@ -14,7 +14,7 @@ timezone: Asia/Seoul
 # jekyll-seo-tag settings › https://github.com/jekyll/jekyll-seo-tag/blob/master/docs/usage.md
 # ↓ --------------------------
 
-title: JM Dev # the main title
+title: Jaemin Choi # the main title
 
 tagline: 개발 기록과 메모 # it will display as the subtitle
 
@@ -203,14 +203,13 @@ compress_html:
 exclude:
   - "*.gem"
   - "*.gemspec"
+  - 설명서
+  - app
   - docs
   - src
   - tools
   - README.md
   - LICENSE
-  - user-guide.html
-  - developer-guide.html
-  - obsidian-guide.html
   - purgecss.js
   - "*.config.js"
   - "package*.json"

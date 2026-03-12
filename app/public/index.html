@@ -13,11 +13,13 @@
         <p class="muted">글 작성, 이미지 저장, 로컬 테스트, GitHub 발행까지 한 번에 처리합니다.</p>
 
         <div class="nav-grid">
-          <button type="button" data-scroll="#overview">개요</button>
-          <button type="button" data-scroll="#editor">글 작성</button>
-          <button type="button" data-scroll="#images">이미지</button>
-          <button type="button" data-scroll="#deploy">테스트/배포</button>
-          <button type="button" data-scroll="#settings">설정 파일</button>
+          <button type="button" class="nav-tab active" data-panel="overview">개요</button>
+          <button type="button" class="nav-tab" data-panel="editor">글 작성</button>
+          <button type="button" class="nav-tab" data-panel="images">이미지</button>
+          <button type="button" class="nav-tab" data-panel="deploy">테스트/배포</button>
+          <button type="button" class="nav-tab" data-panel="template-manager">템플릿 관리</button>
+          <button type="button" class="nav-tab" data-panel="markdown-help">문법 도움말</button>
+          <button type="button" class="nav-tab" data-panel="settings">설정 파일</button>
         </div>
 
         <section class="card compact">
@@ -38,7 +40,7 @@
       </aside>
 
       <main class="content">
-        <section id="overview" class="card">
+        <section id="overview" class="card screen active-screen">
           <div class="title-row">
             <div>
               <h2>사이트 개요</h2>
@@ -62,7 +64,7 @@
           </div>
         </section>
 
-        <section id="editor" class="card">
+        <section id="editor" class="card screen">
           <div class="title-row">
             <div>
               <h2>글 작성</h2>
@@ -123,7 +125,7 @@
           <input id="original-path" type="hidden">
         </section>
 
-        <section id="images" class="card">
+        <section id="images" class="card screen">
           <div class="title-row">
             <div>
               <h2>이미지 저장</h2>
@@ -151,7 +153,7 @@
           <label>결과<textarea id="image-result" class="small-area" readonly></textarea></label>
         </section>
 
-        <section id="deploy" class="card">
+        <section id="deploy" class="card screen">
           <div class="title-row">
             <div>
               <h2>테스트 / 배포</h2>
@@ -162,30 +164,128 @@
           <div class="row wrap">
             <button id="start-preview-btn" type="button" class="primary">미리보기 시작</button>
             <button id="stop-preview-btn" type="button">미리보기 중지</button>
-            <button id="build-btn" type="button">정적 빌드 테스트</button>
+            <button id="build-btn" type="button">테스트 빌드</button>
             <button id="open-preview-btn" type="button">미리보기 열기</button>
           </div>
 
           <div class="publish-box">
-            <label class="grow">커밋 메시지<input id="publish-message" type="text" placeholder="예: 블로그 글 추가 및 설정 정리"></label>
-            <button id="publish-btn" type="button" class="danger">GitHub 발행</button>
+            <label class="grow">배포 커밋 메시지<input id="publish-message" type="text" placeholder="예: 블로그 글 추가 및 설정 정리"></label>
+            <button id="publish-btn" type="button" class="danger">GitHub 배포</button>
+          </div>
+
+          <div class="soft-box helper-box">
+            <h3>미리보기 사용 방법</h3>
+            <p class="muted">웹앱 안에 미리보기 화면을 넣지 않고, 필요할 때만 <strong>미리보기 열기</strong> 버튼으로 실제 사이트를 새 탭에서 확인하도록 단순화했습니다.</p>
           </div>
 
           <div class="grid two">
             <div>
-              <h3>미리보기 화면</h3>
-              <iframe id="preview-frame" title="블로그 미리보기" src="about:blank"></iframe>
-            </div>
-            <div>
               <h3>명령 결과</h3>
               <pre id="command-output" class="code-box"></pre>
+            </div>
+            <div>
               <h3>미리보기 로그</h3>
               <pre id="preview-log-output" class="code-box"></pre>
             </div>
           </div>
         </section>
 
-        <section id="settings" class="card">
+        <section id="template-manager" class="card screen">
+          <div class="title-row">
+            <div>
+              <h2>템플릿 관리</h2>
+              <p class="muted">기존 템플릿을 수정하거나, 새 템플릿을 직접 추가할 수 있습니다.</p>
+            </div>
+          </div>
+
+          <div class="grid two">
+            <label>템플릿 선택
+              <select id="template-select"></select>
+            </label>
+            <label>템플릿 파일명
+              <input id="template-name" type="text" placeholder="예: post-template-devlog.md">
+            </label>
+          </div>
+
+          <div class="row wrap">
+            <button id="load-template-btn" type="button">선택 템플릿 불러오기</button>
+            <button id="new-template-btn" type="button">새 템플릿</button>
+            <button id="apply-template-btn" type="button">글 편집기에 적용</button>
+            <button id="save-template-btn" type="button" class="primary">템플릿 저장</button>
+          </div>
+
+          <label>템플릿 내용<textarea id="template-editor" class="raw-area"></textarea></label>
+        </section>
+
+        <section id="markdown-help" class="card screen">
+          <div class="title-row">
+            <div>
+              <h2>마크다운 문법 도움말</h2>
+              <p class="muted">글 쓰다가 바로 참고할 수 있게 자주 쓰는 문법만 빠르게 모았습니다.</p>
+            </div>
+          </div>
+
+          <div class="grid two help-grid">
+            <div class="soft-box">
+              <h3>제목과 강조</h3>
+              <pre class="help-code"><code># 큰 제목
+## 중간 제목
+### 작은 제목
+
+**굵게**
+*기울임*
+~~취소선~~</code></pre>
+            </div>
+
+            <div class="soft-box">
+              <h3>목록과 체크리스트</h3>
+              <pre class="help-code"><code>- 항목 1
+- 항목 2
+
+1. 첫 번째
+2. 두 번째
+
+- [ ] 해야 할 일
+- [x] 끝난 일</code></pre>
+            </div>
+
+            <div class="soft-box">
+              <h3>링크와 이미지</h3>
+              <pre class="help-code"><code>[OpenAI](https://openai.com)
+
+![이미지 설명](/assets/img/posts/sample/image.png)</code></pre>
+            </div>
+
+            <div class="soft-box">
+              <h3>인용문과 코드</h3>
+              <pre class="help-code"><code>> 중요한 메모
+
+`한 줄 코드`
+
+```bash
+bundle exec jekyll serve
+```</code></pre>
+            </div>
+
+            <div class="soft-box">
+              <h3>표</h3>
+              <pre class="help-code"><code>| 이름 | 설명 |
+| --- | --- |
+| title | 글 제목 |
+| tags | 태그 목록 |</code></pre>
+            </div>
+
+            <div class="soft-box">
+              <h3>접기 영역</h3>
+              <pre class="help-code"><code>&lt;details&gt;
+  &lt;summary&gt;눌러서 보기&lt;/summary&gt;
+  숨겨진 내용
+&lt;/details&gt;</code></pre>
+            </div>
+          </div>
+        </section>
+
+        <section id="settings" class="card screen">
           <div class="title-row">
             <div>
               <h2>설정 파일 편집</h2>

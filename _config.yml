@@ -16,10 +16,10 @@ timezone: Asia/Seoul
 
 title: Jaemin Choi # the main title
 
-tagline: 개발 기록과 메모 # it will display as the subtitle
+tagline: 개인에게 더 많은 자유를 # it will display as the subtitle
 
 description: >- # used by seo meta and the atom feed
-  개발하면서 배운 내용과 문제 해결 과정을 정리하는 개인 블로그입니다.
+  문제 해결 과정을 정리하는 개인 블로그입니다.
 
 # Fill in the protocol & hostname for your site.
 # E.g. 'https://username.github.io', note that it does not end with a '/'.

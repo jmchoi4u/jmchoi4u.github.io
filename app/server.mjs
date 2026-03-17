@@ -56,6 +56,7 @@ const mime = {
 };
 
 await fs.mkdir(logsDir, { recursive: true });
+await fs.mkdir(postsDir, { recursive: true });
 await fs.mkdir(draftsDir, { recursive: true });
 await fs.mkdir(trashDir, { recursive: true });
 await pruneOldLogs();
@@ -474,7 +475,7 @@ async function savePost(data) {
   const target = path.join(draft ? draftsDir : postsDir, fileName);
   const categories = (data.categories || []).map((x) => String(x).trim()).filter(Boolean).slice(0, 2);
   const tags = (data.tags || []).map((x) => String(x).trim().toLowerCase()).filter(Boolean);
-  await fs.writeFile(target, makeDoc({
+  const content = makeDoc({
     title: data.title,
     date,
     categories,
@@ -487,7 +488,14 @@ async function savePost(data) {
     math: Boolean(data.math),
     extra: data.extra,
     body: data.body
-  }), "utf8");
+  });
+  await fs.mkdir(path.dirname(target), { recursive: true });
+  await fs.writeFile(target, content, "utf8");
+  try {
+    await fs.access(target);
+  } catch {
+    throw new Error(`파일 저장 실패: ${fileName} 파일이 디스크에 기록되지 않았습니다.`);
+  }
   if (data.originalRelativePath) {
     const oldPath = safeJoin(repoRoot, data.originalRelativePath);
     if (oldPath !== target) {
@@ -714,15 +722,20 @@ function openBrowser(url) {
   spawn(`start "" "${url}"`, { shell: true, detached: true, stdio: "ignore" }).unref();
 }
 
+let listenRetries = 0;
+const MAX_LISTEN_RETRIES = 2;
+
 server.on("error", async (err) => {
-  if (err.code === "EADDRINUSE") {
-    console.log(`Port ${APP_PORT} in use, closing old process...`);
+  if (err.code === "EADDRINUSE" && listenRetries < MAX_LISTEN_RETRIES) {
+    listenRetries++;
+    console.log(`Port ${APP_PORT} in use, closing old process... (attempt ${listenRetries}/${MAX_LISTEN_RETRIES})`);
     await killPort(APP_PORT);
-    await new Promise((r) => setTimeout(r, 800));
+    await new Promise((r) => setTimeout(r, 1000));
     server.listen(APP_PORT, "127.0.0.1");
     return;
   }
-  throw err;
+  console.error(`Server error: ${err.message}`);
+  process.exit(1);
 });
 
 server.listen(APP_PORT, "127.0.0.1", async () => {

@@ -959,11 +959,17 @@ async function init() {
   resetEditor();
   bind();
   setActivePanel(state.panel);
-  await Promise.all([loadSummary(), loadPosts(), loadTemplates(), loadRaw("config")]);
-  restoreAutosaveIfNeeded();
-  if (el.templateSelect.value) {
-    await loadTemplateText(el.templateSelect.value);
+  try {
+    await Promise.all([loadSummary(), loadPosts(), loadTemplates(), loadRaw("config")]);
+  } catch (error) {
+    setOutput("초기화 오류", `서버 연결에 실패했습니다.\n${error.message}\n\nstart.bat 으로 서버가 실행 중인지 확인하세요.`);
   }
+  restoreAutosaveIfNeeded();
+  try {
+    if (el.templateSelect.value) {
+      await loadTemplateText(el.templateSelect.value);
+    }
+  } catch {}
   renderHelpPreviews();
   updateBodyPreview();
   updateTemplatePreview();

@@ -743,6 +743,20 @@ body.loading .content {
   transition: opacity 0.15s ease;
 }
 
+/* --- drag & drop indicator --- */
+
+.body-area.drag-over {
+  outline: 3px dashed var(--point);
+  outline-offset: -3px;
+  background: var(--point-soft);
+}
+
+/* --- filter selects in manager toolbar --- */
+
+.manager-toolbar select {
+  min-width: 120px;
+}
+
 /* --- responsive overrides --- */
 
 @media (max-width: 1100px) {

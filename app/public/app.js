@@ -7,8 +7,11 @@ const state = {
   panel: "editor",
   posts: [],
   searchQuery: "",
+  filterCategory: "",
+  filterTag: "",
   editorBaseline: "",
-  autosaveTimer: null
+  autosaveTimer: null,
+  slugManuallyEdited: false
 };
 
 const markdownEngine = window.marked;
@@ -69,7 +72,7 @@ function slugify(value) {
   return String(value || "")
     .trim()
     .toLowerCase()
-    .replace(/[^a-z0-9-_ ]/g, "")
+    .replace(/[^\p{L}\p{N}\-_ ]/gu, "")
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");
@@ -324,6 +327,7 @@ function restoreAutosaveIfNeeded() {
 }
 
 function resetEditor() {
+  state.slugManuallyEdited = false;
   el.title.value = "";
   el.slug.value = "";
   el.date.value = el.dateRefresh.checked ? formatNow() : "";
@@ -431,13 +435,24 @@ function renderPostGroup(target, posts, options = {}) {
 
 function renderPosts(posts) {
   const query = state.searchQuery.trim().toLowerCase();
-  const filtered = query
+  let filtered = query
     ? posts.filter((post) =>
         [post.title, post.relativePath, post.fileName]
           .filter(Boolean)
           .some((value) => String(value).toLowerCase().includes(query))
       )
     : posts;
+
+  if (state.filterCategory) {
+    filtered = filtered.filter((post) =>
+      (post.categories || []).some((c) => c === state.filterCategory)
+    );
+  }
+  if (state.filterTag) {
+    filtered = filtered.filter((post) =>
+      (post.tags || []).some((t) => t === state.filterTag)
+    );
+  }
 
   const drafts = filtered.filter((post) => post.draft);
   const pendingPublished = filtered.filter((post) => !post.draft && post.pendingDeploy);
@@ -536,9 +551,31 @@ async function loadSummary() {
   el.previewLogOutput.textContent = (data.preview.logs || []).join("\n") || "아직 로그가 없습니다.";
 }
 
+function updateFilterOptions(posts) {
+  const catSet = new Set();
+  const tagSet = new Set();
+  for (const post of posts) {
+    (post.categories || []).forEach((c) => catSet.add(c));
+    (post.tags || []).forEach((t) => tagSet.add(t));
+  }
+  const catSelect = document.querySelector("#filter-category");
+  const tagSelect = document.querySelector("#filter-tag");
+  if (catSelect) {
+    const prev = catSelect.value;
+    catSelect.innerHTML = `<option value="">-- --</option>` + [...catSet].sort().map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+    catSelect.value = prev;
+  }
+  if (tagSelect) {
+    const prev = tagSelect.value;
+    tagSelect.innerHTML = `<option value="">-- --</option>` + [...tagSet].sort().map((t) => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join("");
+    tagSelect.value = prev;
+  }
+}
+
 async function loadPosts() {
   const data = await api("/api/posts");
   state.posts = data.posts || [];
+  updateFilterOptions(state.posts);
   renderPosts(state.posts);
 }
 
@@ -668,6 +705,19 @@ async function savePost() {
   }
 
   await Promise.all([loadPosts(), loadSummary()]);
+  refreshPreviewIfRunning();
+}
+
+async function refreshPreviewIfRunning() {
+  try {
+    const status = await api("/api/preview-status");
+    if (status.running) {
+      const previewWin = window.open("", "jekyll-preview");
+      if (previewWin && !previewWin.closed) {
+        previewWin.location.reload();
+      }
+    }
+  } catch {}
 }
 
 async function publishDraft(relativePath) {
@@ -830,7 +880,7 @@ function bind() {
   document.querySelector("#build-btn").addEventListener("click", () => run(buildSite));
   document.querySelector("#start-preview-btn").addEventListener("click", () => run(startPreview));
   document.querySelector("#stop-preview-btn").addEventListener("click", () => run(stopPreview));
-  document.querySelector("#open-preview-btn").addEventListener("click", () => window.open("http://127.0.0.1:4000/", "_blank", "noopener"));
+  document.querySelector("#open-preview-btn").addEventListener("click", () => window.open("http://127.0.0.1:4000/", "jekyll-preview"));
   document.querySelector("#publish-btn").addEventListener("click", () => run(publishSite));
   document.querySelector("#shutdown-app-btn").addEventListener("click", () => run(shutdownApp));
   document.querySelector("#save-raw-btn").addEventListener("click", () => run(saveRaw));
@@ -860,7 +910,13 @@ function bind() {
   });
 
   el.title.addEventListener("input", () => {
-    if (!el.slug.value.trim()) el.slug.value = formatPostFileName(slugify(el.title.value));
+    if (!state.slugManuallyEdited) {
+      el.slug.value = formatPostFileName(slugify(el.title.value));
+    }
+  });
+
+  el.slug.addEventListener("input", () => {
+    state.slugManuallyEdited = true;
   });
 
   [
@@ -940,6 +996,53 @@ function bind() {
       event.preventDefault();
       run(beginNewPost);
     }
+  });
+
+  // Image drag & drop on body textarea
+  el.body.addEventListener("dragover", (event) => {
+    event.preventDefault();
+    el.body.classList.add("drag-over");
+  });
+  el.body.addEventListener("dragleave", () => {
+    el.body.classList.remove("drag-over");
+  });
+  el.body.addEventListener("drop", (event) => {
+    event.preventDefault();
+    el.body.classList.remove("drag-over");
+    const file = event.dataTransfer?.files?.[0];
+    if (!file || !file.type.startsWith("image/")) return;
+    run(async () => {
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error("image read failed"));
+        reader.readAsDataURL(file);
+      });
+      const folderName = el.slug.value.trim().replace(/\.md$/i, "") || el.title.value.trim() || "dropped";
+      const data = await api("/api/upload-image", {
+        method: "POST",
+        body: JSON.stringify({
+          area: "posts",
+          folderName,
+          fileName: file.name,
+          dataUrl
+        })
+      });
+      insertAtCursor(data.markdown);
+      setOutput("image drop upload", data.sitePath);
+    });
+  });
+
+  // Category / Tag filters
+  const catFilter = document.querySelector("#filter-category");
+  const tagFilter = document.querySelector("#filter-tag");
+  catFilter?.addEventListener("change", (event) => {
+    state.filterCategory = event.target.value;
+    renderPosts(state.posts);
+  });
+  tagFilter?.addEventListener("change", (event) => {
+    state.filterTag = event.target.value;
+    renderPosts(state.posts);
   });
 }
 

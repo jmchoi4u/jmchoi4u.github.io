@@ -240,7 +240,7 @@ function slugify(value) {
   return String(value || "")
     .trim()
     .toLowerCase()
-    .replace(/[^a-z0-9-_ ]/g, "")
+    .replace(/[^\p{L}\p{N}\-_ ]/gu, "")
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");
@@ -406,6 +406,8 @@ async function listPosts() {
         relativePath: path.relative(repoRoot, full).replace(/\\/g, "/"),
         title: parsed.title || name.replace(/\.md$/i, ""),
         date: parsed.date,
+        categories: parsed.categories || [],
+        tags: parsed.tags || [],
         draft,
         pendingDeploy: !draft && pendingPublishedPaths.has(path.relative(repoRoot, full).replace(/\\/g, "/"))
       });
@@ -467,6 +469,19 @@ function resolveManagedPostPath(relativePath) {
   };
 }
 
+async function backupFile(filePath) {
+  try {
+    await fs.access(filePath);
+  } catch {
+    return;
+  }
+  const relativePath = path.relative(repoRoot, filePath).replace(/\\/g, "/");
+  const backupPath = path.join(trashDir, `backup-${makeTimeSlug()}`, relativePath);
+  await fs.mkdir(path.dirname(backupPath), { recursive: true });
+  await fs.copyFile(filePath, backupPath);
+  rememberLog("BACKUP", `${relativePath} -> ${path.relative(repoRoot, backupPath).replace(/\\/g, "/")}`);
+}
+
 async function savePost(data) {
   const draft = Boolean(data.draft);
   const date = String(data.date || "").trim() || `${new Date().toISOString().slice(0, 16).replace("T", " ")}:00 +0900`;
@@ -490,6 +505,13 @@ async function savePost(data) {
     body: data.body
   });
   await fs.mkdir(path.dirname(target), { recursive: true });
+  await backupFile(target);
+  if (data.originalRelativePath) {
+    const oldPath = safeJoin(repoRoot, data.originalRelativePath);
+    if (oldPath !== target) {
+      await backupFile(oldPath);
+    }
+  }
   await fs.writeFile(target, content, "utf8");
   try {
     await fs.access(target);
@@ -658,6 +680,21 @@ async function handleApi(req, res, url) {
   if (req.method === "GET" && url.pathname === "/api/template-raw") return sendJson(res, 200, { name: url.searchParams.get("name"), content: await readTemplateText(url.searchParams.get("name")) });
   if (req.method === "GET" && url.pathname === "/api/raw-file") return sendJson(res, 200, { kind: url.searchParams.get("kind"), content: await readTextFile(url.searchParams.get("kind")) });
   if (req.method === "GET" && url.pathname === "/api/preview-status") return sendJson(res, 200, { running: Boolean(state.previewProcess), url: PREVIEW_URL, logs: state.previewLogs });
+  if (req.method === "GET" && url.pathname === "/api/filters") {
+    const posts = await listPosts();
+    const catSet = new Set();
+    const tagSet = new Set();
+    for (const post of posts) {
+      try {
+        const full = safeJoin(repoRoot, post.relativePath);
+        const raw = await fs.readFile(full, "utf8");
+        const parsed = parseDoc(raw, post.fileName);
+        (parsed.categories || []).forEach((c) => catSet.add(c));
+        (parsed.tags || []).forEach((t) => tagSet.add(t));
+      } catch {}
+    }
+    return sendJson(res, 200, { categories: [...catSet].sort(), tags: [...tagSet].sort() });
+  }
 
   const payload = JSON.parse((await readBody(req)) || "{}");
   if (req.method === "POST" && url.pathname === "/api/save-post") return sendJson(res, 200, await savePost(payload));

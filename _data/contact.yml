@@ -14,9 +14,9 @@
 - type: instagram
   icon: "fab fa-instagram"
   url: "https://www.instagram.com/jaemin.sta/"
-# - type: rss
-#   icon: "fas fa-rss"
-#   noblank: true
+- type: rss
+  icon: "fas fa-rss"
+  noblank: true
 # Uncomment and complete the url below to enable more contact options
 #
 # - type: mastodon

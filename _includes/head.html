@@ -98,10 +98,15 @@
     <link rel="stylesheet" href="{{ site.data.origin[type].glightbox.css | relative_url }}">
   {% endif %}
 
-  <!-- Reading Progress Bar (post only) -->
+  <!-- Custom styles -->
   {% if page.layout == 'post' %}
     <style>
       #reading-progress{position:fixed;top:0;left:0;width:0;height:3px;background:linear-gradient(90deg,#FFDD00,#f7971e);z-index:9999;transition:width .1s linear}
+      .post-desc{color:var(--text-muted-color,#868e96)!important;font-style:italic!important;font-size:0.9rem!important}
+      .content h1{font-size:1.6rem}
+      .content h2{font-size:1.35rem}
+      .content h3{font-size:1.15rem}
+      .content h4{font-size:1.0rem}
     </style>
   {% endif %}
 

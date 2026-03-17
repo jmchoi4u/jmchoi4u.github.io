@@ -391,19 +391,19 @@ async function listPosts() {
   const result = [];
   const pendingPublishedPaths = await listPendingPublishedPaths();
   for (const [dir, draft] of [[postsDir, false], [draftsDir, true]]) {
-    let entries = [];
+    let names = [];
     try {
-      entries = await fs.readdir(dir, { withFileTypes: true });
+      names = (await fs.readdir(dir)).filter((n) => n.endsWith(".md"));
     } catch {}
-    for (const entry of entries) {
-      if (!entry.isFile() || !entry.name.endsWith(".md")) continue;
-      const full = path.join(dir, entry.name);
-      const raw = await fs.readFile(full, "utf8");
-      const parsed = parseDoc(raw, entry.name);
+    for (const name of names) {
+      const full = path.join(dir, name);
+      let raw;
+      try { raw = await fs.readFile(full, "utf8"); } catch { continue; }
+      const parsed = parseDoc(raw, name);
       result.push({
-        fileName: entry.name,
+        fileName: name,
         relativePath: path.relative(repoRoot, full).replace(/\\/g, "/"),
-        title: parsed.title || entry.name.replace(/\.md$/i, ""),
+        title: parsed.title || name.replace(/\.md$/i, ""),
         date: parsed.date,
         draft,
         pendingDeploy: !draft && pendingPublishedPaths.has(path.relative(repoRoot, full).replace(/\\/g, "/"))
@@ -414,8 +414,8 @@ async function listPosts() {
 }
 
 async function listTemplates() {
-  const entries = await fs.readdir(templatesDir, { withFileTypes: true });
-  return entries.filter((x) => x.isFile() && x.name.endsWith(".md")).map((x) => x.name).sort();
+  const names = await fs.readdir(templatesDir);
+  return names.filter((n) => n.endsWith(".md")).sort();
 }
 
 function normalizeTemplateName(name) {
@@ -550,8 +550,12 @@ async function saveImage(data) {
   return { ok: true, sitePath, markdown: `![이미지 설명](${sitePath})` };
 }
 
+async function killPort(port) {
+  await run(`powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort ${port} -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $($_.OwningProcess) -Force -ErrorAction SilentlyContinue }"`);
+}
+
 async function killPreviewPort() {
-  await run(`powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort ${PREVIEW_PORT} -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess | Sort-Object -Unique | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }"`);
+  await killPort(PREVIEW_PORT);
 }
 
 async function startPreview() {
@@ -615,13 +619,16 @@ async function buildSite() {
 async function publish(message) {
   const commitMessage = String(message || "").trim() || `blog update ${new Date().toISOString()}`;
   const add = await run("git add -A");
-  if (add.code !== 0) return { ok: false, step: "add", ...add };
-  const commit = await run(`git commit -m "${commitMessage.replace(/"/g, '\\"')}"`);
+  if (add.code !== 0) return { ok: false, error: "git add 실패: 파일 스테이징 중 오류가 발생했습니다.", step: "add", ...add };
+  const msgFile = path.join(logsDir, "commit-msg.tmp");
+  await fs.writeFile(msgFile, commitMessage, "utf8");
+  const commit = await run(`git commit -F "${msgFile.replace(/\\/g, "/")}"`);
+  await fs.unlink(msgFile).catch(() => {});
   const nothing = `${commit.stdout}\n${commit.stderr}`.includes("nothing to commit");
-  if (commit.code !== 0 && !nothing) return { ok: false, step: "commit", ...commit };
+  if (commit.code !== 0 && !nothing) return { ok: false, error: `git commit 실패: ${commit.stderr || commit.stdout || "알 수 없는 오류"}`, step: "commit", ...commit };
   if (nothing) return { ok: true, step: "noop", ...commit };
   const push = await run("git push");
-  if (push.code !== 0) return { ok: false, step: "push", ...push };
+  if (push.code !== 0) return { ok: false, error: `git push 실패: ${push.stderr || push.stdout || "원격 저장소 연결을 확인하세요."}`, step: "push", ...push };
   rememberLog("PUBLISH", "git push 완료");
   return { ok: true, step: "push", stdout: `${commit.stdout}\n${push.stdout}`.trim(), stderr: `${commit.stderr}\n${push.stderr}`.trim() };
 }
@@ -707,8 +714,19 @@ function openBrowser(url) {
   spawn(`start "" "${url}"`, { shell: true, detached: true, stdio: "ignore" }).unref();
 }
 
+server.on("error", async (err) => {
+  if (err.code === "EADDRINUSE") {
+    console.log(`Port ${APP_PORT} in use, closing old process...`);
+    await killPort(APP_PORT);
+    await new Promise((r) => setTimeout(r, 800));
+    server.listen(APP_PORT, "127.0.0.1");
+    return;
+  }
+  throw err;
+});
+
 server.listen(APP_PORT, "127.0.0.1", async () => {
   await appendLog("APP", `블로그 편집기 시작: ${APP_URL}`);
   openBrowser(APP_URL);
-  console.log(`블로그 편집기 실행 중: ${APP_URL}`);
+  console.log(`Blog editor running: ${APP_URL}`);
 });

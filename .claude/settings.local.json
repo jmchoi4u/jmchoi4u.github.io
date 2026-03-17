@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"console.log\\(process.version\\)\")",
+      "Bash(powershell -NoProfile -Command \":*)"
+    ]
+  }
+}

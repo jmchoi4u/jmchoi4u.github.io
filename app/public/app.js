@@ -764,7 +764,7 @@ async function publishSite() {
     body: JSON.stringify({ message: el.publishMessage.value.trim() })
   });
   setOutput("GitHub 발행 결과", `${data.stdout || ""}\n${data.stderr || ""}`.trim());
-  await loadSummary();
+  await Promise.all([loadSummary(), loadPosts()]);
 }
 
 async function shutdownApp() {
@@ -899,7 +899,7 @@ function bind() {
   });
   el.templateEditor.addEventListener("input", updateTemplatePreview);
 
-  [el.draftsList, el.publishedPostsList].forEach((list) => {
+  [el.draftsList, el.pendingPublishedList, el.publishedPostsList].forEach((list) => {
     list?.addEventListener("click", (event) => {
       const publishButton = event.target.closest("[data-publish-path]");
       if (publishButton) {
@@ -930,14 +930,28 @@ function bind() {
   });
 
   el.templateSelect.addEventListener("change", () => run(loadTemplateText));
+
+  document.addEventListener("keydown", (event) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === "s") {
+      event.preventDefault();
+      if (state.panel === "editor") run(savePost);
+    }
+    if ((event.ctrlKey || event.metaKey) && event.key === "n") {
+      event.preventDefault();
+      run(beginNewPost);
+    }
+  });
 }
 
 async function run(task) {
+  document.body.classList.add("loading");
   try {
     await task();
   } catch (error) {
     setOutput("오류", error.message || "알 수 없는 오류");
     alert(error.message || "알 수 없는 오류");
+  } finally {
+    document.body.classList.remove("loading");
   }
 }
 

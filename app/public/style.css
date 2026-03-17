@@ -510,3 +510,261 @@ label {
     grid-template-columns: 1fr;
   }
 }
+
+/* --- title actions --- */
+
+.title-actions {
+  text-align: right;
+}
+
+.title-actions .row {
+  justify-content: flex-end;
+}
+
+.status-text {
+  margin: 6px 0 0;
+  font-size: 13px;
+}
+
+/* --- nav highlights --- */
+
+.nav-important {
+  font-weight: 600;
+}
+
+.nav-manage.active {
+  background: #eef6f0;
+  border-color: #b4d4bb;
+  color: #1e5631;
+}
+
+.nav-publish.active {
+  background: #fef3ee;
+  border-color: #e6c8b0;
+  color: #7a3e10;
+}
+
+/* --- editor preview side-by-side --- */
+
+.editor-preview-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  align-items: stretch;
+}
+
+.editor-preview-grid > label {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0;
+}
+
+.editor-preview-grid textarea {
+  flex: 1;
+  min-height: 440px;
+}
+
+.preview-panel {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fafbfc;
+  overflow: hidden;
+}
+
+.preview-panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 14px;
+  background: #f3f5f8;
+  border-bottom: 1px solid var(--line);
+}
+
+.preview-panel-head h4 {
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.preview-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--point-soft);
+  color: var(--point);
+}
+
+.markdown-preview {
+  flex: 1;
+  padding: 14px;
+  overflow: auto;
+  max-height: 540px;
+  line-height: 1.7;
+  word-break: break-word;
+}
+
+.markdown-preview h1,
+.markdown-preview h2,
+.markdown-preview h3 {
+  margin-top: 0.6em;
+}
+
+.markdown-preview pre {
+  padding: 12px;
+  border-radius: 8px;
+  background: #1e293b;
+  color: #e2e8f0;
+  overflow-x: auto;
+}
+
+.markdown-preview code {
+  font-family: "Cascadia Code", "D2Coding", monospace;
+  font-size: 0.92em;
+}
+
+.markdown-preview blockquote {
+  margin: 0.6em 0;
+  padding: 4px 14px;
+  border-left: 3px solid var(--point);
+  color: var(--muted);
+}
+
+.markdown-preview img {
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+.markdown-preview table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.markdown-preview th,
+.markdown-preview td {
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  text-align: left;
+}
+
+.markdown-preview th {
+  background: #f8f9fb;
+}
+
+.preview-empty {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.help-preview {
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid var(--line);
+  line-height: 1.7;
+}
+
+/* --- post manager --- */
+
+.manager-toolbar {
+  display: flex;
+  gap: 14px;
+  align-items: start;
+  margin-bottom: 16px;
+}
+
+.manager-toolbar .grow {
+  min-width: 0;
+}
+
+.manager-tip {
+  flex-shrink: 0;
+  max-width: 420px;
+  font-size: 13px;
+}
+
+.manager-grid {
+  gap: 14px;
+}
+
+.manager-section-head {
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eef1f4;
+}
+
+.manager-section-head h3 {
+  margin: 0 0 4px;
+}
+
+.manager-section-head p {
+  margin: 0;
+  font-size: 13px;
+}
+
+.managed-post {
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.managed-post .list-item {
+  border: none;
+  padding: 6px 8px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+}
+
+.list-entry-actions {
+  display: flex;
+  gap: 6px;
+  padding: 0 4px;
+}
+
+.list-entry-actions button {
+  padding: 5px 10px;
+  font-size: 13px;
+  border-radius: 6px;
+}
+
+/* --- loading --- */
+
+body.loading {
+  cursor: wait;
+}
+
+body.loading .content {
+  pointer-events: none;
+  opacity: 0.6;
+  transition: opacity 0.15s ease;
+}
+
+/* --- responsive overrides --- */
+
+@media (max-width: 1100px) {
+  .editor-preview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .manager-toolbar {
+    flex-direction: column;
+  }
+
+  .manager-tip {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 720px) {
+  .editor-preview-grid textarea {
+    min-height: 300px;
+  }
+
+  .markdown-preview {
+    max-height: 300px;
+  }
+}

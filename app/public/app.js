@@ -11,7 +11,9 @@ const state = {
   filterTag: "",
   editorBaseline: "",
   autosaveTimer: null,
-  slugManuallyEdited: false
+  slugManuallyEdited: false,
+  sortBy: "newest",
+  pmTab: "all"
 };
 
 const markdownEngine = window.marked;
@@ -21,9 +23,7 @@ markdownEngine.setOptions({
 });
 
 const el = {
-  draftsList: document.querySelector("#drafts-list"),
-  pendingPublishedList: document.querySelector("#pending-published-list"),
-  publishedPostsList: document.querySelector("#published-posts-list"),
+  pmList: document.querySelector("#pm-list"),
   siteSummary: document.querySelector("#site-summary"),
   previewSummary: document.querySelector("#preview-summary"),
   gitSummary: document.querySelector("#git-summary"),
@@ -408,39 +408,55 @@ function applyTextColor(color) {
   wrapSelection(`<span style="color: ${color};">`, "</span>", "색상 글자");
 }
 
-function renderPostGroup(target, posts, options = {}) {
-  if (!target) return;
+function getPostStatus(post) {
+  if (post.draft) return { label: "임시저장", cls: "pm-status-draft" };
+  if (post.pendingDeploy) return { label: "배포 대기", cls: "pm-status-pending" };
+  return { label: "발행됨", cls: "pm-status-published" };
+}
 
-  target.innerHTML = posts.length
-    ? posts
-        .map(
-          (post) => `
-            <article class="managed-post">
-              <button type="button" class="list-item" data-path="${escapeHtml(post.relativePath)}">
-                <strong>${escapeHtml(post.title)}</strong>
-                <span>${escapeHtml(post.relativePath)}</span>
-              </button>
-              <div class="list-entry-actions">
-                <button type="button" data-path="${escapeHtml(post.relativePath)}">수정</button>
-                ${
-                  options.draft
-                    ? `<button type="button" class="primary" data-publish-path="${escapeHtml(post.relativePath)}">발행</button>`
-                    : ""
-                }
-                <button type="button" class="danger" data-delete-path="${escapeHtml(post.relativePath)}" data-title="${escapeHtml(post.title)}">삭제</button>
-              </div>
-            </article>
-          `
-        )
-        .join("")
-    : `<div class='muted'>${options.emptyText || "표시할 글이 없습니다."}</div>`;
+function renderPostCard(post) {
+  const status = getPostStatus(post);
+  const date = (post.date || "").replace(/\s.*/, "");
+  const cats = (post.categories || []).map((c) => escapeHtml(c)).join(" / ");
+  const tags = (post.tags || []).slice(0, 3).map((t) => `<span class="pm-card-tag">${escapeHtml(t)}</span>`).join(" ");
+  const desc = post.description ? `<span>${escapeHtml(post.description).slice(0, 40)}</span>` : "";
+
+  return `<div class="pm-card" data-path="${escapeHtml(post.relativePath)}">
+    <span class="pm-card-status ${status.cls}" title="${status.label}"></span>
+    <div class="pm-card-body">
+      <div class="pm-card-title">${escapeHtml(post.title || "(제목 없음)")}</div>
+      <div class="pm-card-meta">
+        ${date ? `<span>📅 ${date}</span>` : ""}
+        ${cats ? `<span>📁 ${cats}</span>` : ""}
+        ${desc}
+      </div>
+      ${tags ? `<div class="pm-card-meta" style="margin-top:3px">${tags}</div>` : ""}
+    </div>
+    <div class="pm-card-actions">
+      <button type="button" data-path="${escapeHtml(post.relativePath)}">수정</button>
+      ${post.draft ? `<button type="button" class="primary" data-publish-path="${escapeHtml(post.relativePath)}">발행</button>` : ""}
+      <button type="button" class="danger" data-delete-path="${escapeHtml(post.relativePath)}" data-title="${escapeHtml(post.title)}">삭제</button>
+    </div>
+  </div>`;
+}
+
+function sortPosts(posts, sortBy) {
+  const sorted = [...posts];
+  if (sortBy === "oldest") {
+    sorted.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+  } else if (sortBy === "title") {
+    sorted.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
+  } else {
+    sorted.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+  }
+  return sorted;
 }
 
 function renderPosts(posts) {
   const query = state.searchQuery.trim().toLowerCase();
   let filtered = query
     ? posts.filter((post) =>
-        [post.title, post.relativePath, post.fileName]
+        [post.title, post.relativePath, post.fileName, ...(post.categories || []), ...(post.tags || [])]
           .filter(Boolean)
           .some((value) => String(value).toLowerCase().includes(query))
       )
@@ -457,13 +473,48 @@ function renderPosts(posts) {
     );
   }
 
-  const drafts = filtered.filter((post) => post.draft);
-  const pendingPublished = filtered.filter((post) => !post.draft && post.pendingDeploy);
-  const published = filtered.filter((post) => !post.draft && !post.pendingDeploy);
+  const sorted = sortPosts(filtered, state.sortBy || "newest");
 
-  renderPostGroup(el.draftsList, drafts, { draft: true, emptyText: "임시저장 글이 없습니다." });
-  renderPostGroup(el.pendingPublishedList, pendingPublished, { emptyText: "아직 GitHub 배포 전인 발행 글이 없습니다." });
-  renderPostGroup(el.publishedPostsList, published, { emptyText: "발행 글이 없습니다." });
+  const drafts = sorted.filter((post) => post.draft);
+  const pending = sorted.filter((post) => !post.draft && post.pendingDeploy);
+  const published = sorted.filter((post) => !post.draft && !post.pendingDeploy);
+
+  // Update counts
+  const countAll = document.getElementById("pm-count-all");
+  const countPublished = document.getElementById("pm-count-published");
+  const countPending = document.getElementById("pm-count-pending");
+  const countDrafts = document.getElementById("pm-count-drafts");
+  if (countAll) countAll.textContent = sorted.length;
+  if (countPublished) countPublished.textContent = published.length;
+  if (countPending) countPending.textContent = pending.length;
+  if (countDrafts) countDrafts.textContent = drafts.length;
+
+  // Stats bar
+  const statsEl = document.getElementById("pm-stats");
+  if (statsEl) {
+    statsEl.innerHTML = `
+      <div class="pm-stat"><span class="pm-stat-num">${posts.length}</span><span class="pm-stat-label">전체 글</span></div>
+      <div class="pm-stat"><span class="pm-stat-num" style="color:#16a34a">${posts.filter(p => !p.draft && !p.pendingDeploy).length}</span><span class="pm-stat-label">발행됨</span></div>
+      <div class="pm-stat"><span class="pm-stat-num" style="color:#f59e0b">${posts.filter(p => !p.draft && p.pendingDeploy).length}</span><span class="pm-stat-label">배포 대기</span></div>
+      <div class="pm-stat"><span class="pm-stat-num" style="color:#8b5cf6">${posts.filter(p => p.draft).length}</span><span class="pm-stat-label">임시저장</span></div>
+    `;
+  }
+
+  // Filter by active tab
+  const activeTab = state.pmTab || "all";
+  let display;
+  if (activeTab === "published") display = published;
+  else if (activeTab === "pending") display = pending;
+  else if (activeTab === "drafts") display = drafts;
+  else display = sorted;
+
+  // Render list
+  const listEl = document.getElementById("pm-list");
+  if (listEl) {
+    listEl.innerHTML = display.length
+      ? display.map(renderPostCard).join("")
+      : `<div class="pm-empty">표시할 글이 없습니다.</div>`;
+  }
 }
 
 function renderTemplates(templates) {
@@ -974,25 +1025,40 @@ function bind() {
   });
   el.templateEditor.addEventListener("input", updateTemplatePreview);
 
-  [el.draftsList, el.pendingPublishedList, el.publishedPostsList].forEach((list) => {
-    list?.addEventListener("click", (event) => {
-      const publishButton = event.target.closest("[data-publish-path]");
-      if (publishButton) {
-        run(() => publishDraft(publishButton.dataset.publishPath));
-        return;
-      }
+  // Posts manager list events
+  el.pmList?.addEventListener("click", (event) => {
+    const publishButton = event.target.closest("[data-publish-path]");
+    if (publishButton) {
+      run(() => publishDraft(publishButton.dataset.publishPath));
+      return;
+    }
 
-      const deleteButton = event.target.closest("[data-delete-path]");
-      if (deleteButton) {
-        run(() => deletePostByPath(deleteButton.dataset.deletePath, deleteButton.dataset.title));
-        return;
-      }
+    const deleteButton = event.target.closest("[data-delete-path]");
+    if (deleteButton) {
+      run(() => deletePostByPath(deleteButton.dataset.deletePath, deleteButton.dataset.title));
+      return;
+    }
 
-      const openButton = event.target.closest("[data-path]");
-      if (openButton) {
-        run(() => openPost(openButton.dataset.path));
-      }
+    const openButton = event.target.closest("[data-path]");
+    if (openButton) {
+      run(() => openPost(openButton.dataset.path));
+    }
+  });
+
+  // PM tab switching
+  document.querySelectorAll(".pm-tab").forEach((tab) => {
+    tab.addEventListener("click", () => {
+      state.pmTab = tab.dataset.pmTab || "all";
+      document.querySelectorAll(".pm-tab").forEach((t) => t.classList.toggle("active", t === tab));
+      renderPosts(state.posts);
     });
+  });
+
+  // PM sort
+  const sortSelect = document.getElementById("pm-sort");
+  sortSelect?.addEventListener("change", (event) => {
+    state.sortBy = event.target.value;
+    renderPosts(state.posts);
   });
 
   el.templatesList?.addEventListener("click", (event) => {
@@ -1049,6 +1115,43 @@ function bind() {
       });
       insertAtCursor(data.markdown);
       setOutput("image drop upload", data.sitePath);
+    });
+  });
+
+  // Image paste (Ctrl+V) on body textarea
+  el.body.addEventListener("paste", (event) => {
+    const items = event.clipboardData?.items;
+    if (!items) return;
+    let imageItem = null;
+    for (const item of items) {
+      if (item.type.startsWith("image/")) {
+        imageItem = item;
+        break;
+      }
+    }
+    if (!imageItem) return;
+    event.preventDefault();
+    const file = imageItem.getAsFile();
+    if (!file) return;
+    run(async () => {
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error("image read failed"));
+        reader.readAsDataURL(file);
+      });
+      const folderName = el.slug.value.trim().replace(/\.md$/i, "") || el.title.value.trim() || "pasted";
+      const data = await api("/api/upload-image", {
+        method: "POST",
+        body: JSON.stringify({
+          area: "posts",
+          folderName,
+          fileName: file.name || "pasted-image.png",
+          dataUrl
+        })
+      });
+      insertAtCursor(data.markdown);
+      setOutput("image paste upload", data.sitePath);
     });
   });
 

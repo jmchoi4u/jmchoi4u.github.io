@@ -29,7 +29,7 @@ script_includes:
       </div>
       <div class="post-hero-meta">
         <span class="hero-left">{{ page.date | date: "%Y/%m/%d" }} · By <a href="{{ '/about/' | relative_url }}" class="hero-author-link">{{ site.social.name }}</a></span>
-        <span class="hero-right">{% capture _words %}{{ content | number_of_words }}{% endcapture %}{% assign _wpm = 200 %}{% assign _reading_time = _words | divided_by: _wpm | at_least: 1 %}{{ _reading_time }} {{ site.data.locales[lang].post.read_time.unit }} {{ site.data.locales[lang].post.read_time.prompt }}</span>
+        <span class="hero-right">{% capture _words %}{{ content | number_of_words }}{% endcapture %}{% assign _wpm = 200 %}{% assign _reading_time = _words | divided_by: _wpm | at_least: 1 %}<span class="hero-read-num">{{ _reading_time }} {{ site.data.locales[lang].post.read_time.unit }}</span> {{ site.data.locales[lang].post.read_time.prompt }}</span>
       </div>
     </div>
   </header>
@@ -81,33 +81,27 @@ script_includes:
   </div>
 
   <div class="post-tail-wrapper text-muted">
-    <!-- categories -->
-    {% if page.categories.size > 0 %}
-      <div class="post-meta mb-3">
-        <i class="far fa-folder-open fa-fw me-1"></i>
-        {% for category in page.categories %}
-          <a href="{{ site.baseurl }}/categories/{{ category | slugify | url_encode }}/">{{ category }}</a>
-          {%- unless forloop.last -%},{%- endunless -%}
-        {% endfor %}
-      </div>
-    {% endif %}
+    <div class="post-cat-tag-row">
+      {% if page.categories.size > 0 %}
+        <span class="post-meta-inline">
+          <i class="far fa-folder-open fa-fw me-1"></i>
+          {% for category in page.categories %}
+            <a href="{{ site.baseurl }}/categories/{{ category | slugify | url_encode }}/">{{ category }}</a>
+            {%- unless forloop.last -%},{%- endunless -%}
+          {% endfor %}
+        </span>
+      {% endif %}
+      {% if page.tags.size > 0 %}
+        <span class="post-tags-inline">
+          <i class="fa fa-tags fa-fw me-1"></i>
+          {% for tag in page.tags %}
+            <a href="{{ site.baseurl }}/tags/{{ tag | slugify | url_encode }}/" class="post-tag no-text-decoration">{{- tag -}}</a>
+          {% endfor %}
+        </span>
+      {% endif %}
+    </div>
 
-    <!-- tags -->
-    {% if page.tags.size > 0 %}
-      <div class="post-tags">
-        <i class="fa fa-tags fa-fw me-1"></i>
-        {% for tag in page.tags %}
-          <a
-            href="{{ site.baseurl }}/tags/{{ tag | slugify | url_encode }}/"
-            class="post-tag no-text-decoration"
-          >
-            {{- tag -}}
-          </a>
-        {% endfor %}
-      </div>
-    {% endif %}
-
-    <div class="post-tail-bottom d-flex justify-content-between align-items-center mt-5 pb-2">
+    <div class="post-tail-bottom d-flex align-items-center justify-content-between mt-2 pb-1" style="gap:10px">
       <div class="subscribe-inline">
         <button id="subscribe-bell" type="button" class="subscribe-inline-btn">
           <i class="fas fa-bell"></i> 새 글 알림

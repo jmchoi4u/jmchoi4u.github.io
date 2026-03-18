@@ -128,14 +128,6 @@
     /* Search bar slightly lower */
     #search-results{margin-top:1.5rem!important}
 
-    /* Code block fix */
-    .content pre,.content .highlight,div[class*="highlight"],figure.highlight{overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch}
-    .content pre code{white-space:pre;word-break:normal;overflow-wrap:normal;font-size:0.82rem;line-height:1.6}
-    .content table{display:block;overflow-x:auto;max-width:100%}
-    @media(max-width:576px){
-      .content pre{padding:12px;font-size:0.78rem;border-radius:8px}
-      .content pre code{font-size:0.78rem}
-    }
   </style>
 
   <!-- Custom styles (post only) -->
@@ -162,6 +154,7 @@
       .post-hero-meta{position:absolute;bottom:0.8rem;left:1rem;right:1rem;z-index:2;display:flex;gap:0.6rem;flex-wrap:wrap;justify-content:space-between;align-items:center;font-size:0.75rem;color:rgba(255,255,255,0.78)}
       .post-hero-meta .hero-left{display:flex;gap:0.4rem;align-items:center}
       .post-hero-meta .hero-right{font-style:italic;opacity:0.7}
+      .hero-read-num{color:#ff6b6b;font-weight:600;font-style:normal}
       .post-hero-meta span{white-space:nowrap}
       .post-hero-meta a.hero-link,.post-hero-meta a,.post-hero-meta a.hero-author-link{color:rgba(255,255,255,0.95)!important;text-decoration:none;border-bottom:1px solid rgba(255,255,255,0.3);transition:border-color 0.15s}
       .post-hero-meta a.hero-author-link:hover{border-bottom-color:rgba(255,255,255,0.8)}
@@ -177,14 +170,15 @@
 
       /* Subscribe inline button */
       .subscribe-inline{position:relative}
-      .subscribe-inline-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border:1px solid var(--link-color,#355f67);border-radius:20px;background:transparent;color:var(--link-color,#355f67);font-size:0.8rem;font-weight:600;cursor:pointer;transition:background 0.2s,color 0.2s}
+      .subscribe-inline{display:flex}
+      .subscribe-inline-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:6px 18px;border:1px solid var(--link-color,#355f67);border-radius:10px;background:transparent;color:var(--link-color,#355f67);font-size:0.8rem;font-weight:600;cursor:pointer;transition:background 0.2s,color 0.2s;white-space:nowrap}
       .subscribe-inline-btn:hover{background:var(--link-color,#355f67);color:#fff}
       .subscribe-inline-btn i{font-size:0.75rem}
       .subscribe-popup-bottom{bottom:auto;top:auto;position:absolute;left:0;bottom:40px;right:auto}
       @media(max-width:576px){
-        .subscribe-popup{width:calc(100vw - 40px)!important;left:-10px!important}
+        .subscribe-popup{position:fixed!important;bottom:auto!important;top:50%!important;left:50%!important;transform:translate(-50%,-50%)!important;width:calc(100vw - 40px)!important;right:auto!important;z-index:2000!important}
+        .subscribe-popup.show~.subscribe-overlay,.subscribe-overlay.show{display:block}
         .subscribe-inline-btn{padding:5px 10px;font-size:0.72rem}
-        .post-tail-bottom{gap:8px}
         .post-hero{height:200px}
         .post-hero-content{padding:1.2rem 1rem 2.2rem;max-width:95%}
         .post-hero-content h1{font-size:1.4rem;line-height:1.4}
@@ -222,15 +216,30 @@
       .support-btn{display:inline-block;font-size:0.75rem;font-weight:600;padding:6px 14px;border-radius:20px;text-decoration:none;white-space:nowrap;background:linear-gradient(135deg,#FFDD00,#f7c948);color:#1a1a1a;box-shadow:0 1px 3px rgba(0,0,0,0.1);transition:transform 0.15s,box-shadow 0.15s}
       .support-btn:hover{transform:translateY(-1px);box-shadow:0 3px 8px rgba(0,0,0,0.15);color:#1a1a1a;text-decoration:none}
 
-      /* Sharing buttons */
-      .share-wrapper{padding:8px 14px;border:1px solid var(--btn-border-color,#e2e6ec);border-radius:10px;background:var(--card-bg,#f8f9fb)}
-      .share-wrapper .share-label{font-size:0.82rem;font-weight:600;margin-right:6px}
-      .share-wrapper .share-icons a,.share-wrapper .share-icons button{opacity:0.6;transition:opacity 0.15s,transform 0.15s}
-      .share-wrapper .share-icons a:hover,.share-wrapper .share-icons button:hover{opacity:1;transform:translateY(-1px)}
+      /* Share button & popup */
+      .share-inline{position:relative}
+      .share-simple-btn{width:38px;height:38px;border-radius:50%;border:1px solid var(--link-color,#355f67);background:var(--card-bg,#f8f9fb);color:var(--link-color,#355f67);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s,color 0.2s,transform 0.15s;box-shadow:0 1px 4px rgba(0,0,0,0.08)}
+      .share-simple-btn:hover{background:var(--link-color,#355f67);color:#fff;transform:translateY(-1px);box-shadow:0 3px 8px rgba(0,0,0,0.12)}
+      .share-popup{display:none;position:absolute;bottom:46px;right:0;z-index:1001;min-width:180px;background:var(--card-bg,#fff);border:1px solid var(--btn-border-color,#e2e6ec);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.15);padding:6px;font-size:0.82rem}
+      .share-popup.show{display:block}
+      .share-popup-item{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:6px;text-decoration:none;color:var(--text-color,#1f2937);cursor:pointer;border:none;background:none;width:100%;font-size:0.82rem;transition:background 0.15s}
+      .share-popup-item:hover{background:var(--btn-border-color,#f0f3f6);text-decoration:none;color:var(--text-color,#1f2937)}
+      .share-popup-item i{width:18px;text-align:center;color:var(--text-muted-color,#697586)}
 
       /* Content headings spacing */
       .content h2{margin-top:2.5rem}
       .content h3{margin-top:2rem}
+
+      /* Reduce post tail spacing */
+      .post-tail-wrapper{margin-top:0.5rem}
+      .post-cat-tag-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:0.5rem}
+      .post-meta-inline,.post-tags-inline{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+      .post-tail-bottom{margin-top:1rem!important;padding-bottom:0.5rem!important;flex-wrap:nowrap!important}
+
+      /* Reduce related posts & post-nav spacing */
+      #related-posts{margin-top:1rem;margin-bottom:1rem}
+      #related-posts h3{margin-bottom:0.8rem;font-size:1.1rem}
+      .post-navigation{margin-top:0.5rem}
     </style>
   {% endif %}
 
@@ -305,14 +314,27 @@
         var hero=document.querySelector('.post-hero');
         var stickyBar=document.getElementById('sticky-title-bar');
 
-        // Subscribe bell
+        // Subscribe bell with mobile overlay
         var bell=document.getElementById('subscribe-bell');
         var popup=document.getElementById('subscribe-popup');
         var closeBtn=document.getElementById('subscribe-close');
+        var overlay=null;
+        function createOverlay(){
+          if(overlay)return overlay;
+          overlay=document.createElement('div');
+          overlay.style.cssText='display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1999';
+          document.body.appendChild(overlay);
+          overlay.addEventListener('click',function(){popup.classList.remove('show');overlay.style.display='none'});
+          return overlay;
+        }
         if(bell&&popup){
-          bell.addEventListener('click',function(e){e.stopPropagation();popup.classList.toggle('show')});
-          if(closeBtn)closeBtn.addEventListener('click',function(){popup.classList.remove('show')});
-          document.addEventListener('click',function(e){if(!popup.contains(e.target)&&e.target!==bell)popup.classList.remove('show')});
+          bell.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();
+            var isShow=!popup.classList.contains('show');
+            popup.classList.toggle('show');
+            if(window.innerWidth<=576){var ov=createOverlay();ov.style.display=isShow?'block':'none'}
+          });
+          if(closeBtn)closeBtn.addEventListener('click',function(){popup.classList.remove('show');if(overlay)overlay.style.display='none'});
+          document.addEventListener('click',function(e){if(popup.classList.contains('show')&&!popup.contains(e.target)&&e.target!==bell&&!bell.contains(e.target)){popup.classList.remove('show');if(overlay)overlay.style.display='none'}});
         }
         window.addEventListener('scroll',function(){
           var h=document.documentElement;

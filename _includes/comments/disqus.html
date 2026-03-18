@@ -21,6 +21,7 @@
   };
 
   function addDisqus() {
+    if (document.getElementById('disqus_thread')) return; // already added
     var wrapper = document.createElement('div');
     wrapper.className = 'disqus-wrapper';
     wrapper.innerHTML =
@@ -32,7 +33,13 @@
       '<div class="disqus-footer">Powered by <a href="https://disqus.com/" target="_blank" rel="noopener">Disqus</a></div>';
 
     var footer = document.querySelector('footer');
-    footer.insertAdjacentElement('beforebegin', wrapper);
+    if (footer) {
+      footer.insertAdjacentElement('beforebegin', wrapper);
+    } else {
+      // footer not yet in DOM, append to article or body
+      var article = document.querySelector('article') || document.body;
+      article.appendChild(wrapper);
+    }
   }
 
   function reloadDisqus(event) {
@@ -44,40 +51,56 @@
     }
   }
 
-  addDisqus();
-
-  if (Theme.switchable) {
-    addEventListener('message', reloadDisqus);
+  // Ensure DOM is ready before adding Disqus wrapper
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() { initDisqus(); });
+  } else {
+    initDisqus();
   }
 
-  // Load Disqus early using requestIdleCallback (won't block initial render)
-  var _disqusLoaded = false;
-  function loadDisqusEmbed() {
-    if (_disqusLoaded) return;
-    _disqusLoaded = true;
-    var d = document, s = d.createElement('script');
-    s.src = 'https://{{ site.comments.disqus.shortname }}.disqus.com/embed.js';
-    s.setAttribute('data-timestamp', +new Date());
-    (d.head || d.body).appendChild(s);
+  function initDisqus() {
+    addDisqus();
+
+    if (typeof Theme !== 'undefined' && Theme.switchable) {
+      addEventListener('message', reloadDisqus);
+    }
+
+    // Load Disqus embed script
+    var _disqusLoaded = false;
+    function loadDisqusEmbed() {
+      if (_disqusLoaded) return;
+      _disqusLoaded = true;
+      var d = document, s = d.createElement('script');
+      s.src = 'https://{{ site.comments.disqus.shortname }}.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', +new Date());
+      (d.head || d.body).appendChild(s);
+    }
+
+    var threadEl = document.getElementById('disqus_thread');
+    if (!threadEl) return;
+
+    // Strategy 1: load during idle time after page load
+    if ('requestIdleCallback' in window) {
+      window.addEventListener('load', function() {
+        requestIdleCallback(loadDisqusEmbed, { timeout: 3000 });
+      });
+    }
+
+    // Strategy 2: IntersectionObserver with generous rootMargin
+    if ('IntersectionObserver' in window) {
+      var disqusObserver = new IntersectionObserver(
+        function (entries) {
+          if (entries[0].isIntersecting) {
+            loadDisqusEmbed();
+            disqusObserver.disconnect();
+          }
+        },
+        { threshold: [0], rootMargin: '600px' }
+      );
+      disqusObserver.observe(threadEl);
+    } else {
+      // Fallback for very old browsers: just load it
+      window.addEventListener('load', function() { setTimeout(loadDisqusEmbed, 1000); });
+    }
   }
-
-  // Strategy: load during idle time after page load, or when scrolled near
-  if ('requestIdleCallback' in window) {
-    window.addEventListener('load', function() {
-      requestIdleCallback(loadDisqusEmbed, { timeout: 3000 });
-    });
-  }
-
-  // Fallback: IntersectionObserver with generous rootMargin (start loading 600px before visible)
-  var disqusObserver = new IntersectionObserver(
-    function (entries) {
-      if (entries[0].isIntersecting) {
-        loadDisqusEmbed();
-        disqusObserver.disconnect();
-      }
-    },
-    { threshold: [0], rootMargin: '600px' }
-  );
-
-  disqusObserver.observe(document.getElementById('disqus_thread'));
 </script>

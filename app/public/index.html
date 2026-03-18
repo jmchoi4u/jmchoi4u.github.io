@@ -256,61 +256,41 @@
           <div class="title-row">
             <div>
               <h2>글 관리</h2>
-              <p class="muted">글이 많아져도 찾기 쉽도록 발행 글과 임시저장 글을 나눠서 관리합니다.</p>
+              <p class="muted">모든 글을 한눈에 확인하고 관리합니다.</p>
             </div>
             <div class="row wrap">
               <button id="refresh-posts-btn" type="button">새로고침</button>
-              <button id="new-post-btn" type="button" class="primary">새 글</button>
+              <button id="new-post-btn" type="button" class="primary">+ 새 글</button>
             </div>
           </div>
 
-          <div class="manager-toolbar">
-            <label class="grow">글 검색
-              <input id="post-search" type="text" placeholder="제목, 파일명, 경로로 검색">
-            </label>
-            <label>카테고리
-              <select id="filter-category"><option value="">-- --</option></select>
-            </label>
-            <label>태그
-              <select id="filter-tag"><option value="">-- --</option></select>
-            </label>
-            <div class="soft-box manager-tip">
-              <strong>상태 안내</strong>
-              <p class="muted">`_posts` 에 저장되어도 바로 사이트에 올라가는 것은 아닙니다. GitHub에 아직 안 올라간 글은 아래 `배포 전 발행 글`에서 따로 보입니다.</p>
+          <!-- Stats bar -->
+          <div class="pm-stats" id="pm-stats"></div>
+
+          <!-- Search & Filter -->
+          <div class="pm-toolbar">
+            <div class="pm-search-wrap">
+              <input id="post-search" type="text" placeholder="🔍 제목, 카테고리, 태그로 검색..." class="pm-search">
             </div>
+            <select id="filter-category" class="pm-filter"><option value="">전체 카테고리</option></select>
+            <select id="filter-tag" class="pm-filter"><option value="">전체 태그</option></select>
+            <select id="pm-sort" class="pm-filter">
+              <option value="newest">최신순</option>
+              <option value="oldest">오래된순</option>
+              <option value="title">이름순</option>
+            </select>
           </div>
 
-          <div class="grid three manager-grid">
-            <section class="soft-box">
-              <div class="manager-section-head">
-                <div>
-                  <h3>임시저장 글</h3>
-                  <p class="muted">여기 있는 글만 골라서 발행할 수 있습니다.</p>
-                </div>
-              </div>
-              <div id="drafts-list" class="list-box"></div>
-            </section>
-
-            <section class="soft-box">
-              <div class="manager-section-head">
-                <div>
-                  <h3>배포 전 발행 글</h3>
-                  <p class="muted">`_posts` 에 있지만 아직 GitHub 배포 전인 글입니다.</p>
-                </div>
-              </div>
-              <div id="pending-published-list" class="list-box"></div>
-            </section>
-
-            <section class="soft-box">
-              <div class="manager-section-head">
-                <div>
-                  <h3>배포 완료 글</h3>
-                  <p class="muted">로컬 git 기준으로 이미 원격과 맞춰진 글입니다.</p>
-                </div>
-              </div>
-              <div id="published-posts-list" class="list-box"></div>
-            </section>
+          <!-- Tab switcher -->
+          <div class="pm-tabs">
+            <button type="button" class="pm-tab active" data-pm-tab="all">전체 <span class="pm-badge" id="pm-count-all">0</span></button>
+            <button type="button" class="pm-tab" data-pm-tab="published">발행 <span class="pm-badge" id="pm-count-published">0</span></button>
+            <button type="button" class="pm-tab" data-pm-tab="pending">배포 대기 <span class="pm-badge pm-badge-warn" id="pm-count-pending">0</span></button>
+            <button type="button" class="pm-tab" data-pm-tab="drafts">임시저장 <span class="pm-badge pm-badge-draft" id="pm-count-drafts">0</span></button>
           </div>
+
+          <!-- Post list -->
+          <div id="pm-list" class="pm-list"></div>
         </section>
 
         <section id="images" class="card screen">

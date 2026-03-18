@@ -328,7 +328,7 @@
           return overlay;
         }
         if(bell&&popup){
-          bell.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();
+          bell.addEventListener('click',function(e){e.stopPropagation();
             var isShow=!popup.classList.contains('show');
             popup.classList.toggle('show');
             if(window.innerWidth<=576){var ov=createOverlay();ov.style.display=isShow?'block':'none'}

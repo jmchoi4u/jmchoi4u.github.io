@@ -126,4 +126,96 @@ script_includes:
     <!-- .post-tail-bottom -->
   </div>
   <!-- div.post-tail-wrapper -->
+
+  <!-- Post-specific Scripts (placed here to execute on Pjax/Turbo loads) -->
+  <script>
+    (function() {
+      // Reading Progress Bar
+      var bar = document.getElementById('reading-progress');
+      if (!bar) {
+        bar = document.createElement('div');
+        bar.id = 'reading-progress';
+        document.body.prepend(bar);
+      }
+      var hero = document.querySelector('.post-hero');
+      var stickyBar = document.getElementById('sticky-title-bar');
+
+      // Subscribe bell with mobile overlay
+      var bell = document.getElementById('subscribe-bell');
+      var popup = document.getElementById('subscribe-popup');
+      var closeBtn = document.getElementById('subscribe-close');
+      
+      // We attach the click listeners to current elements.
+      if (bell && popup) {
+        bell.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var isShow = !popup.classList.contains('show');
+          popup.classList.toggle('show');
+          if (window.innerWidth <= 576) {
+            var overlay = document.getElementById('subscribe-overlay');
+            if (!overlay) {
+              overlay = document.createElement('div');
+              overlay.id = 'subscribe-overlay';
+              overlay.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1999';
+              document.body.appendChild(overlay);
+              overlay.addEventListener('click', function() {
+                var p = document.getElementById('subscribe-popup');
+                if (p) p.classList.remove('show');
+                overlay.style.display = 'none';
+              });
+            }
+            overlay.style.display = isShow ? 'block' : 'none';
+          }
+        });
+
+        if (closeBtn) {
+          closeBtn.addEventListener('click', function() {
+            popup.classList.remove('show');
+            var overlay = document.getElementById('subscribe-overlay');
+            if (overlay) overlay.style.display = 'none';
+          });
+        }
+
+        // We use a global listener tracking flag to avoid adding it multiple times on Navigation
+        if (!window.__subscribeDocListenerAdded) {
+          window.__subscribeDocListenerAdded = true;
+          document.addEventListener('click', function(e) {
+            var currentPopup = document.getElementById('subscribe-popup');
+            var currentBell = document.getElementById('subscribe-bell');
+            var currentOverlay = document.getElementById('subscribe-overlay');
+            if (currentPopup && currentPopup.classList.contains('show') && !currentPopup.contains(e.target)) {
+              if (currentBell && !currentBell.contains(e.target) && e.target !== currentBell) {
+                currentPopup.classList.remove('show');
+                if (currentOverlay) currentOverlay.style.display = 'none';
+              }
+            }
+          });
+        }
+      }
+
+      // Scroll event for Progress Bar and Sticky Header
+      if (!window.__postScrollListenerAdded) {
+        window.__postScrollListenerAdded = true;
+        window.addEventListener('scroll', function() {
+          var h = document.documentElement;
+          var pct = h.scrollTop / (h.scrollHeight - h.clientHeight) * 100;
+          var currentBar = document.getElementById('reading-progress');
+          if (currentBar) {
+            currentBar.style.width = Math.min(pct, 100) + '%';
+          }
+          
+          var currentHero = document.querySelector('.post-hero');
+          var currentSticky = document.getElementById('sticky-title-bar');
+          if (currentHero && currentSticky) {
+            var heroBottom = currentHero.getBoundingClientRect().bottom;
+            if (heroBottom < 0) {
+              currentSticky.classList.add('visible');
+            } else {
+              currentSticky.classList.remove('visible');
+            }
+          }
+        });
+      }
+    })();
+  </script>
 </article>

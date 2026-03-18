@@ -306,46 +306,5 @@
     });
   </script>
 
-  <!-- Reading Progress Bar + Sticky Title Script (post only) -->
-  {% if page.layout == 'post' %}
-    <script>
-      document.addEventListener('DOMContentLoaded',function(){
-        var bar=document.createElement('div');bar.id='reading-progress';document.body.prepend(bar);
-        var hero=document.querySelector('.post-hero');
-        var stickyBar=document.getElementById('sticky-title-bar');
 
-        // Subscribe bell with mobile overlay
-        var bell=document.getElementById('subscribe-bell');
-        var popup=document.getElementById('subscribe-popup');
-        var closeBtn=document.getElementById('subscribe-close');
-        var overlay=null;
-        function createOverlay(){
-          if(overlay)return overlay;
-          overlay=document.createElement('div');
-          overlay.style.cssText='display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1999';
-          document.body.appendChild(overlay);
-          overlay.addEventListener('click',function(){popup.classList.remove('show');overlay.style.display='none'});
-          return overlay;
-        }
-        if(bell&&popup){
-          bell.addEventListener('click',function(e){e.stopPropagation();
-            var isShow=!popup.classList.contains('show');
-            popup.classList.toggle('show');
-            if(window.innerWidth<=576){var ov=createOverlay();ov.style.display=isShow?'block':'none'}
-          });
-          if(closeBtn)closeBtn.addEventListener('click',function(){popup.classList.remove('show');if(overlay)overlay.style.display='none'});
-          document.addEventListener('click',function(e){if(popup.classList.contains('show')&&!popup.contains(e.target)&&e.target!==bell&&!bell.contains(e.target)){popup.classList.remove('show');if(overlay)overlay.style.display='none'}});
-        }
-        window.addEventListener('scroll',function(){
-          var h=document.documentElement;
-          var pct=h.scrollTop/(h.scrollHeight-h.clientHeight)*100;
-          bar.style.width=Math.min(pct,100)+'%';
-          if(hero&&stickyBar){
-            var heroBottom=hero.getBoundingClientRect().bottom;
-            if(heroBottom<0){stickyBar.classList.add('visible')}else{stickyBar.classList.remove('visible')}
-          }
-        })
-      })
-    </script>
-  {% endif %}
 </head>

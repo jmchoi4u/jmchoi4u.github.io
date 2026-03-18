@@ -12,7 +12,6 @@ math: false
 permalink: /posts/3/
 ---
 
-# 제가 요즘 쓰는 LLM 프롬프트 공유합니다.
 ## 보통 지시사항에 미리 넣어놓고 씁니다.
 
 ```md

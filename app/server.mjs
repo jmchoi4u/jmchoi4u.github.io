@@ -170,11 +170,11 @@ function yamlString(value) {
 function parseDoc(text, fileName = "") {
   const normalized = text.replace(/\r\n/g, "\n");
   if (!normalized.startsWith("---\n")) {
-    return { fileName, title: "", date: "", categories: [], tags: [], description: "", extra: "", body: normalized, draft: false };
+    return { fileName, title: "", date: "", categories: [], tags: [], description: "", extra: "", body: normalized, draft: false, permalink: "" };
   }
   const end = normalized.indexOf("\n---\n", 4);
   if (end === -1) {
-    return { fileName, title: "", date: "", categories: [], tags: [], description: "", extra: "", body: normalized, draft: false };
+    return { fileName, title: "", date: "", categories: [], tags: [], description: "", extra: "", body: normalized, draft: false, permalink: "" };
   }
   const head = normalized.slice(4, end);
   const body = normalized.slice(end + 5).replace(/^\n/, "");
@@ -189,7 +189,7 @@ function parseDoc(text, fileName = "") {
   };
   const extra = head
     .split("\n")
-    .filter((line) => !/^(title|date|categories|tags|description|toc|comments|pin|mermaid|math):/.test(line.trim()))
+    .filter((line) => !/^(title|date|categories|tags|description|toc|comments|pin|mermaid|math|permalink):/.test(line.trim()))
     .join("\n")
     .trim();
   return {
@@ -204,6 +204,7 @@ function parseDoc(text, fileName = "") {
     pin: pickBool("pin", false),
     mermaid: pickBool("mermaid", false),
     math: pickBool("math", false),
+    permalink: pick(/^permalink:\s*(.+)$/m),
     extra,
     body
   };
@@ -229,6 +230,9 @@ function makeDoc(data) {
   lines.push(`pin: ${data.pin ? "true" : "false"}`);
   lines.push(`mermaid: ${data.mermaid ? "true" : "false"}`);
   lines.push(`math: ${data.math ? "true" : "false"}`);
+  if (data.permalink) {
+    lines.push(`permalink: ${data.permalink}`);
+  }
   if (String(data.extra || "").trim()) {
     lines.push(String(data.extra).trimEnd());
   }
@@ -482,14 +486,46 @@ async function backupFile(filePath) {
   rememberLog("BACKUP", `${relativePath} -> ${path.relative(repoRoot, backupPath).replace(/\\/g, "/")}`);
 }
 
+async function getNextPostNumber() {
+  let maxNum = 0;
+  for (const dir of [postsDir, draftsDir]) {
+    let names = [];
+    try { names = (await fs.readdir(dir)).filter((n) => n.endsWith(".md")); } catch {}
+    for (const name of names) {
+      try {
+        const raw = await fs.readFile(path.join(dir, name), "utf8");
+        const match = raw.match(/^permalink:\s*\/posts\/(\d+)\/?/m);
+        if (match) {
+          const num = parseInt(match[1], 10);
+          if (num > maxNum) maxNum = num;
+        }
+      } catch {}
+    }
+  }
+  return maxNum + 1;
+}
+
 async function savePost(data) {
   const draft = Boolean(data.draft);
   const date = String(data.date || "").trim() || `${new Date().toISOString().slice(0, 16).replace("T", " ")}:00 +0900`;
-  const slug = resolvePostSlug(data.slug, data.title, date);
-  const fileName = draft ? `${slug}.md` : `${date.slice(0, 10)}-${slug}.md`;
-  const target = path.join(draft ? draftsDir : postsDir, fileName);
   const categories = (data.categories || []).map((x) => String(x).trim()).filter(Boolean).slice(0, 2);
   const tags = (data.tags || []).map((x) => String(x).trim().toLowerCase()).filter(Boolean);
+
+  // Auto-assign permalink number and use it as file slug
+  let permalink = data.permalink || "";
+  let postNum;
+  if (!permalink) {
+    postNum = await getNextPostNumber();
+    if (!draft) permalink = `/posts/${postNum}/`;
+  } else {
+    const numMatch = permalink.match(/\/posts\/(\d+)\/?/);
+    postNum = numMatch ? parseInt(numMatch[1], 10) : await getNextPostNumber();
+  }
+
+  const slug = String(postNum);
+  const fileName = draft ? `${slug}.md` : `${date.slice(0, 10)}-${slug}.md`;
+  const target = path.join(draft ? draftsDir : postsDir, fileName);
+
   const content = makeDoc({
     title: data.title,
     date,
@@ -501,6 +537,7 @@ async function savePost(data) {
     pin: Boolean(data.pin),
     mermaid: Boolean(data.mermaid),
     math: Boolean(data.math),
+    permalink,
     extra: data.extra,
     body: data.body
   });
@@ -560,6 +597,7 @@ async function publishDraft(data) {
     pin: Boolean(parsed.pin),
     mermaid: Boolean(parsed.mermaid),
     math: Boolean(parsed.math),
+    permalink: parsed.permalink || "",
     extra: parsed.extra,
     body: parsed.body
   });

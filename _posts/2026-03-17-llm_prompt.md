@@ -9,6 +9,7 @@ comments: true
 pin: false
 mermaid: false
 math: false
+permalink: /posts/3/
 ---
 
 # 제가 요즘 쓰는 LLM 프롬프트 공유합니다.

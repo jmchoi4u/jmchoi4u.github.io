@@ -53,6 +53,7 @@ const el = {
   imageFolder: document.querySelector("#image-folder"),
   imageFile: document.querySelector("#image-file"),
   imageResult: document.querySelector("#image-result"),
+  permalink: document.querySelector("#post-permalink"),
   publishMessage: document.querySelector("#publish-message"),
   postSearch: document.querySelector("#post-search"),
   rawEditor: document.querySelector("#raw-editor"),
@@ -344,6 +345,7 @@ function resetEditor() {
   el.extra.value = "";
   el.body.value = "";
   el.originalPath.value = "";
+  el.permalink.value = "";
   updateBodyPreview();
   setEditorBaseline();
   setAutosaveStatus("새 글 작성 대기 중");
@@ -366,6 +368,7 @@ function fillEditor(data) {
   el.extra.value = data.extra || "";
   el.body.value = data.body || "";
   el.originalPath.value = data.relativePath || "";
+  el.permalink.value = data.permalink || "";
   updateBodyPreview();
   setEditorBaseline();
   setAutosaveStatus(data.draft ? "임시저장 글을 편집 중" : "발행 글을 편집 중");
@@ -418,7 +421,7 @@ function renderPostGroup(target, posts, options = {}) {
                 <span>${escapeHtml(post.relativePath)}</span>
               </button>
               <div class="list-entry-actions">
-                <button type="button" data-path="${escapeHtml(post.relativePath)}">열기</button>
+                <button type="button" data-path="${escapeHtml(post.relativePath)}">수정</button>
                 ${
                   options.draft
                     ? `<button type="button" class="primary" data-publish-path="${escapeHtml(post.relativePath)}">발행</button>`
@@ -686,6 +689,7 @@ async function savePost() {
       pin: el.pin.checked,
       mermaid: el.mermaid.checked,
       math: el.math.checked,
+      permalink: el.permalink.value || "",
       extra: el.extra.value,
       body: el.body.value
     })
@@ -889,11 +893,11 @@ function bind() {
   document.querySelector("#save-template-btn").addEventListener("click", () => run(saveTemplateText));
   document.querySelector("#apply-template-btn").addEventListener("click", applyTemplateEditorContent);
 
-  document.querySelectorAll(".toolbar [data-insert]").forEach((button) => {
+  document.querySelectorAll(".word-toolbar [data-insert]").forEach((button) => {
     button.addEventListener("click", () => insertAtCursor(button.dataset.insert.replaceAll("&#10;", "\n")));
   });
 
-  document.querySelectorAll(".toolbar [data-wrap-before]").forEach((button) => {
+  document.querySelectorAll(".word-toolbar [data-wrap-before]").forEach((button) => {
     button.addEventListener("click", () => {
       wrapSelection(
         button.dataset.wrapBefore || "",
@@ -903,21 +907,36 @@ function bind() {
     });
   });
 
-  document.querySelectorAll(".toolbar [data-text-color]").forEach((button) => {
+  // Color swatches
+  document.querySelectorAll(".word-toolbar .tb-swatch:not(.tb-swatch-custom)").forEach((button) => {
     button.addEventListener("click", () => {
       applyTextColor(button.dataset.textColor || "#111827");
     });
   });
 
-  el.title.addEventListener("input", () => {
-    if (!state.slugManuallyEdited) {
-      el.slug.value = formatPostFileName(slugify(el.title.value));
-    }
+  // Custom color picker
+  const customSwatch = document.querySelector(".tb-swatch-custom");
+  if (customSwatch) {
+    const colorInput = customSwatch.querySelector(".tb-color-input");
+    colorInput.addEventListener("input", (e) => {
+      applyTextColor(e.target.value);
+    });
+  }
+
+  // Alignment buttons
+  document.querySelectorAll(".word-toolbar [data-align]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const align = button.dataset.align;
+      if (align === "left") {
+        // Remove alignment wrapper if selected text has one
+        wrapSelection("", "", "텍스트");
+      } else {
+        wrapSelection(`<div style="text-align: ${align};">`, "</div>", "정렬할 텍스트");
+      }
+    });
   });
 
-  el.slug.addEventListener("input", () => {
-    state.slugManuallyEdited = true;
-  });
+  // Slug is now auto-generated (numeric), no manual editing needed
 
   [
     el.title,

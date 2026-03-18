@@ -203,7 +203,6 @@ label {
   height: 18px;
 }
 
-.toolbar,
 .tabs {
   display: flex;
   flex-wrap: wrap;
@@ -211,57 +210,114 @@ label {
   margin-bottom: 10px;
 }
 
-.toolbar {
-  align-items: center;
-}
+/* --- Word-style toolbar --- */
 
-.toolbar-group {
+.word-toolbar {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
   align-items: center;
-  padding: 6px;
-  border: 1px solid #e7ebf0;
+  gap: 2px;
+  padding: 6px 8px;
+  background: #f8f9fb;
+  border: 1px solid #e2e6ec;
   border-radius: 10px;
-  background: #fcfcfb;
 }
 
-.toolbar button {
-  background: #fafaf9;
+.tb-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
 }
 
-.mini-label {
-  margin: 0;
+.tb-sep {
+  width: 1px;
+  height: 24px;
+  background: #d5dbe3;
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+.tb-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 6px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.tb-btn:hover {
+  background: #e8ecf1;
+  border-color: #d0d7e0;
+}
+
+.tb-btn:active {
+  background: #dce1e8;
+}
+
+.tb-btn-text {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0 8px;
   color: var(--muted);
-  font-size: 13px;
 }
 
-.color-toolbar {
-  gap: 6px;
+/* Color swatches */
+
+.tb-colors {
+  gap: 3px;
 }
 
-.color-preset {
+.tb-swatch {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  padding: 0;
+  border: 2px solid #e2e6ec;
+  border-radius: 50%;
+  background: var(--sw);
+  cursor: pointer;
+  transition: transform 0.12s, border-color 0.12s;
   position: relative;
-  padding-left: 28px;
 }
 
-.color-preset::before {
-  content: "";
-  position: absolute;
-  left: 10px;
-  top: 50%;
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  background: var(--swatch);
-  transform: translateY(-50%);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+.tb-swatch:hover {
+  transform: scale(1.2);
+  border-color: #94a3b8;
 }
 
-.toolbar-tip {
-  margin-top: -4px;
-  margin-bottom: 8px;
+.tb-swatch-custom {
+  background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.tb-swatch-custom span {
   font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  pointer-events: none;
+}
+
+.tb-color-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  border: none;
+  padding: 0;
 }
 
 .editor-layout {
@@ -757,6 +813,75 @@ body.loading .content {
   min-width: 120px;
 }
 
+/* --- deploy panel --- */
+
+.deploy-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.deploy-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 18px;
+  background: #fbfcfd;
+}
+
+.deploy-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.deploy-card-head h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.deploy-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.deploy-card .muted {
+  font-size: 13px;
+  margin: 0 0 14px;
+}
+
+.deploy-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.deploy-commit-label {
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+
+.deploy-preview {
+  border-color: #bfd3d8;
+  background: linear-gradient(180deg, #f2f7fc 0%, #fff 100%);
+}
+
+.deploy-build {
+  border-color: #d7ead8;
+  background: linear-gradient(180deg, #f1f9f3 0%, #fff 100%);
+}
+
+.deploy-publish {
+  border-color: #f2d8e0;
+  background: linear-gradient(180deg, #fdf2f5 0%, #fff 100%);
+}
+
+.deploy-log-box h4 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
 /* --- responsive overrides --- */
 
 @media (max-width: 1100px) {
@@ -770,6 +895,10 @@ body.loading .content {
 
   .manager-tip {
     max-width: 100%;
+  }
+
+  .deploy-grid {
+    grid-template-columns: 1fr;
   }
 }
 

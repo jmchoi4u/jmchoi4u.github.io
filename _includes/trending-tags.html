@@ -1,0 +1,50 @@
+<!-- Popular posts by views (replaces trending tags) -->
+
+{% include lang.html %}
+
+<section id="access-popular">
+  <h2 class="panel-heading">{{- site.data.locales[include.lang].panel.trending_tags -}}</h2>
+  <ul class="content list-unstyled ps-0 pb-1 ms-1 mt-2" id="popular-posts">
+    {% for post in site.posts limit: 5 %}
+      <li class="text-truncate lh-lg">
+        <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
+      </li>
+    {% endfor %}
+  </ul>
+</section>
+
+<script>
+(function() {
+  var posts = [
+    {% for post in site.posts limit: 30 %}
+    { url: {{ post.url | jsonify }}, title: {{ post.title | jsonify }}, href: {{ post.url | relative_url | jsonify }} },
+    {% endfor %}
+  ];
+
+  var gcId = {{ site.analytics.goatcounter.id | jsonify }};
+  if (!gcId || posts.length === 0) return;
+
+  Promise.all(posts.map(function(p) {
+    var uri = p.url.replace(/\/$/, '');
+    return fetch('https://' + gcId + '.goatcounter.com/counter/' + encodeURIComponent(uri) + '.json')
+      .then(function(r) { return r.json(); })
+      .then(function(d) { p.views = parseInt((d.count || '0').replace(/\D/g, ''), 10) || 0; return p; })
+      .catch(function() { p.views = 0; return p; });
+  })).then(function(results) {
+    results.sort(function(a, b) { return b.views - a.views; });
+    var top5 = results.slice(0, 5);
+    var ul = document.getElementById('popular-posts');
+    if (!ul) return;
+    ul.innerHTML = '';
+    top5.forEach(function(p) {
+      var li = document.createElement('li');
+      li.className = 'text-truncate lh-lg';
+      var a = document.createElement('a');
+      a.href = p.href;
+      a.textContent = p.title;
+      li.appendChild(a);
+      ul.appendChild(li);
+    });
+  });
+})();
+</script>

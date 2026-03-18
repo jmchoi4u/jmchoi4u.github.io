@@ -81,7 +81,7 @@
 
               <div class="grid two">
                 <label>글 제목<input id="post-title" type="text" placeholder="예: Chirpy 블로그 설정 기록"></label>
-                <label>파일 이름 (.md)<input id="post-slug" type="text" placeholder="예: chirpy-setup-note.md"></label>
+                <label>파일 이름 (.md)<input id="post-slug" type="text" placeholder="자동 생성 (숫자 순번)" readonly disabled style="background:#f3f5f8;color:var(--muted)"></label>
               </div>
 
               <div class="grid two">
@@ -134,44 +134,84 @@
             <section class="editor-block tone-slate">
               <div class="editor-block-header">
                 <div>
-                  <h3>빠른 서식</h3>
-                  <p class="muted">본문에서 글자를 드래그한 뒤 버튼을 누르면 서식이 바로 적용됩니다.</p>
+                  <h3>서식 도구</h3>
+                  <p class="muted">글자를 드래그한 뒤 버튼을 누르면 서식이 적용됩니다.</p>
                 </div>
                 <span class="editor-chip">도구</span>
               </div>
 
-              <div class="toolbar">
-                <div class="toolbar-group">
-                  <button type="button" data-wrap-before="**" data-wrap-after="**" data-wrap-placeholder="강조할 글">굵게</button>
-                  <button type="button" data-wrap-before="*" data-wrap-after="*" data-wrap-placeholder="기울일 글">기울임</button>
-                  <button type="button" data-wrap-before="<u>" data-wrap-after="</u>" data-wrap-placeholder="밑줄 글">밑줄</button>
-                  <button type="button" data-wrap-before="~~" data-wrap-after="~~" data-wrap-placeholder="취소선 글">취소선</button>
-                  <button type="button" data-wrap-before="<mark>" data-wrap-after="</mark>" data-wrap-placeholder="강조 표시">형광펜</button>
+              <div class="word-toolbar">
+                <div class="tb-group">
+                  <button type="button" class="tb-btn" data-wrap-before="**" data-wrap-after="**" data-wrap-placeholder="굵게" title="굵게"><b>B</b></button>
+                  <button type="button" class="tb-btn" data-wrap-before="*" data-wrap-after="*" data-wrap-placeholder="기울임" title="기울임"><i>I</i></button>
+                  <button type="button" class="tb-btn" data-wrap-before="<u>" data-wrap-after="</u>" data-wrap-placeholder="밑줄" title="밑줄"><u>U</u></button>
+                  <button type="button" class="tb-btn" data-wrap-before="~~" data-wrap-after="~~" data-wrap-placeholder="취소선" title="취소선"><s>S</s></button>
+                  <button type="button" class="tb-btn" data-wrap-before="<mark>" data-wrap-after="</mark>" data-wrap-placeholder="형광펜" title="형광펜"><span style="background:#fde68a;padding:0 3px;border-radius:2px;">H</span></button>
+                  <button type="button" class="tb-btn" data-wrap-before="<sup>" data-wrap-after="</sup>" data-wrap-placeholder="위첨자" title="위첨자">X<sup style="font-size:9px">2</sup></button>
+                  <button type="button" class="tb-btn" data-wrap-before="<sub>" data-wrap-after="</sub>" data-wrap-placeholder="아래첨자" title="아래첨자">X<sub style="font-size:9px">2</sub></button>
                 </div>
 
-                <div class="toolbar-group color-toolbar">
-                  <span class="mini-label">주요 색상</span>
-                  <button type="button" class="color-preset" data-text-color="#111827" style="--swatch: #111827;">검정</button>
-                  <button type="button" class="color-preset" data-text-color="#b91c1c" style="--swatch: #b91c1c;">빨강</button>
-                  <button type="button" class="color-preset" data-text-color="#1d4ed8" style="--swatch: #1d4ed8;">파랑</button>
-                  <button type="button" class="color-preset" data-text-color="#7c3aed" style="--swatch: #7c3aed;">보라</button>
-                  <button type="button" class="color-preset" data-text-color="#047857" style="--swatch: #047857;">초록</button>
-                  <button type="button" class="color-preset" data-text-color="#6b7280" style="--swatch: #6b7280;">회색</button>
+                <span class="tb-sep"></span>
+
+                <div class="tb-group">
+                  <button type="button" class="tb-btn" data-insert="# " title="제목 1">H1</button>
+                  <button type="button" class="tb-btn" data-insert="## " title="제목 2">H2</button>
+                  <button type="button" class="tb-btn" data-insert="### " title="제목 3">H3</button>
                 </div>
 
-                <div class="toolbar-group">
-                  <button type="button" data-insert="# 제목">제목</button>
-                  <button type="button" data-insert="## 소제목">소제목</button>
-                  <button type="button" data-insert="- 항목">목록</button>
-                  <button type="button" data-insert="> 인용문">인용</button>
-                  <button type="button" data-insert="`코드`">코드</button>
-                  <button type="button" data-insert="```bash&#10;bundle exec jekyll serve&#10;```">코드 블록</button>
-                  <button type="button" data-insert="![이미지 설명](/assets/img/posts/sample/image.png)">이미지</button>
-                  <button type="button" data-insert="## English Summary&#10;&#10;This post explains the main idea in English.">영어 요약</button>
+                <span class="tb-sep"></span>
+
+                <div class="tb-group">
+                  <button type="button" class="tb-btn" data-align="left" title="왼쪽 정렬">&#9776;</button>
+                  <button type="button" class="tb-btn" data-align="center" title="가운데 정렬">&#9779;</button>
+                  <button type="button" class="tb-btn" data-align="right" title="오른쪽 정렬">&#9782;</button>
+                </div>
+
+                <span class="tb-sep"></span>
+
+                <div class="tb-group">
+                  <button type="button" class="tb-btn" data-insert="- " title="목록">&#8226;</button>
+                  <button type="button" class="tb-btn" data-insert="1. " title="번호 목록">1.</button>
+                  <button type="button" class="tb-btn" data-insert="- [ ] " title="체크리스트">&#9744;</button>
+                  <button type="button" class="tb-btn" data-insert="> " title="인용">&#10077;</button>
+                  <button type="button" class="tb-btn" data-insert="---&#10;" title="구분선">&#8213;</button>
+                </div>
+
+                <span class="tb-sep"></span>
+
+                <div class="tb-group">
+                  <button type="button" class="tb-btn" data-wrap-before="`" data-wrap-after="`" data-wrap-placeholder="코드" title="인라인 코드">&lt;/&gt;</button>
+                  <button type="button" class="tb-btn" data-insert="```&#10;&#10;```" title="코드 블록">{ }</button>
+                  <button type="button" class="tb-btn" data-insert="| 제목 | 설명 |&#10;| --- | --- |&#10;| 내용 | 내용 |" title="표">&#9638;</button>
+                  <button type="button" class="tb-btn" data-wrap-before="[" data-wrap-after="](https://)" data-wrap-placeholder="링크 텍스트" title="링크">&#128279;</button>
+                  <button type="button" class="tb-btn" data-insert="![이미지 설명](/assets/img/posts/sample/image.png)" title="이미지">&#128247;</button>
+                </div>
+
+                <span class="tb-sep"></span>
+
+                <div class="tb-group tb-colors">
+                  <button type="button" class="tb-swatch" data-text-color="#111827" style="--sw:#111827" title="검정"></button>
+                  <button type="button" class="tb-swatch" data-text-color="#b91c1c" style="--sw:#b91c1c" title="빨강"></button>
+                  <button type="button" class="tb-swatch" data-text-color="#ea580c" style="--sw:#ea580c" title="주황"></button>
+                  <button type="button" class="tb-swatch" data-text-color="#ca8a04" style="--sw:#ca8a04" title="노랑"></button>
+                  <button type="button" class="tb-swatch" data-text-color="#16a34a" style="--sw:#16a34a" title="초록"></button>
+                  <button type="button" class="tb-swatch" data-text-color="#1d4ed8" style="--sw:#1d4ed8" title="파랑"></button>
+                  <button type="button" class="tb-swatch" data-text-color="#7c3aed" style="--sw:#7c3aed" title="보라"></button>
+                  <button type="button" class="tb-swatch" data-text-color="#db2777" style="--sw:#db2777" title="핑크"></button>
+                  <button type="button" class="tb-swatch" data-text-color="#6b7280" style="--sw:#6b7280" title="회색"></button>
+                  <button type="button" class="tb-swatch tb-swatch-custom" data-text-color="custom" title="직접 선택">
+                    <span>+</span>
+                    <input type="color" class="tb-color-input" value="#355f67">
+                  </button>
+                </div>
+
+                <span class="tb-sep"></span>
+
+                <div class="tb-group">
+                  <button type="button" class="tb-btn tb-btn-text" data-insert="<details>&#10;<summary>접기/펼치기</summary>&#10;&#10;내용&#10;&#10;</details>" title="접기 영역">접기</button>
+                  <button type="button" class="tb-btn tb-btn-text" data-insert="## English Summary&#10;&#10;This post explains the main idea in English." title="영어 요약 섹션">EN</button>
                 </div>
               </div>
-
-              <p class="muted toolbar-tip">글자색과 밑줄은 HTML 태그 방식으로 저장되며 Chirpy에서 정상 표시됩니다.</p>
             </section>
 
             <section class="editor-block tone-ink">
@@ -209,6 +249,7 @@
           </div>
 
           <input id="original-path" type="hidden">
+          <input id="post-permalink" type="hidden">
         </section>
 
         <section id="posts-manager" class="card screen">
@@ -304,34 +345,57 @@
           <div class="title-row">
             <div>
               <h2>테스트 / 배포</h2>
-              <p class="muted">로컬 미리보기, 정적 빌드 테스트, GitHub 발행 버튼을 제공합니다.</p>
+              <p class="muted">로컬 미리보기와 GitHub 배포를 관리합니다.</p>
             </div>
           </div>
 
-          <div class="row wrap">
-            <button id="start-preview-btn" type="button" class="primary">미리보기 시작</button>
-            <button id="stop-preview-btn" type="button">미리보기 중지</button>
-            <button id="build-btn" type="button">테스트 빌드</button>
-            <button id="open-preview-btn" type="button">미리보기 열기</button>
+          <div class="deploy-grid">
+            <div class="deploy-card deploy-preview">
+              <div class="deploy-card-head">
+                <span class="deploy-icon">&#128065;</span>
+                <h3>로컬 미리보기</h3>
+              </div>
+              <p class="muted">Jekyll 서버를 실행해 변경사항을 브라우저에서 바로 확인합니다.</p>
+              <div class="deploy-actions">
+                <button id="start-preview-btn" type="button" class="primary">시작</button>
+                <button id="stop-preview-btn" type="button">중지</button>
+                <button id="open-preview-btn" type="button">브라우저에서 열기</button>
+              </div>
+            </div>
+
+            <div class="deploy-card deploy-build">
+              <div class="deploy-card-head">
+                <span class="deploy-icon">&#9881;</span>
+                <h3>빌드 테스트</h3>
+              </div>
+              <p class="muted">배포 전 정적 빌드를 돌려 오류가 없는지 확인합니다.</p>
+              <div class="deploy-actions">
+                <button id="build-btn" type="button">테스트 빌드 실행</button>
+              </div>
+            </div>
+
+            <div class="deploy-card deploy-publish">
+              <div class="deploy-card-head">
+                <span class="deploy-icon">&#128640;</span>
+                <h3>GitHub 배포</h3>
+              </div>
+              <p class="muted">모든 변경사항을 커밋하고 GitHub에 푸시합니다.</p>
+              <label class="deploy-commit-label">커밋 메시지
+                <input id="publish-message" type="text" placeholder="예: 새 글 추가">
+              </label>
+              <div class="deploy-actions">
+                <button id="publish-btn" type="button" class="danger">배포</button>
+              </div>
+            </div>
           </div>
 
-          <div class="publish-box">
-            <label class="grow">배포 커밋 메시지<input id="publish-message" type="text" placeholder="예: 블로그 글 추가 및 설정 정리"></label>
-            <button id="publish-btn" type="button" class="danger">전체 변경 GitHub 배포</button>
-          </div>
-
-          <div class="soft-box helper-box">
-            <h3>미리보기 사용 방법</h3>
-            <p class="muted">웹앱 안에 미리보기 화면을 넣지 않고, 필요할 때만 <strong>미리보기 열기</strong> 버튼으로 실제 사이트를 새 탭에서 확인하도록 단순화했습니다.</p>
-          </div>
-
-          <div class="grid two">
-            <div>
-              <h3>명령 결과</h3>
+          <div class="grid two" style="margin-top: 16px;">
+            <div class="deploy-log-box">
+              <h4>명령 결과</h4>
               <pre id="command-output" class="code-box"></pre>
             </div>
-            <div>
-              <h3>미리보기 로그</h3>
+            <div class="deploy-log-box">
+              <h4>미리보기 로그</h4>
               <pre id="preview-log-output" class="code-box"></pre>
             </div>
           </div>

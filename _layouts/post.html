@@ -130,7 +130,7 @@ script_includes:
   <!-- Post-specific Scripts (placed here to execute on Pjax/Turbo loads) -->
   <script>
     (function() {
-      // Reading Progress Bar
+      /* Reading Progress Bar */
       var bar = document.getElementById('reading-progress');
       if (!bar) {
         bar = document.createElement('div');
@@ -140,12 +140,12 @@ script_includes:
       var hero = document.querySelector('.post-hero');
       var stickyBar = document.getElementById('sticky-title-bar');
 
-      // Subscribe bell with mobile overlay
+      /* Subscribe bell with mobile overlay */
       var bell = document.getElementById('subscribe-bell');
       var popup = document.getElementById('subscribe-popup');
       var closeBtn = document.getElementById('subscribe-close');
       
-      // We attach the click listeners to current elements.
+      /* We attach the click listeners to current elements. */
       if (bell && popup) {
         bell.addEventListener('click', function(e) {
           e.stopPropagation();
@@ -160,7 +160,7 @@ script_includes:
               document.body.appendChild(overlay);
               overlay.addEventListener('click', function() {
                 var p = document.getElementById('subscribe-popup');
-                if (p) p.classList.remove('show');
+                if (p) { p.classList.remove('show'); }
                 overlay.style.display = 'none';
               });
             }
@@ -172,11 +172,11 @@ script_includes:
           closeBtn.addEventListener('click', function() {
             popup.classList.remove('show');
             var overlay = document.getElementById('subscribe-overlay');
-            if (overlay) overlay.style.display = 'none';
+            if (overlay) { overlay.style.display = 'none'; }
           });
         }
 
-        // We use a global listener tracking flag to avoid adding it multiple times on Navigation
+        /* We use a global listener tracking flag to avoid adding it multiple times on Navigation */
         if (!window.__subscribeDocListenerAdded) {
           window.__subscribeDocListenerAdded = true;
           document.addEventListener('click', function(e) {
@@ -186,19 +186,19 @@ script_includes:
             if (currentPopup && currentPopup.classList.contains('show') && !currentPopup.contains(e.target)) {
               if (currentBell && !currentBell.contains(e.target) && e.target !== currentBell) {
                 currentPopup.classList.remove('show');
-                if (currentOverlay) currentOverlay.style.display = 'none';
+                if (currentOverlay) { currentOverlay.style.display = 'none'; }
               }
             }
           });
         }
       }
 
-      // Scroll event for Progress Bar and Sticky Header
+      /* Scroll event for Progress Bar and Sticky Header */
       if (!window.__postScrollListenerAdded) {
         window.__postScrollListenerAdded = true;
         window.addEventListener('scroll', function() {
           var h = document.documentElement;
-          var pct = h.scrollTop / (h.scrollHeight - h.clientHeight) * 100;
+          var pct = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
           var currentBar = document.getElementById('reading-progress');
           if (currentBar) {
             currentBar.style.width = Math.min(pct, 100) + '%';

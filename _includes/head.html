@@ -98,6 +98,36 @@
     <link rel="stylesheet" href="{{ site.data.origin[type].glightbox.css | relative_url }}">
   {% endif %}
 
+  <!-- Home page styles -->
+  {% if page.layout == 'home' %}
+    <style>
+      /* Hover effect */
+      .home-card{transition:transform 0.2s ease,box-shadow 0.2s ease;border-radius:0.75rem!important;overflow:hidden}
+      .home-card:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,0,0,0.15)}
+      [data-mode="dark"] .home-card:hover{box-shadow:0 8px 24px rgba(0,0,0,0.4)}
+
+      /* Auto thumbnail */
+      .auto-thumb{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:140px;border-radius:0.75rem 0 0 0.75rem;gap:8px}
+      .auto-thumb-icon{font-size:2rem;opacity:0.9}
+      .auto-thumb-cat{font-size:0.75rem;font-weight:600;opacity:0.8;letter-spacing:0.5px}
+      .auto-thumb-0{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff}
+      .auto-thumb-1{background:linear-gradient(135deg,#f093fb,#f5576c);color:#fff}
+      .auto-thumb-2{background:linear-gradient(135deg,#4facfe,#00f2fe);color:#fff}
+      .auto-thumb-3{background:linear-gradient(135deg,#43e97b,#38f9d7);color:#1a1a1a}
+      .auto-thumb-4{background:linear-gradient(135deg,#fa709a,#fee140);color:#1a1a1a}
+      @media(max-width:767px){
+        .auto-thumb{border-radius:0.75rem 0.75rem 0 0;min-height:100px}
+      }
+
+      /* Tag pills */
+      .post-tag-pill{display:inline-block;padding:2px 8px;margin:2px;font-size:0.68rem;border-radius:12px;background:var(--btn-border-color,#e2e6ec);color:var(--text-muted-color,#697586);white-space:nowrap}
+
+      /* Reading time icon spacing */
+      .post-meta .fa-clock{margin-left:1.5rem}
+      @media(min-width:768px){.post-meta .fa-clock{margin-left:1.75rem}}
+    </style>
+  {% endif %}
+
   <!-- Custom styles -->
   {% if page.layout == 'post' %}
     <style>

@@ -5,7 +5,7 @@
 <section id="access-popular">
   <h2 class="panel-heading">{{- site.data.locales[include.lang].panel.trending_tags -}}</h2>
   <ul class="content list-unstyled ps-0 pb-1 ms-1 mt-2" id="popular-posts">
-    {% for post in site.posts limit: 5 %}
+    {% for post in site.posts limit: 3 %}
       <li class="text-truncate lh-lg">
         <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
       </li>
@@ -32,7 +32,7 @@
       .catch(function() { p.views = 0; return p; });
   })).then(function(results) {
     results.sort(function(a, b) { return b.views - a.views; });
-    var top5 = results.slice(0, 5);
+    var top5 = results.slice(0, 3);
     var ul = document.getElementById('popular-posts');
     if (!ul) return;
     ul.innerHTML = '';

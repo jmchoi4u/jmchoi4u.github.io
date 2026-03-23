@@ -214,13 +214,16 @@
               </div>
             </section>
 
-            <section class="editor-block tone-ink">
+            <section class="editor-block tone-ink" id="body-block">
               <div class="editor-block-header">
                 <div>
                   <h3>본문</h3>
                   <p class="muted">옵시디언 초안을 붙여넣고 필요한 부분만 다듬으면 됩니다.</p>
                 </div>
-                <span class="editor-chip">작성</span>
+                <div class="row" style="gap:6px">
+                  <span id="word-counter" class="editor-chip" style="font-size:11px;min-width:auto;padding:4px 8px">0자 · 0단어 · 약 0분</span>
+                  <button type="button" id="fullscreen-btn" class="editor-chip" style="cursor:pointer;font-size:11px;min-width:auto;padding:4px 8px" title="전체화면 글쓰기 (Esc로 나가기)">⛶ 집중모드</button>
+                </div>
               </div>
 
               <div class="editor-preview-grid">

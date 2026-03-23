@@ -913,6 +913,87 @@ async function uploadImage() {
   setOutput("이미지 저장 완료", data.sitePath);
 }
 
+function setupAutocomplete(inputEl, getOptions, isMulti = false) {
+  if (!inputEl) return;
+  const wrap = document.createElement("div");
+  wrap.className = "autocomplete-wrap";
+  inputEl.parentNode.insertBefore(wrap, inputEl);
+  wrap.appendChild(inputEl);
+
+  const list = document.createElement("div");
+  list.className = "autocomplete-list";
+  wrap.appendChild(list);
+
+  let selectedIdx = -1;
+
+  function getCurrentToken() {
+    if (!isMulti) return inputEl.value.trim();
+    const parts = inputEl.value.split(",");
+    return (parts[parts.length - 1] || "").trim();
+  }
+
+  function setCurrentToken(value) {
+    if (!isMulti) {
+      inputEl.value = value;
+    } else {
+      const parts = inputEl.value.split(",").map((s) => s.trim());
+      parts[parts.length - 1] = value;
+      inputEl.value = parts.join(", ");
+    }
+  }
+
+  function render(query) {
+    const options = getOptions();
+    const q = query.toLowerCase();
+    const filtered = q ? options.filter((o) => o.toLowerCase().includes(q)) : options;
+    if (filtered.length === 0 || (filtered.length === 1 && filtered[0].toLowerCase() === q)) {
+      list.classList.remove("show");
+      return;
+    }
+    selectedIdx = -1;
+    list.innerHTML = filtered.slice(0, 8).map((o, i) =>
+      `<div class="autocomplete-item" data-idx="${i}" data-value="${escapeHtml(o)}">${escapeHtml(o)}</div>`
+    ).join("");
+    list.classList.add("show");
+  }
+
+  inputEl.addEventListener("input", () => render(getCurrentToken()));
+  inputEl.addEventListener("focus", () => render(getCurrentToken()));
+
+  inputEl.addEventListener("keydown", (e) => {
+    if (!list.classList.contains("show")) return;
+    const items = list.querySelectorAll(".autocomplete-item");
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      selectedIdx = Math.min(selectedIdx + 1, items.length - 1);
+      items.forEach((el, i) => el.classList.toggle("selected", i === selectedIdx));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      selectedIdx = Math.max(selectedIdx - 1, 0);
+      items.forEach((el, i) => el.classList.toggle("selected", i === selectedIdx));
+    } else if (e.key === "Enter" && selectedIdx >= 0) {
+      e.preventDefault();
+      setCurrentToken(items[selectedIdx].dataset.value);
+      list.classList.remove("show");
+    } else if (e.key === "Escape") {
+      list.classList.remove("show");
+    }
+  });
+
+  list.addEventListener("click", (e) => {
+    const item = e.target.closest(".autocomplete-item");
+    if (item) {
+      setCurrentToken(item.dataset.value);
+      list.classList.remove("show");
+      inputEl.focus();
+    }
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!wrap.contains(e.target)) list.classList.remove("show");
+  });
+}
+
 function bind() {
   document.querySelectorAll(".nav-tab").forEach((button) => {
     button.addEventListener("click", () => run(async () => {
@@ -1072,15 +1153,142 @@ function bind() {
 
   el.templateSelect.addEventListener("change", () => run(loadTemplateText));
 
+  // --- Keyboard Shortcuts ---
   document.addEventListener("keydown", (event) => {
-    if ((event.ctrlKey || event.metaKey) && event.key === "s") {
+    const mod = event.ctrlKey || event.metaKey;
+
+    // Ctrl+S: save
+    if (mod && event.key === "s") {
       event.preventDefault();
       if (state.panel === "editor") run(savePost);
+      return;
     }
-    if ((event.ctrlKey || event.metaKey) && event.key === "n") {
+    // Ctrl+N: new post
+    if (mod && event.key === "n") {
       event.preventDefault();
       run(beginNewPost);
+      return;
     }
+
+    // Shortcuts only when body textarea is focused
+    if (document.activeElement !== el.body) return;
+
+    // Ctrl+B: bold
+    if (mod && event.key === "b") {
+      event.preventDefault();
+      wrapSelection("**", "**", "굵게");
+      showShortcutHint("굵게 (Ctrl+B)");
+      return;
+    }
+    // Ctrl+I: italic
+    if (mod && event.key === "i") {
+      event.preventDefault();
+      wrapSelection("*", "*", "기울임");
+      showShortcutHint("기울임 (Ctrl+I)");
+      return;
+    }
+    // Ctrl+U: underline
+    if (mod && event.key === "u") {
+      event.preventDefault();
+      wrapSelection("<u>", "</u>", "밑줄");
+      showShortcutHint("밑줄 (Ctrl+U)");
+      return;
+    }
+    // Ctrl+K: link
+    if (mod && event.key === "k") {
+      event.preventDefault();
+      wrapSelection("[", "](https://)", "링크 텍스트");
+      showShortcutHint("링크 (Ctrl+K)");
+      return;
+    }
+    // Ctrl+Shift+C: inline code
+    if (mod && event.shiftKey && event.key === "C") {
+      event.preventDefault();
+      wrapSelection("`", "`", "코드");
+      showShortcutHint("인라인 코드 (Ctrl+Shift+C)");
+      return;
+    }
+    // Ctrl+Shift+K: code block
+    if (mod && event.shiftKey && event.key === "K") {
+      event.preventDefault();
+      insertAtCursor("```\n\n```");
+      showShortcutHint("코드 블록 (Ctrl+Shift+K)");
+      return;
+    }
+    // Escape: exit fullscreen
+    if (event.key === "Escape" && state.fullscreen) {
+      event.preventDefault();
+      toggleFullscreen();
+      return;
+    }
+  });
+
+  // --- Shortcut Hint Toast ---
+  function showShortcutHint(text) {
+    let hint = document.querySelector(".shortcut-hint");
+    if (!hint) {
+      hint = document.createElement("div");
+      hint.className = "shortcut-hint";
+      document.body.appendChild(hint);
+    }
+    hint.textContent = text;
+    hint.classList.add("show");
+    clearTimeout(hint._timer);
+    hint._timer = setTimeout(() => hint.classList.remove("show"), 1200);
+  }
+
+  // --- Word Counter ---
+  function updateWordCounter() {
+    const text = el.body.value;
+    const chars = text.length;
+    const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+    const minutes = Math.max(1, Math.round(words / 200));
+    const counter = document.getElementById("word-counter");
+    if (counter) {
+      counter.textContent = `${chars}자 · ${words}단어 · 약 ${minutes}분`;
+    }
+  }
+  el.body.addEventListener("input", updateWordCounter);
+  updateWordCounter();
+
+  // --- Fullscreen / Focus Mode ---
+  state.fullscreen = false;
+  const fullscreenBtn = document.getElementById("fullscreen-btn");
+  function toggleFullscreen() {
+    const block = document.getElementById("body-block");
+    if (!block) return;
+    state.fullscreen = !state.fullscreen;
+    block.classList.toggle("fullscreen-mode", state.fullscreen);
+    fullscreenBtn.textContent = state.fullscreen ? "✕ 집중모드 끝내기" : "⛶ 집중모드";
+    if (state.fullscreen) el.body.focus();
+  }
+  if (fullscreenBtn) {
+    fullscreenBtn.addEventListener("click", toggleFullscreen);
+  }
+
+  // --- Tag/Category Autocomplete ---
+  setupAutocomplete(el.tags, () => {
+    const tagSet = new Set();
+    for (const post of state.posts) {
+      (post.tags || []).forEach((t) => tagSet.add(t));
+    }
+    return [...tagSet].sort();
+  }, true);
+
+  setupAutocomplete(el.categoryMain, () => {
+    const catSet = new Set();
+    for (const post of state.posts) {
+      (post.categories || []).forEach((c) => catSet.add(c));
+    }
+    return [...catSet].sort();
+  });
+
+  setupAutocomplete(el.categorySub, () => {
+    const catSet = new Set();
+    for (const post of state.posts) {
+      (post.categories || []).forEach((c) => catSet.add(c));
+    }
+    return [...catSet].sort();
   });
 
   // Image drag & drop on body textarea

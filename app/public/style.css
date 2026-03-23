@@ -1138,3 +1138,90 @@ body.loading .content {
     flex: 1;
   }
 }
+
+/* ===== Fullscreen / Focus Mode ===== */
+.fullscreen-mode {
+  position: fixed !important;
+  inset: 0;
+  z-index: 9999;
+  background: var(--bg);
+  border-radius: 0 !important;
+  border: none !important;
+  margin: 0 !important;
+  padding: 24px 48px !important;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+.fullscreen-mode .editor-block-header {
+  flex-shrink: 0;
+}
+.fullscreen-mode .editor-preview-grid {
+  flex: 1;
+  min-height: 0;
+}
+.fullscreen-mode .editor-preview-grid textarea {
+  min-height: 0;
+  flex: 1;
+}
+.fullscreen-mode .markdown-preview {
+  max-height: none;
+}
+.fullscreen-mode #fullscreen-btn {
+  background: var(--danger) !important;
+  color: #fff !important;
+  border-color: var(--danger) !important;
+}
+
+/* ===== Autocomplete Dropdown ===== */
+.autocomplete-wrap {
+  position: relative;
+}
+.autocomplete-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  max-height: 160px;
+  overflow: auto;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  display: none;
+}
+.autocomplete-list.show {
+  display: block;
+}
+.autocomplete-item {
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--text);
+}
+.autocomplete-item:hover,
+.autocomplete-item.selected {
+  background: var(--point-soft);
+  color: var(--point);
+}
+
+/* ===== Keyboard Shortcut Hint ===== */
+.shortcut-hint {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  background: rgba(31, 41, 55, 0.9);
+  color: #e5e7eb;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  z-index: 10000;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.shortcut-hint.show {
+  opacity: 1;
+}

@@ -205,20 +205,6 @@
         .content{font-size:0.95rem;line-height:1.95}
       }
 
-      /* === Mobile: subtle fade-in on scroll === */
-      @media(max-width:768px){
-        .content > h2,
-        .content > h3 {
-          opacity:0;
-          transform:translateY(12px);
-          transition:opacity 0.4s ease,transform 0.4s ease;
-        }
-        .content > h2.revealed,
-        .content > h3.revealed {
-          opacity:1;
-          transform:translateY(0);
-        }
-      }
     </style>
   {% endif %}
 

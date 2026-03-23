@@ -2,22 +2,11 @@
 
 {% include lang.html %}
 
-<style>
-  .popular-rank{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;font-size:0.7rem;font-weight:700;margin-right:6px;flex-shrink:0;line-height:1}
-  .rank-1{background:linear-gradient(135deg,#FFD700,#f7c948);color:#1a1a1a}
-  .rank-2{background:linear-gradient(135deg,#C0C0C0,#a8a8a8);color:#1a1a1a}
-  .rank-3{background:linear-gradient(135deg,#CD7F32,#b87333);color:#fff}
-  .rank-other{background:var(--btn-border-color,#e2e6ec);color:var(--text-muted-color,#697586)}
-  #popular-posts li{display:flex;align-items:center}
-  #popular-posts li a{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-</style>
-
 <section id="access-popular">
   <h2 class="panel-heading">{{- site.data.locales[include.lang].panel.trending_tags -}}</h2>
   <ul class="content list-unstyled ps-0 pb-1 ms-1 mt-2" id="popular-posts">
-    {% for post in site.posts limit: 5 %}
-      <li class="lh-lg">
-        <span class="popular-rank {% if forloop.index == 1 %}rank-1{% elsif forloop.index == 2 %}rank-2{% elsif forloop.index == 3 %}rank-3{% else %}rank-other{% endif %}">{{ forloop.index }}</span>
+    {% for post in site.posts limit: 3 %}
+      <li class="text-truncate lh-lg">
         <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
       </li>
     {% endfor %}
@@ -43,21 +32,16 @@
       .catch(function() { p.views = 0; return p; });
   })).then(function(results) {
     results.sort(function(a, b) { return b.views - a.views; });
-    var top5 = results.slice(0, 5);
+    var top5 = results.slice(0, 3);
     var ul = document.getElementById('popular-posts');
     if (!ul) return;
     ul.innerHTML = '';
-    var rankClasses = ['rank-1','rank-2','rank-3','rank-other','rank-other'];
-    top5.forEach(function(p, i) {
+    top5.forEach(function(p) {
       var li = document.createElement('li');
-      li.className = 'lh-lg';
-      var badge = document.createElement('span');
-      badge.className = 'popular-rank ' + rankClasses[i];
-      badge.textContent = i + 1;
+      li.className = 'text-truncate lh-lg';
       var a = document.createElement('a');
       a.href = p.href;
       a.textContent = p.title;
-      li.appendChild(badge);
       li.appendChild(a);
       ul.appendChild(li);
     });

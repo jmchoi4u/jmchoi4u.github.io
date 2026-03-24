@@ -125,6 +125,10 @@
       /* Reading time icon spacing */
       .post-meta .fa-clock{margin-left:1.5rem}
       @media(min-width:768px){.post-meta .fa-clock{margin-left:1.75rem}}
+
+      /* View count badge in title */
+      .view-count-title{font-size:0.65rem;font-weight:500;color:var(--text-muted-color,#868e96);vertical-align:middle;margin-left:6px;white-space:nowrap}
+      .view-count-title i{font-size:0.6rem;margin-right:2px}
     </style>
   {% endif %}
 
@@ -170,8 +174,7 @@
       .post-hero-meta a.hero-link,.post-hero-meta a{color:rgba(255,255,255,0.9)!important;text-decoration:none}
       .post-hero-meta em{font-style:normal}
 
-      /* Hide pageviews everywhere */
-      #pageviews,.license-wrapper{display:none!important}
+      .license-wrapper{display:none!important}
 
       /* === Mobile readability === */
       @media(max-width:768px){

@@ -40,6 +40,7 @@ const el = {
   toc: document.querySelector("#post-toc"),
   comments: document.querySelector("#post-comments"),
   pin: document.querySelector("#post-pin"),
+  hidden: document.querySelector("#post-hidden"),
   mermaid: document.querySelector("#post-mermaid"),
   math: document.querySelector("#post-math"),
   dateRefresh: document.querySelector("#post-date-refresh"),
@@ -182,6 +183,7 @@ function setActivePanel(panelId) {
   const nextPanel = document.getElementById(panelId) ? panelId : fallbackPanel;
 
   state.panel = nextPanel;
+  try { localStorage.setItem("jm-editor-active-panel", nextPanel); } catch {}
   document.querySelectorAll(".nav-tab").forEach((button) => {
     button.classList.toggle("active", button.dataset.panel === nextPanel);
   });
@@ -215,6 +217,7 @@ function currentEditorData() {
     toc: el.toc.checked,
     comments: el.comments.checked,
     pin: el.pin.checked,
+    hidden: el.hidden.checked,
     mermaid: el.mermaid.checked,
     math: el.math.checked,
     extra: el.extra.value,
@@ -340,6 +343,7 @@ function resetEditor() {
   el.toc.checked = true;
   el.comments.checked = true;
   el.pin.checked = false;
+  el.hidden.checked = false;
   el.mermaid.checked = false;
   el.math.checked = false;
   el.extra.value = "";
@@ -363,6 +367,7 @@ function fillEditor(data) {
   el.toc.checked = data.toc !== false;
   el.comments.checked = data.comments !== false;
   el.pin.checked = Boolean(data.pin);
+  el.hidden.checked = Boolean(data.hidden);
   el.mermaid.checked = Boolean(data.mermaid);
   el.math.checked = Boolean(data.math);
   el.extra.value = data.extra || "";
@@ -410,6 +415,7 @@ function applyTextColor(color) {
 
 function getPostStatus(post) {
   if (post.draft) return { label: "임시저장", cls: "pm-status-draft" };
+  if (post.hidden) return { label: "숨김", cls: "pm-status-hidden" };
   if (post.pendingDeploy) return { label: "배포 대기", cls: "pm-status-pending" };
   return { label: "발행됨", cls: "pm-status-published" };
 }
@@ -421,6 +427,8 @@ function renderPostCard(post) {
   const tags = (post.tags || []).slice(0, 3).map((t) => `<span class="pm-card-tag">${escapeHtml(t)}</span>`).join(" ");
   const desc = post.description ? `<span>${escapeHtml(post.description).slice(0, 40)}</span>` : "";
 
+  const postUrl = post.relativePath.replace(/^_posts\//, "/posts/").replace(/\.md$/, "/").replace(/^\d{4}-\d{2}-\d{2}-/, "");
+
   return `<div class="pm-card" data-path="${escapeHtml(post.relativePath)}">
     <span class="pm-card-status ${status.cls}" title="${status.label}"></span>
     <div class="pm-card-body">
@@ -429,12 +437,14 @@ function renderPostCard(post) {
         ${date ? `<span>📅 ${date}</span>` : ""}
         ${cats ? `<span>📁 ${cats}</span>` : ""}
         ${desc}
+        <span class="pm-card-views" data-post-url="${escapeHtml(postUrl)}" style="display:none">👁 <span class="pm-views-num">-</span></span>
       </div>
       ${tags ? `<div class="pm-card-meta" style="margin-top:3px">${tags}</div>` : ""}
     </div>
     <div class="pm-card-actions">
       <button type="button" data-path="${escapeHtml(post.relativePath)}">수정</button>
       ${post.draft ? `<button type="button" class="primary" data-publish-path="${escapeHtml(post.relativePath)}">발행</button>` : ""}
+      ${!post.draft ? `<button type="button" class="secondary" data-toggle-hidden-path="${escapeHtml(post.relativePath)}">${post.hidden ? "보이기" : "숨기기"}</button>` : ""}
       <button type="button" class="danger" data-delete-path="${escapeHtml(post.relativePath)}" data-title="${escapeHtml(post.title)}">삭제</button>
     </div>
   </div>`;
@@ -476,27 +486,31 @@ function renderPosts(posts) {
   const sorted = sortPosts(filtered, state.sortBy || "newest");
 
   const drafts = sorted.filter((post) => post.draft);
-  const pending = sorted.filter((post) => !post.draft && post.pendingDeploy);
-  const published = sorted.filter((post) => !post.draft && !post.pendingDeploy);
+  const hidden = sorted.filter((post) => !post.draft && post.hidden);
+  const pending = sorted.filter((post) => !post.draft && !post.hidden && post.pendingDeploy);
+  const published = sorted.filter((post) => !post.draft && !post.hidden && !post.pendingDeploy);
 
   // Update counts
   const countAll = document.getElementById("pm-count-all");
   const countPublished = document.getElementById("pm-count-published");
   const countPending = document.getElementById("pm-count-pending");
   const countDrafts = document.getElementById("pm-count-drafts");
+  const countHidden = document.getElementById("pm-count-hidden");
   if (countAll) countAll.textContent = sorted.length;
   if (countPublished) countPublished.textContent = published.length;
   if (countPending) countPending.textContent = pending.length;
   if (countDrafts) countDrafts.textContent = drafts.length;
+  if (countHidden) countHidden.textContent = hidden.length;
 
   // Stats bar
   const statsEl = document.getElementById("pm-stats");
   if (statsEl) {
     statsEl.innerHTML = `
       <div class="pm-stat"><span class="pm-stat-num">${posts.length}</span><span class="pm-stat-label">전체 글</span></div>
-      <div class="pm-stat"><span class="pm-stat-num" style="color:#16a34a">${posts.filter(p => !p.draft && !p.pendingDeploy).length}</span><span class="pm-stat-label">발행됨</span></div>
-      <div class="pm-stat"><span class="pm-stat-num" style="color:#f59e0b">${posts.filter(p => !p.draft && p.pendingDeploy).length}</span><span class="pm-stat-label">배포 대기</span></div>
+      <div class="pm-stat"><span class="pm-stat-num" style="color:#16a34a">${posts.filter(p => !p.draft && !p.hidden && !p.pendingDeploy).length}</span><span class="pm-stat-label">발행됨</span></div>
+      <div class="pm-stat"><span class="pm-stat-num" style="color:#f59e0b">${posts.filter(p => !p.draft && !p.hidden && p.pendingDeploy).length}</span><span class="pm-stat-label">배포 대기</span></div>
       <div class="pm-stat"><span class="pm-stat-num" style="color:#8b5cf6">${posts.filter(p => p.draft).length}</span><span class="pm-stat-label">임시저장</span></div>
+      <div class="pm-stat"><span class="pm-stat-num" style="color:#6b7280">${posts.filter(p => p.hidden).length}</span><span class="pm-stat-label">숨김</span></div>
     `;
   }
 
@@ -506,6 +520,7 @@ function renderPosts(posts) {
   if (activeTab === "published") display = published;
   else if (activeTab === "pending") display = pending;
   else if (activeTab === "drafts") display = drafts;
+  else if (activeTab === "hidden") display = hidden;
   else display = sorted;
 
   // Render list
@@ -515,6 +530,28 @@ function renderPosts(posts) {
       ? display.map(renderPostCard).join("")
       : `<div class="pm-empty">표시할 글이 없습니다.</div>`;
   }
+
+  // Load view counts from GoatCounter
+  loadPostViewCounts();
+}
+
+function loadPostViewCounts() {
+  const gcId = "jmchoi4u";
+  const badges = document.querySelectorAll(".pm-card-views");
+  if (!badges.length) return;
+  badges.forEach((badge) => {
+    const url = badge.dataset.postUrl;
+    if (!url) return;
+    const uri = url.replace(/\/$/, "");
+    fetch(`https://${gcId}.goatcounter.com/counter/${encodeURIComponent(uri)}.json`)
+      .then((r) => r.json())
+      .then((d) => {
+        const views = parseInt((d.count || "0").replace(/\D/g, ""), 10) || 0;
+        badge.querySelector(".pm-views-num").textContent = views + "회";
+        badge.style.display = "inline";
+      })
+      .catch(() => {});
+  });
 }
 
 function renderTemplates(templates) {
@@ -542,11 +579,11 @@ function renderInfoList(target, rows) {
 function parseTemplateText(text, fileName = "") {
   const normalized = String(text || "").replace(/\r\n/g, "\n");
   if (!normalized.startsWith("---\n")) {
-    return { fileName, title: "", date: formatNow(), categories: [], tags: [], description: "", toc: true, comments: true, pin: false, mermaid: false, math: false, extra: "", body: normalized };
+    return { fileName, title: "", date: formatNow(), categories: [], tags: [], description: "", toc: true, comments: true, pin: false, hidden: false, mermaid: false, math: false, extra: "", body: normalized };
   }
   const end = normalized.indexOf("\n---\n", 4);
   if (end === -1) {
-    return { fileName, title: "", date: formatNow(), categories: [], tags: [], description: "", toc: true, comments: true, pin: false, mermaid: false, math: false, extra: "", body: normalized };
+    return { fileName, title: "", date: formatNow(), categories: [], tags: [], description: "", toc: true, comments: true, pin: false, hidden: false, mermaid: false, math: false, extra: "", body: normalized };
   }
   const head = normalized.slice(4, end);
   const body = normalized.slice(end + 5).replace(/^\n/, "");
@@ -567,7 +604,7 @@ function parseTemplateText(text, fileName = "") {
       .filter(Boolean);
   const extra = head
     .split("\n")
-    .filter((line) => !/^(title|date|categories|tags|description|toc|comments|pin|mermaid|math):/.test(line.trim()))
+    .filter((line) => !/^(title|date|categories|tags|description|toc|comments|pin|hidden|mermaid|math):/.test(line.trim()))
     .join("\n")
     .trim();
   return {
@@ -580,6 +617,7 @@ function parseTemplateText(text, fileName = "") {
     toc: pickBool("toc", true),
     comments: pickBool("comments", true),
     pin: pickBool("pin", false),
+    hidden: pickBool("hidden", false),
     mermaid: pickBool("mermaid", false),
     math: pickBool("math", false),
     extra,
@@ -738,6 +776,7 @@ async function savePost() {
       toc: el.toc.checked,
       comments: el.comments.checked,
       pin: el.pin.checked,
+      hidden: el.hidden.checked,
       mermaid: el.mermaid.checked,
       math: el.math.checked,
       permalink: el.permalink.value || "",
@@ -1006,6 +1045,10 @@ function bind() {
   document.querySelector("#refresh-posts-btn").addEventListener("click", () => run(loadPosts));
   document.querySelector("#new-post-btn").addEventListener("click", () => run(beginNewPost));
   document.querySelector("#save-post-btn").addEventListener("click", () => run(savePost));
+  document.querySelector("#save-draft-btn")?.addEventListener("click", () => {
+    el.draft.checked = true;
+    run(savePost);
+  });
   document.querySelector("#delete-post-btn").addEventListener("click", () => run(deleteCurrentPost));
   document.querySelector("#reset-editor-btn").addEventListener("click", () => run(beginNewPost));
   document.querySelector("#upload-image-btn").addEventListener("click", () => run(uploadImage));
@@ -1088,6 +1131,7 @@ function bind() {
     el.toc,
     el.comments,
     el.pin,
+    el.hidden,
     el.mermaid,
     el.math,
     el.dateRefresh
@@ -1117,6 +1161,20 @@ function bind() {
     const deleteButton = event.target.closest("[data-delete-path]");
     if (deleteButton) {
       run(() => deletePostByPath(deleteButton.dataset.deletePath, deleteButton.dataset.title));
+      return;
+    }
+
+    const toggleHiddenButton = event.target.closest("[data-toggle-hidden-path]");
+    if (toggleHiddenButton) {
+      event.stopPropagation();
+      run(async () => {
+        const relativePath = toggleHiddenButton.dataset.toggleHiddenPath;
+        const result = await api("/api/toggle-hidden", { method: "POST", body: JSON.stringify({ relativePath }) });
+        if (result.ok) {
+          alert(result.hidden ? "글이 숨겨졌습니다." : "글이 다시 보입니다.");
+          await loadPosts();
+        }
+      });
       return;
     }
 
@@ -1391,7 +1449,8 @@ async function run(task) {
 async function init() {
   resetEditor();
   bind();
-  setActivePanel(state.panel);
+  const savedPanel = (() => { try { return localStorage.getItem("jm-editor-active-panel"); } catch { return null; } })();
+  setActivePanel(savedPanel || state.panel);
   try {
     await Promise.all([loadSummary(), loadPosts(), loadTemplates(), loadRaw("config")]);
   } catch (error) {

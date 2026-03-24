@@ -1,0 +1,163 @@
+<!-- Post bottom navigation: 추천글 + 최신글 -->
+
+{% include lang.html %}
+
+{% assign latest_posts = site.posts | slice: 0, 4 %}
+{% assign filtered_latest = '' | split: '' %}
+{% for p in latest_posts %}
+  {% unless p.url == page.url %}
+    {% assign filtered_latest = filtered_latest | push: p %}
+  {% endunless %}
+{% endfor %}
+{% assign filtered_latest = filtered_latest | slice: 0, 3 %}
+
+{% assign related = '' | split: '' %}
+{% for cat in page.categories %}
+  {% for p in site.categories[cat] %}
+    {% unless p.url == page.url %}
+      {% unless related contains p %}
+        {% assign related = related | push: p %}
+      {% endunless %}
+    {% endunless %}
+  {% endfor %}
+{% endfor %}
+{% for tag in page.tags %}
+  {% for p in site.tags[tag] %}
+    {% unless p.url == page.url %}
+      {% unless related contains p %}
+        {% assign related = related | push: p %}
+      {% endunless %}
+    {% endunless %}
+  {% endfor %}
+{% endfor %}
+{% assign related = related | slice: 0, 3 %}
+
+<nav class="post-bottom-nav mt-4 mb-3" aria-label="Post Bottom Navigation">
+  <div class="row g-3">
+    <!-- 추천글 (관련글 + 인기글로 3개 채움) -->
+    <div class="col-12 col-md-6">
+      <div class="bottom-nav-section recommend-section">
+        <h4 class="bottom-nav-title">
+          <i class="fas fa-star" style="color:#fbbf24;"></i> 추천글
+        </h4>
+        <ul class="bottom-nav-list" id="recommend-list">
+          {% for p in related %}
+            <li data-url="{{ p.url }}">
+              <a href="{{ p.url | relative_url }}">
+                <span class="bottom-nav-link-title">{{ p.title }}</span>
+                <span class="bottom-nav-date">{{ p.date | date: "%m/%d" }}</span>
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <!-- 최신글 -->
+    <div class="col-12 col-md-6">
+      <div class="bottom-nav-section">
+        <h4 class="bottom-nav-title">
+          <i class="fas fa-fire" style="color:#f59e0b;"></i> 최신글
+        </h4>
+        <ul class="bottom-nav-list">
+          {% for p in filtered_latest %}
+            <li>
+              <a href="{{ p.url | relative_url }}">
+                <span class="bottom-nav-link-title">{{ p.title }}</span>
+                <span class="bottom-nav-date">{{ p.date | date: "%m/%d" }}</span>
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<script>
+(function() {
+  var gcId = {{ site.analytics.goatcounter.id | jsonify | default: 'null' }};
+  var currentUrl = {{ page.url | jsonify }};
+  var recommendList = document.getElementById('recommend-list');
+  if (!recommendList) return;
+
+  // 이미 있는 추천글 URL 수집
+  var existingUrls = [];
+  var existingItems = recommendList.querySelectorAll('li[data-url]');
+  existingItems.forEach(function(li) { existingUrls.push(li.getAttribute('data-url')); });
+
+  var currentCount = existingItems.length;
+  if (currentCount >= 3) return; // 이미 3개면 끝
+  var needed = 3 - currentCount;
+
+  // 모든 포스트 목록
+  var allPosts = [
+    {% for post in site.posts limit: 30 %}
+    { url: {{ post.url | jsonify }}, title: {{ post.title | jsonify }}, href: {{ post.url | relative_url | jsonify }}, date: {{ post.date | date: "%m/%d" | jsonify }} },
+    {% endfor %}
+  ];
+
+  if (!gcId) {
+    // GoatCounter 없으면 최신순으로 채움
+    fillWithPosts(allPosts, needed);
+    return;
+  }
+
+  // GoatCounter에서 조회수 가져와서 인기순으로 채움
+  Promise.all(allPosts.map(function(p) {
+    var uri = p.url.replace(/\/$/, '');
+    return fetch('https://' + gcId + '.goatcounter.com/counter/' + encodeURIComponent(uri) + '.json')
+      .then(function(r) { return r.json(); })
+      .then(function(d) { p.views = parseInt((d.count || '0').replace(/\D/g, ''), 10) || 0; return p; })
+      .catch(function() { p.views = 0; return p; });
+  })).then(function(results) {
+    results.sort(function(a, b) { return b.views - a.views; });
+    fillWithPosts(results, needed);
+  }).catch(function() {
+    fillWithPosts(allPosts, needed);
+  });
+
+  function fillWithPosts(posts, count) {
+    var added = 0;
+    for (var i = 0; i < posts.length && added < count; i++) {
+      var p = posts[i];
+      // 현재 글, 이미 추천에 있는 글 제외
+      if (p.url === currentUrl || existingUrls.indexOf(p.url) !== -1) continue;
+      var li = document.createElement('li');
+      var a = document.createElement('a');
+      a.href = p.href;
+      var titleSpan = document.createElement('span');
+      titleSpan.className = 'bottom-nav-link-title';
+      titleSpan.textContent = p.title;
+      var dateSpan = document.createElement('span');
+      dateSpan.className = 'bottom-nav-date';
+      dateSpan.textContent = p.date;
+      a.appendChild(titleSpan);
+      a.appendChild(dateSpan);
+      li.appendChild(a);
+      recommendList.appendChild(li);
+      existingUrls.push(p.url);
+      added++;
+    }
+  }
+})();
+</script>
+
+<style>
+  .post-bottom-nav{border-top:1px solid var(--border-color,#e9ecef);padding-top:1.5rem}
+  .bottom-nav-section{background:var(--card-bg,rgba(0,0,0,0.02));border-radius:10px;padding:1rem 1.2rem;transition:box-shadow 0.2s}
+  .bottom-nav-section:hover{box-shadow:0 4px 16px rgba(0,0,0,0.08)}
+  [data-mode="dark"] .bottom-nav-section{background:rgba(255,255,255,0.04)}
+  [data-mode="dark"] .bottom-nav-section:hover{box-shadow:0 4px 16px rgba(0,0,0,0.3)}
+  .recommend-section{border-left:3px solid #fbbf24;background:linear-gradient(135deg,rgba(251,191,36,0.06),rgba(251,191,36,0.02))}
+  [data-mode="dark"] .recommend-section{background:linear-gradient(135deg,rgba(251,191,36,0.1),rgba(251,191,36,0.03))}
+  .bottom-nav-title{font-size:0.9rem;font-weight:700;margin-bottom:0.6rem;color:var(--heading-color)}
+  .bottom-nav-title i{margin-right:5px}
+  .bottom-nav-list{list-style:none;padding:0;margin:0}
+  .bottom-nav-list li{padding:0;margin:0}
+  .bottom-nav-list li+li{border-top:1px solid var(--border-color,rgba(0,0,0,0.05))}
+  .bottom-nav-list a{display:flex;justify-content:space-between;align-items:center;gap:8px;text-decoration:none;color:var(--text-color);font-size:0.85rem;padding:7px 6px;border-radius:6px;transition:background 0.15s,transform 0.1s}
+  .bottom-nav-list a:hover{background:var(--btn-border-color,rgba(0,0,0,0.05));transform:translateX(3px);color:var(--link-color,#0056b3)}
+  .bottom-nav-link-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+  .bottom-nav-date{font-size:0.72rem;color:var(--text-muted-color,#868e96);white-space:nowrap;flex-shrink:0}
+</style>

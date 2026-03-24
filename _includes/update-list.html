@@ -1,0 +1,54 @@
+<!-- 최신글 (override update-list) -->
+
+{% include lang.html %}
+
+{% assign MAX_SIZE = 5 %}
+{% assign all_list = '' | split: '' %}
+
+{% for post in site.posts %}
+  {% assign datetime = post.last_modified_at | default: post.date %}
+  {% capture elem %}
+    {{- datetime | date: "%Y%m%d%H%M%S" -}}::{{- forloop.index0 -}}
+  {% endcapture %}
+  {% assign all_list = all_list | push: elem %}
+{% endfor %}
+
+{% assign all_list = all_list | sort | reverse %}
+{% assign update_list = '' | split: '' %}
+
+{% for entry in all_list limit: MAX_SIZE %}
+  {% assign update_list = update_list | push: entry %}
+{% endfor %}
+
+{% if update_list.size > 0 %}
+  <section id="access-lastmod" class="sidebar-section">
+    <h2 class="panel-heading sidebar-heading">
+      <i class="fas fa-bolt" style="color:#f59e0b;"></i> 최신글
+    </h2>
+    <ul class="content list-unstyled ps-0 pb-1 mt-2 sidebar-list">
+      {% for item in update_list %}
+        {% assign index = item | split: '::' | last | plus: 0 %}
+        {% assign post = site.posts[index] %}
+        {% assign url = post.url | relative_url %}
+        <li class="sidebar-list-item">
+          <a href="{{ url }}" class="sidebar-link">
+            <span class="sidebar-link-title">{{ post.title }}</span>
+            <span class="sidebar-link-date">{{ post.date | date: "%m/%d" }}</span>
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
+{% endif %}
+
+<style>
+  .sidebar-section{margin-bottom:1.2rem}
+  .sidebar-heading{font-size:1rem;font-weight:700;color:var(--heading-color);margin-bottom:0.4rem;padding-bottom:0.4rem;border-bottom:2px solid var(--border-color,#e9ecef)}
+  .sidebar-heading i{margin-right:5px}
+  .sidebar-list{font-size:0.85rem;margin:0;padding:0}
+  .sidebar-list-item{margin:0;padding:0}
+  .sidebar-link{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:6px 8px;border-radius:6px;text-decoration:none!important;color:var(--text-color);transition:background 0.15s,transform 0.1s}
+  .sidebar-link:hover{background:var(--btn-border-color,rgba(0,0,0,0.05));transform:translateX(2px);color:var(--link-color,#0056b3)!important}
+  .sidebar-link-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+  .sidebar-link-date{font-size:0.7rem;color:var(--text-muted-color,#868e96);white-space:nowrap;flex-shrink:0}
+</style>

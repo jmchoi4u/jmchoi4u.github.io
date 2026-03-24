@@ -1,8 +1,14 @@
 ---
-title: 나의 첫 포스트
+title: "나의 첫 포스트"
 date: 2026-03-13 02:48:00 +0900
-categories: [끄적끄적]
-tags: [잡글]
+categories: ["끄적끄적"]
+tags: ["잡글"]
+toc: true
+comments: true
+pin: false
+mermaid: false
+math: false
+hidden: true
 permalink: /posts/1/
 ---
 

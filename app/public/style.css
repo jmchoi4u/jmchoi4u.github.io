@@ -61,6 +61,12 @@ button.danger {
   border-color: #e7c0c0;
 }
 
+button.secondary {
+  background: #f3f4f6;
+  color: #4b5563;
+  border-color: #d1d5db;
+}
+
 button.wide {
   width: 100%;
 }
@@ -815,6 +821,26 @@ body.loading .content {
 
 /* --- deploy panel --- */
 
+.shortcut-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--text);
+  background: var(--bg-soft, #f3f4f6);
+  border: 1px solid var(--line);
+  transition: background 0.15s, transform 0.1s;
+}
+.shortcut-btn:hover {
+  background: var(--accent);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
 .deploy-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1067,6 +1093,13 @@ body.loading .content {
 .pm-status-draft {
   background: #8b5cf6;
 }
+.pm-status-hidden {
+  background: #6b7280;
+}
+.pm-badge-hidden {
+  background: #6b7280;
+  color: #fff;
+}
 .pm-card-body {
   flex: 1;
   min-width: 0;
@@ -1098,6 +1131,11 @@ body.loading .content {
   color: var(--point);
   font-size: 0.68rem;
   font-weight: 500;
+}
+.pm-card-views {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #f59e0b;
 }
 .pm-card-actions {
   display: flex;

@@ -96,7 +96,12 @@ layout: default
 
         <div class="col-md-{{ card_body_col }}">
           <div class="card-body d-flex flex-column">
-            <h1 class="card-title my-2 mt-md-0" style="font-size:1.25rem">{{ post.title }}</h1>
+            <h1 class="card-title my-2 mt-md-0" style="font-size:1.25rem">
+              {{ post.title }}
+              <span class="view-count-title" data-post-url="{{ post.url }}" style="display:none;">
+                <i class="far fa-eye"></i> <span class="view-num-title"></span>
+              </span>
+            </h1>
 
             <div class="card-text content mt-0 mb-2" style="font-size:0.85rem;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden">
               <p style="margin:0">{% include post-summary.html %}</p>
@@ -144,3 +149,25 @@ layout: default
 {% if paginator.total_pages > 1 %}
   {% include post-paginator.html %}
 {% endif %}
+
+<script>
+(function() {
+  var gcId = {{ site.analytics.goatcounter.id | jsonify | default: 'null' }};
+  if (!gcId) return;
+  var badges = document.querySelectorAll('.view-count-title');
+  if (!badges.length) return;
+  badges.forEach(function(badge) {
+    var url = badge.getAttribute('data-post-url').replace(/\/$/, '');
+    fetch('https://' + gcId + '.goatcounter.com/counter/' + encodeURIComponent(url) + '.json')
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        var views = parseInt((d.count || '0').replace(/\D/g, ''), 10) || 0;
+        if (views >= 5) {
+          badge.querySelector('.view-num-title').textContent = views;
+          badge.style.display = 'inline';
+        }
+      })
+      .catch(function() {});
+  });
+})();
+</script>

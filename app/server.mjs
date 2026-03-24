@@ -170,11 +170,11 @@ function yamlString(value) {
 function parseDoc(text, fileName = "") {
   const normalized = text.replace(/\r\n/g, "\n");
   if (!normalized.startsWith("---\n")) {
-    return { fileName, title: "", date: "", categories: [], tags: [], description: "", extra: "", body: normalized, draft: false, permalink: "" };
+    return { fileName, title: "", date: "", categories: [], tags: [], description: "", extra: "", body: normalized, draft: false, hidden: false, permalink: "" };
   }
   const end = normalized.indexOf("\n---\n", 4);
   if (end === -1) {
-    return { fileName, title: "", date: "", categories: [], tags: [], description: "", extra: "", body: normalized, draft: false, permalink: "" };
+    return { fileName, title: "", date: "", categories: [], tags: [], description: "", extra: "", body: normalized, draft: false, hidden: false, permalink: "" };
   }
   const head = normalized.slice(4, end);
   const body = normalized.slice(end + 5).replace(/^\n/, "");
@@ -189,7 +189,7 @@ function parseDoc(text, fileName = "") {
   };
   const extra = head
     .split("\n")
-    .filter((line) => !/^(title|date|categories|tags|description|toc|comments|pin|mermaid|math|permalink):/.test(line.trim()))
+    .filter((line) => !/^(title|date|categories|tags|description|toc|comments|pin|mermaid|math|permalink|hidden):/.test(line.trim()))
     .join("\n")
     .trim();
   return {
@@ -204,6 +204,7 @@ function parseDoc(text, fileName = "") {
     pin: pickBool("pin", false),
     mermaid: pickBool("mermaid", false),
     math: pickBool("math", false),
+    hidden: pickBool("hidden", false),
     permalink: pick(/^permalink:\s*(.+)$/m),
     extra,
     body
@@ -230,6 +231,9 @@ function makeDoc(data) {
   lines.push(`pin: ${data.pin ? "true" : "false"}`);
   lines.push(`mermaid: ${data.mermaid ? "true" : "false"}`);
   lines.push(`math: ${data.math ? "true" : "false"}`);
+  if (data.hidden) {
+    lines.push(`hidden: true`);
+  }
   if (data.permalink) {
     lines.push(`permalink: ${data.permalink}`);
   }
@@ -413,6 +417,7 @@ async function listPosts() {
         categories: parsed.categories || [],
         tags: parsed.tags || [],
         draft,
+        hidden: parsed.hidden || false,
         pendingDeploy: !draft && pendingPublishedPaths.has(path.relative(repoRoot, full).replace(/\\/g, "/"))
       });
     }
@@ -535,6 +540,7 @@ async function savePost(data) {
     toc: data.toc !== false,
     comments: data.comments !== false,
     pin: Boolean(data.pin),
+    hidden: Boolean(data.hidden),
     mermaid: Boolean(data.mermaid),
     math: Boolean(data.math),
     permalink,
@@ -573,6 +579,17 @@ async function deletePost(data) {
   return { ok: true, relativePath: normalized, trashPath };
 }
 
+async function toggleHidden(data) {
+  const { normalized, fullPath } = resolveManagedPostPath(data.relativePath);
+  const raw = await fs.readFile(fullPath, "utf8");
+  const parsed = parseDoc(raw, path.basename(fullPath));
+  const newHidden = !parsed.hidden;
+  const newDoc = makeDoc({ ...parsed, hidden: newHidden });
+  await fs.writeFile(fullPath, newDoc, "utf8");
+  rememberLog("POST", `${normalized} → ${newHidden ? "숨김" : "숨김 해제"}`);
+  return { ok: true, relativePath: normalized, hidden: newHidden };
+}
+
 async function publishDraft(data) {
   const { normalized, fullPath } = resolveManagedPostPath(data.relativePath);
   if (!normalized.startsWith("_drafts/")) {
@@ -595,6 +612,7 @@ async function publishDraft(data) {
     toc: parsed.toc !== false,
     comments: parsed.comments !== false,
     pin: Boolean(parsed.pin),
+    hidden: Boolean(parsed.hidden),
     mermaid: Boolean(parsed.mermaid),
     math: Boolean(parsed.math),
     permalink: parsed.permalink || "",
@@ -738,6 +756,7 @@ async function handleApi(req, res, url) {
   if (req.method === "POST" && url.pathname === "/api/save-post") return sendJson(res, 200, await savePost(payload));
   if (req.method === "POST" && url.pathname === "/api/delete-post") return sendJson(res, 200, await deletePost(payload));
   if (req.method === "POST" && url.pathname === "/api/publish-post") return sendJson(res, 200, await publishDraft(payload));
+  if (req.method === "POST" && url.pathname === "/api/toggle-hidden") return sendJson(res, 200, await toggleHidden(payload));
   if (req.method === "POST" && url.pathname === "/api/save-raw-file") { await saveTextFile(payload.kind, payload.content || ""); return sendJson(res, 200, { ok: true }); }
   if (req.method === "POST" && url.pathname === "/api/save-template") { await saveTemplateText(payload.name, payload.content || ""); return sendJson(res, 200, { ok: true }); }
   if (req.method === "POST" && url.pathname === "/api/upload-image") return sendJson(res, 200, await saveImage(payload));

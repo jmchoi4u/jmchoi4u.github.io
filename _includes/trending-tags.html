@@ -1,17 +1,30 @@
-<!-- Popular posts by views (replaces trending tags) -->
+<!-- 인기글 by views (with rank badges) -->
 
 {% include lang.html %}
 
-<section id="access-popular">
-  <h2 class="panel-heading">{{- site.data.locales[include.lang].panel.trending_tags -}}</h2>
-  <ul class="content list-unstyled ps-0 pb-1 ms-1 mt-2" id="popular-posts">
+<section id="access-popular" class="sidebar-section">
+  <h2 class="panel-heading sidebar-heading">
+    <i class="fas fa-trophy" style="color:#f59e0b;"></i> 인기글
+  </h2>
+  <ul class="content list-unstyled ps-0 pb-1 mt-2 sidebar-list" id="popular-posts">
     {% for post in site.posts limit: 3 %}
-      <li class="text-truncate lh-lg">
-        <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
+      <li class="sidebar-list-item">
+        <a href="{{ post.url | relative_url }}" class="sidebar-link popular-link">
+          <span class="rank-badge rank-{{ forloop.index }}">{{ forloop.index }}</span>
+          <span class="sidebar-link-title">{{ post.title }}</span>
+        </a>
       </li>
     {% endfor %}
   </ul>
 </section>
+
+<style>
+  .rank-badge{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;font-size:0.65rem;font-weight:700;flex-shrink:0;margin-right:6px}
+  .rank-1{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1a1a1a}
+  .rank-2{background:linear-gradient(135deg,#d1d5db,#9ca3af);color:#1a1a1a}
+  .rank-3{background:linear-gradient(135deg,#d97706,#b45309);color:#fff}
+  .popular-link{font-weight:500}
+</style>
 
 <script>
 (function() {
@@ -32,16 +45,36 @@
       .catch(function() { p.views = 0; return p; });
   })).then(function(results) {
     results.sort(function(a, b) { return b.views - a.views; });
-    var top5 = results.slice(0, 3);
+    var top3 = results.slice(0, 3);
     var ul = document.getElementById('popular-posts');
     if (!ul) return;
     ul.innerHTML = '';
-    top5.forEach(function(p) {
+    var colors = [
+      'linear-gradient(135deg,#fbbf24,#f59e0b)',
+      'linear-gradient(135deg,#d1d5db,#9ca3af)',
+      'linear-gradient(135deg,#d97706,#b45309)'
+    ];
+    var textColors = ['#1a1a1a','#1a1a1a','#fff'];
+    top3.forEach(function(p, i) {
       var li = document.createElement('li');
-      li.className = 'text-truncate lh-lg';
+      li.className = 'sidebar-list-item';
       var a = document.createElement('a');
       a.href = p.href;
-      a.textContent = p.title;
+      a.className = 'sidebar-link popular-link';
+      var badge = document.createElement('span');
+      badge.className = 'rank-badge';
+      badge.style.background = colors[i];
+      badge.style.color = textColors[i];
+      badge.textContent = i + 1;
+      var title = document.createElement('span');
+      title.className = 'sidebar-link-title';
+      title.textContent = p.title;
+      var viewSpan = document.createElement('span');
+      viewSpan.className = 'sidebar-link-date';
+      viewSpan.textContent = p.views > 0 ? p.views + '회' : '';
+      a.appendChild(badge);
+      a.appendChild(title);
+      a.appendChild(viewSpan);
       li.appendChild(a);
       ul.appendChild(li);
     });

@@ -704,6 +704,43 @@ async function loadRaw(kind = state.rawKind) {
   });
   const data = await api(`/api/raw-file?kind=${encodeURIComponent(kind)}`);
   el.rawEditor.value = data.content || "";
+  if (kind === "config") loadQuickSettings(data.content || "");
+}
+
+function loadQuickSettings(yaml) {
+  const get = (key) => { const m = yaml.match(new RegExp(`^${key}:\\s*(.+)`, "m")); return m ? m[1].trim().replace(/^["']|["']$/g, "") : ""; };
+  const desc = (() => { const m = yaml.match(/^description:\s*>-?\s*\n([\s\S]*?)(?=\n\S|\n*$)/m); return m ? m[1].trim() : get("description"); })();
+  document.querySelector("#qs-title").value = get("title");
+  document.querySelector("#qs-tagline").value = get("tagline");
+  document.querySelector("#qs-description").value = desc;
+  document.querySelector("#qs-avatar").value = get("avatar");
+  updateAvatarPreview();
+}
+
+function updateAvatarPreview() {
+  const img = document.querySelector("#qs-avatar-preview");
+  const val = document.querySelector("#qs-avatar").value.trim();
+  if (val) { img.src = val; img.style.display = "block"; } else { img.style.display = "none"; }
+}
+
+async function saveQuickSettings() {
+  const data = await api(`/api/raw-file?kind=config`);
+  let yaml = data.content || "";
+  const title = document.querySelector("#qs-title").value.trim();
+  const tagline = document.querySelector("#qs-tagline").value.trim();
+  const desc = document.querySelector("#qs-description").value.trim();
+  const avatar = document.querySelector("#qs-avatar").value.trim();
+
+  yaml = yaml.replace(/^(title:\s*).*$/m, `$1${title}`);
+  yaml = yaml.replace(/^(tagline:\s*).*$/m, `$1${tagline}`);
+  yaml = yaml.replace(/^(description:\s*>-?\s*\n)[\s\S]*?(?=\n\S)/m, `$1  ${desc}`);
+  yaml = yaml.replace(/^(avatar:\s*).*$/m, `$1${avatar}`);
+  yaml = yaml.replace(/^(social_preview_image:\s*).*$/m, `$1${avatar}`);
+
+  await api("/api/save-raw-file", { method: "POST", body: JSON.stringify({ kind: "config", content: yaml }) });
+  setOutput("빠른 설정 저장 완료", "블로그 이름/소개/설명/프로필 이미지가 저장되었습니다.");
+  if (state.rawKind === "config") el.rawEditor.value = yaml;
+  await loadSummary();
 }
 
 async function openPost(path) {

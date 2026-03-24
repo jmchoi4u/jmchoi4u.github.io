@@ -516,6 +516,21 @@ HTML 태그 방식으로 넣는 것이 가장 안정적입니다.</code></pre>
             </div>
           </div>
 
+          <!-- 빠른 설정 -->
+          <article class="soft-box" style="margin-bottom:1.2rem">
+            <h3>빠른 설정</h3>
+            <div class="grid two" style="gap:.6rem">
+              <label>블로그 이름<input id="qs-title" type="text" placeholder="Jaemin Choi"></label>
+              <label>블로그 소개 (부제)<input id="qs-tagline" type="text" placeholder="개인에게 더 많은 자유를"></label>
+              <label style="grid-column:1/-1">블로그 설명 (SEO용)<input id="qs-description" type="text" placeholder="문제 해결 과정을 정리하는 개인 블로그입니다."></label>
+              <label>프로필 이미지 경로<input id="qs-avatar" type="text" placeholder="/assets/img/profile/ai_profile2.png"></label>
+              <div style="display:flex;align-items:end;gap:.5rem">
+                <img id="qs-avatar-preview" src="" alt="미리보기" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:1px solid var(--border);display:none">
+                <button id="qs-save-btn" type="button" class="primary">빠른 설정 저장</button>
+              </div>
+            </div>
+          </article>
+
           <div class="row wrap tabs">
             <button type="button" class="tab active" data-kind="config">_config.yml</button>
             <button type="button" class="tab" data-kind="contact">_data/contact.yml</button>

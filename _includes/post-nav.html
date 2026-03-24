@@ -2,31 +2,27 @@
 
 {% include lang.html %}
 
-{% assign latest_posts = site.posts | slice: 0, 4 %}
 {% assign filtered_latest = '' | split: '' %}
-{% for p in latest_posts %}
-  {% unless p.url == page.url %}
-    {% assign filtered_latest = filtered_latest | push: p %}
-  {% endunless %}
+{% for p in site.posts %}
+  {% if p.hidden == true or p.url == page.url %}{% continue %}{% endif %}
+  {% assign filtered_latest = filtered_latest | push: p %}
+  {% if filtered_latest.size >= 3 %}{% break %}{% endif %}
 {% endfor %}
-{% assign filtered_latest = filtered_latest | slice: 0, 3 %}
 
 {% assign related = '' | split: '' %}
 {% for cat in page.categories %}
   {% for p in site.categories[cat] %}
-    {% unless p.url == page.url %}
-      {% unless related contains p %}
-        {% assign related = related | push: p %}
-      {% endunless %}
+    {% if p.url == page.url or p.hidden == true %}{% continue %}{% endif %}
+    {% unless related contains p %}
+      {% assign related = related | push: p %}
     {% endunless %}
   {% endfor %}
 {% endfor %}
 {% for tag in page.tags %}
   {% for p in site.tags[tag] %}
-    {% unless p.url == page.url %}
-      {% unless related contains p %}
-        {% assign related = related | push: p %}
-      {% endunless %}
+    {% if p.url == page.url or p.hidden == true %}{% continue %}{% endif %}
+    {% unless related contains p %}
+      {% assign related = related | push: p %}
     {% endunless %}
   {% endfor %}
 {% endfor %}
@@ -92,9 +88,9 @@
 
   // 모든 포스트 목록
   var allPosts = [
-    {% for post in site.posts limit: 30 %}
+    {% for post in site.posts limit: 30 %}{% unless post.hidden == true %}
     { url: {{ post.url | jsonify }}, title: {{ post.title | jsonify }}, href: {{ post.url | relative_url | jsonify }}, date: {{ post.date | date: "%m/%d" | jsonify }} },
-    {% endfor %}
+    {% endunless %}{% endfor %}
   ];
 
   if (!gcId) {

@@ -6,6 +6,7 @@
 {% assign all_list = '' | split: '' %}
 
 {% for post in site.posts %}
+  {% if post.hidden == true %}{% continue %}{% endif %}
   {% assign datetime = post.last_modified_at | default: post.date %}
   {% capture elem %}
     {{- datetime | date: "%Y%m%d%H%M%S" -}}::{{- forloop.index0 -}}

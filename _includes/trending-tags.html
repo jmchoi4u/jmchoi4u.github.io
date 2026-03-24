@@ -7,13 +7,17 @@
     <i class="fas fa-trophy" style="color:#f59e0b;"></i> 인기글
   </h2>
   <ul class="content list-unstyled ps-0 pb-1 mt-2 sidebar-list" id="popular-posts">
-    {% for post in site.posts limit: 3 %}
+    {% assign pop_count = 0 %}
+    {% for post in site.posts %}
+      {% if post.hidden == true %}{% continue %}{% endif %}
+      {% assign pop_count = pop_count | plus: 1 %}
       <li class="sidebar-list-item">
         <a href="{{ post.url | relative_url }}" class="sidebar-link popular-link">
-          <span class="rank-badge rank-{{ forloop.index }}">{{ forloop.index }}</span>
+          <span class="rank-badge rank-{{ pop_count }}">{{ pop_count }}</span>
           <span class="sidebar-link-title">{{ post.title }}</span>
         </a>
       </li>
+      {% if pop_count >= 3 %}{% break %}{% endif %}
     {% endfor %}
   </ul>
 </section>
@@ -29,9 +33,9 @@
 <script>
 (function() {
   var posts = [
-    {% for post in site.posts limit: 30 %}
+    {% for post in site.posts limit: 30 %}{% unless post.hidden == true %}
     { url: {{ post.url | jsonify }}, title: {{ post.title | jsonify }}, href: {{ post.url | relative_url | jsonify }} },
-    {% endfor %}
+    {% endunless %}{% endfor %}
   ];
 
   var gcId = {{ site.analytics.goatcounter.id | jsonify }};

@@ -162,7 +162,7 @@ layout: default
       .then(function(r) { return r.json(); })
       .then(function(d) {
         var views = parseInt((d.count || '0').replace(/\D/g, ''), 10) || 0;
-        if (views >= 5) {
+        if (views >= 3) {
           badge.querySelector('.view-num-title').textContent = views;
           badge.style.display = 'inline';
         }

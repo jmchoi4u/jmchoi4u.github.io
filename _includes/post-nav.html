@@ -107,11 +107,13 @@
   Promise.all(allPosts.map(function(p) {
     var uri = p.url.replace(/\/$/, '');
     return fetch('https://' + gcId + '.goatcounter.com/counter/' + encodeURIComponent(uri) + '.json')
-      .then(function(r) { return r.json(); })
+      .then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })
       .then(function(d) { p.views = parseInt((d.count || '0').replace(/\D/g, ''), 10) || 0; return p; })
       .catch(function() { p.views = 0; return p; });
   })).then(function(results) {
-    results.sort(function(a, b) { return b.views - a.views; });
+    // 조회수가 하나라도 있으면 인기순, 없으면 최신순
+    var hasViews = results.some(function(p) { return p.views > 0; });
+    if (hasViews) results.sort(function(a, b) { return b.views - a.views; });
     fillWithPosts(results, needed);
   }).catch(function() {
     fillWithPosts(allPosts, needed);

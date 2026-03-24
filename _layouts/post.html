@@ -28,6 +28,7 @@ script_includes:
       </div>
       <div class="post-hero-meta">
         {{ page.date | date: "%Y/%m/%d" }} · By {{ site.social.name }} · {% capture _words %}{{ content | number_of_words }}{% endcapture %}{% assign _wpm = 200 %}{% assign _reading_time = _words | divided_by: _wpm | at_least: 1 %}{{ _reading_time }} {{ site.data.locales[lang].post.read_time.unit }} {{ site.data.locales[lang].post.read_time.prompt }}
+        <span id="hero-views" style="display:none"> · 👁 <span id="hero-views-num"></span>회</span>
       </div>
     </div>
   </header>
@@ -131,5 +132,21 @@ script_includes:
     }, { passive: true });
   }
 
+  // Hero view count (3회 이상만 표시)
+  var gcId = {{ site.analytics.goatcounter.id | jsonify | default: 'null' }};
+  if (gcId) {
+    var pageUrl = {{ page.url | jsonify }}.replace(/\/$/, '');
+    fetch('https://' + gcId + '.goatcounter.com/counter/' + encodeURIComponent(pageUrl) + '.json')
+      .then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function(d) {
+        var views = parseInt((d.count || '0').replace(/\D/g, ''), 10) || 0;
+        if (views >= 3) {
+          var el = document.getElementById('hero-views');
+          var num = document.getElementById('hero-views-num');
+          if (el && num) { num.textContent = views; el.style.display = 'inline'; }
+        }
+      })
+      .catch(function() {});
+  }
 })();
 </script>

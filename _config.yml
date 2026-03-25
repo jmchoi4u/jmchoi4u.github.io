@@ -70,7 +70,7 @@ analytics:
 
 # Page views settings
 pageviews:
-  provider: goatcounter
+  provider: # Temporarily disabled: public counter endpoint currently returns 404 in production
 
 # Prefer color scheme setting.
 #

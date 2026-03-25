@@ -1,7 +1,7 @@
 ---
 # the default layout is 'page'
 icon: fas fa-info-circle
-order: 4
+order: 3
 ---
 
 문제를 만나면 일단 부딪혀보고, 해결 과정을 기록하는 걸 좋아합니다.

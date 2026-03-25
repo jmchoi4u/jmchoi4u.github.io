@@ -1,4 +1,4 @@
-<!-- Post bottom navigation: 좌측 추천글 1개 + 우측 관련글 1개 -->
+<!-- Post bottom navigation: 좌측 인기글 + 우측 최신글 -->
 
 {% include lang.html %}
 
@@ -9,41 +9,20 @@
   {% if filtered_latest.size >= 5 %}{% break %}{% endif %}
 {% endfor %}
 
-{% assign related = '' | split: '' %}
-{% for cat in page.categories %}
-  {% for p in site.categories[cat] %}
-    {% if p.url == page.url or p.hidden == true %}{% continue %}{% endif %}
-    {% unless related contains p %}
-      {% assign related = related | push: p %}
-    {% endunless %}
-  {% endfor %}
-{% endfor %}
-{% for tag in page.tags %}
-  {% for p in site.tags[tag] %}
-    {% if p.url == page.url or p.hidden == true %}{% continue %}{% endif %}
-    {% unless related contains p %}
-      {% assign related = related | push: p %}
-    {% endunless %}
-  {% endfor %}
-{% endfor %}
-
-{% assign related_pick = related | first %}
 {% assign latest_pick = filtered_latest | first %}
-{% assign recommend_pick = related_pick | default: filtered_latest[1] | default: latest_pick %}
+{% assign fallback_popular = filtered_latest[1] | default: latest_pick %}
 
 <div class="post-floating-bottom" aria-hidden="true">
   <div class="post-floating-bottom-inner">
+    <a id="floating-popular" class="post-floating-bottom-link left" href="{{ fallback_popular.url | relative_url }}">
+      <span class="post-floating-bottom-caption">인기글</span>
+      <span class="post-floating-bottom-title" id="floating-popular-title">{{ fallback_popular.title }}</span>
+    </a>
+
     {% if latest_pick %}
-      <a class="post-floating-bottom-link left" href="{{ latest_pick.url | relative_url }}">
+      <a class="post-floating-bottom-link right" href="{{ latest_pick.url | relative_url }}">
         <span class="post-floating-bottom-caption">최신글</span>
         <span class="post-floating-bottom-title">{{ latest_pick.title }}</span>
-      </a>
-    {% endif %}
-
-    {% if recommend_pick %}
-      <a class="post-floating-bottom-link right" href="{{ recommend_pick.url | relative_url }}">
-        <span class="post-floating-bottom-caption">추천글</span>
-        <span class="post-floating-bottom-title">{{ recommend_pick.title }}</span>
       </a>
     {% endif %}
   </div>
@@ -51,42 +30,30 @@
 
 <nav class="post-bottom-nav mt-4 mb-3" aria-label="Post Bottom Navigation">
   <div class="post-bottom-nav-grid">
-    {% if latest_pick %}
-      <a id="recommend-card" class="post-bottom-card post-bottom-card-left" href="{{ latest_pick.url | relative_url }}" data-current-url="{{ page.url }}">
-        <span class="post-bottom-label">추천글</span>
-        <strong id="recommend-card-title" class="post-bottom-title">{{ latest_pick.title }}</strong>
-        <span id="recommend-card-date" class="post-bottom-date">{{ latest_pick.date | date: "%Y.%m.%d" }}</span>
-      </a>
-    {% endif %}
+    <a id="popular-card" class="post-bottom-card post-bottom-card-left" href="{{ fallback_popular.url | relative_url }}">
+      <span class="post-bottom-label">인기글</span>
+      <strong id="popular-card-title" class="post-bottom-title">{{ fallback_popular.title }}</strong>
+      <span id="popular-card-date" class="post-bottom-date">{{ fallback_popular.date | date: "%Y.%m.%d" }}</span>
+    </a>
 
-    {% if related_pick %}
-      <a class="post-bottom-card post-bottom-card-right" href="{{ related_pick.url | relative_url }}">
-        <span class="post-bottom-label">관련글</span>
-        <strong class="post-bottom-title">{{ related_pick.title }}</strong>
-        <span class="post-bottom-date">{{ related_pick.date | date: "%Y.%m.%d" }}</span>
-      </a>
-    {% elsif filtered_latest.size > 1 %}
-      {% assign fallback_related = filtered_latest[1] %}
-      <a class="post-bottom-card post-bottom-card-right" href="{{ fallback_related.url | relative_url }}">
-        <span class="post-bottom-label">관련글</span>
-        <strong class="post-bottom-title">{{ fallback_related.title }}</strong>
-        <span class="post-bottom-date">{{ fallback_related.date | date: "%Y.%m.%d" }}</span>
+    {% if latest_pick %}
+      <a class="post-bottom-card post-bottom-card-right" href="{{ latest_pick.url | relative_url }}">
+        <span class="post-bottom-label">최신글</span>
+        <strong class="post-bottom-title">{{ latest_pick.title }}</strong>
+        <span class="post-bottom-date">{{ latest_pick.date | date: "%Y.%m.%d" }}</span>
       </a>
     {% endif %}
   </div>
 </nav>
 
 <script>
-(function() {
-  var recommendCard = document.getElementById('recommend-card');
-  if (!recommendCard) return;
+(function(){
+  var readGC = window.requestGoatCounterCount;
+  if (typeof readGC !== 'function') return;
 
-  var gcId = {{ site.analytics.goatcounter.id | jsonify | default: 'null' }};
-  var currentUrl = recommendCard.getAttribute('data-current-url');
-  var titleEl = document.getElementById('recommend-card-title');
-  var dateEl = document.getElementById('recommend-card-date');
-  var relatedCard = document.querySelector('.post-bottom-card-right');
-  var relatedHref = relatedCard ? relatedCard.getAttribute('href') : '';
+  var currentUrl = {{ page.url | jsonify }};
+  var latestHref = document.querySelector('.post-bottom-card-right');
+  var latestUrl = latestHref ? latestHref.getAttribute('href') : '';
 
   var allPosts = [
     {% for post in site.posts limit: 30 %}{% unless post.hidden == true %}
@@ -94,49 +61,37 @@
     {% endunless %}{% endfor %}
   ];
 
-  function applyPick(post) {
-    if (!post) return;
-    recommendCard.href = post.href;
-    if (titleEl) titleEl.textContent = post.title;
-    if (dateEl) dateEl.textContent = post.date;
-  }
-
-  function chooseFallback(posts) {
-    for (var i = 0; i < posts.length; i++) {
-      var post = posts[i];
-      if (post.url === currentUrl) continue;
-      if (relatedHref && post.href === relatedHref) continue;
-      return post;
-    }
-    return null;
-  }
-
-  if (!gcId) {
-    applyPick(chooseFallback(allPosts));
-    return;
-  }
-
-  var readGoatCounterCount = window.requestGoatCounterCount;
-  if (typeof readGoatCounterCount !== 'function') {
-    applyPick(chooseFallback(allPosts));
-    return;
-  }
-
-  Promise.all(allPosts.map(function(post) {
-    return new Promise(function(resolve) {
-      readGoatCounterCount(post.url, function(views) {
-        post.views = views || 0;
-        resolve(post);
-      });
+  Promise.all(allPosts.map(function(p){
+    return new Promise(function(resolve){
+      readGC(p.url, function(v){ p.views = v || 0; resolve(p); });
     });
-  })).then(function(posts) {
-    posts.sort(function(a, b) { return b.views - a.views; });
-    applyPick(chooseFallback(posts) || chooseFallback(allPosts));
-  }).catch(function() {
-    applyPick(chooseFallback(allPosts));
-  });
+  })).then(function(posts){
+    posts.sort(function(a,b){ return b.views - a.views; });
+    for (var i = 0; i < posts.length; i++) {
+      var p = posts[i];
+      if (p.url === currentUrl) continue;
+      if (p.href === latestUrl) continue;
+      applyPopular(p);
+      return;
+    }
+  }).catch(function(){});
+
+  function applyPopular(p) {
+    var card = document.getElementById('popular-card');
+    var cardTitle = document.getElementById('popular-card-title');
+    var cardDate = document.getElementById('popular-card-date');
+    var floatingLink = document.getElementById('floating-popular');
+    var floatingTitle = document.getElementById('floating-popular-title');
+
+    if (card) card.href = p.href;
+    if (cardTitle) cardTitle.textContent = p.title;
+    if (cardDate) cardDate.textContent = p.date;
+    if (floatingLink) floatingLink.href = p.href;
+    if (floatingTitle) floatingTitle.textContent = p.title;
+  }
 })();
 </script>
+
 
 <style>
   .post-bottom-nav{
@@ -187,15 +142,15 @@
     font-size:0.74rem;
     font-weight:700;
     letter-spacing:-0.01em;
-    color:#6f8fce;
-    background:rgba(111,143,206,0.12);
-    border:1px solid rgba(111,143,206,0.22);
+    color:#79a8e8;
+    background:rgba(121,168,232,0.12);
+    border:1px solid rgba(121,168,232,0.22);
   }
   .post-bottom-card-right .post-bottom-label{
     margin-left:auto;
-    color:#c29d56;
-    background:rgba(194,157,86,0.12);
-    border-color:rgba(194,157,86,0.24);
+    color:#d9b76e;
+    background:rgba(217,183,110,0.12);
+    border-color:rgba(217,183,110,0.24);
   }
   .post-bottom-title{
     font-size:1.08rem;

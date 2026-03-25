@@ -3,39 +3,74 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>JM 블로그 편집기</title>
+    <title>JM Blog Editor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
   </head>
   <body>
+    <!-- Toast container -->
+    <div class="toast-container" id="toast-container"></div>
+
     <div class="shell">
       <aside class="sidebar">
-        <h1>JM 블로그 편집기</h1>
-        <p class="muted">글 작성, 이미지 저장, 로컬 테스트, GitHub 발행까지 한 번에 처리합니다.</p>
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          </div>
+          <div>
+            <h1>Blog Editor</h1>
+            <p class="muted">글 작성부터 배포까지</p>
+          </div>
+        </div>
 
         <div class="nav-grid">
-          <button type="button" class="nav-tab nav-important active" data-panel="editor">글 작성</button>
-          <button type="button" class="nav-tab nav-important nav-manage" data-panel="posts-manager">글 관리</button>
-          <button type="button" class="nav-tab nav-important nav-publish" data-panel="deploy">테스트/배포</button>
-          <button type="button" class="nav-tab" data-panel="overview">개요</button>
-          <button type="button" class="nav-tab" data-panel="images">이미지</button>
-          <button type="button" class="nav-tab" data-panel="template-manager">템플릿 관리</button>
-          <button type="button" class="nav-tab" data-panel="markdown-help">문법 도움말</button>
-          <button type="button" class="nav-tab" data-panel="settings">설정 파일</button>
+          <span class="nav-section-label">작성</span>
+          <button type="button" class="nav-tab nav-important active" data-panel="editor">
+            <span class="nav-icon">&#9998;</span> 글 작성
+          </button>
+          <button type="button" class="nav-tab nav-important nav-manage" data-panel="posts-manager">
+            <span class="nav-icon">&#9776;</span> 글 관리
+          </button>
+          <button type="button" class="nav-tab" data-panel="template-manager">
+            <span class="nav-icon">&#10070;</span> 템플릿
+          </button>
+
+          <span class="nav-section-label">운영</span>
+          <button type="button" class="nav-tab nav-important nav-publish" data-panel="deploy">
+            <span class="nav-icon">&#9889;</span> 테스트/배포
+          </button>
+          <button type="button" class="nav-tab" data-panel="overview">
+            <span class="nav-icon">&#9673;</span> 개요
+          </button>
+          <button type="button" class="nav-tab" data-panel="images">
+            <span class="nav-icon">&#9633;</span> 이미지
+          </button>
+
+          <span class="nav-section-label">참고</span>
+          <button type="button" class="nav-tab" data-panel="markdown-help">
+            <span class="nav-icon">?</span> 문법 도움말
+          </button>
+          <button type="button" class="nav-tab" data-panel="settings">
+            <span class="nav-icon">&#9881;</span> 설정 파일
+          </button>
         </div>
 
         <div class="sidebar-actions">
-          <button id="shutdown-app-btn" type="button" class="danger wide">웹앱 종료</button>
+          <button id="shutdown-app-btn" type="button" class="danger wide">종료</button>
         </div>
       </aside>
 
       <main class="content">
+        <!-- ===== Overview ===== -->
         <section id="overview" class="card screen">
           <div class="title-row">
             <div>
               <h2>사이트 개요</h2>
               <p class="muted">현재 설정값과 git 상태를 빠르게 확인합니다.</p>
             </div>
-            <button id="refresh-summary-btn" type="button">상태 새로고침</button>
+            <button id="refresh-summary-btn" type="button">새로고침</button>
           </div>
           <div class="grid three">
             <article class="soft-box">
@@ -53,6 +88,7 @@
           </div>
         </section>
 
+        <!-- ===== Editor ===== -->
         <section id="editor" class="card screen active-screen">
           <div class="title-row">
             <div>
@@ -61,16 +97,17 @@
             </div>
             <div class="title-actions">
               <div class="row wrap">
-                <button id="save-post-btn" type="button" class="primary">💾 저장</button>
-                <button id="save-draft-btn" type="button" style="background:#8b5cf6;color:#fff;border-color:#7c3aed;">📝 임시저장</button>
-                <button id="reset-editor-btn" type="button">✨ 새 글</button>
-                <button id="delete-post-btn" type="button" class="danger" disabled>🗑 삭제</button>
+                <button id="save-post-btn" type="button" class="primary">저장</button>
+                <button id="save-draft-btn" type="button" style="background:var(--purple);color:#fff;border-color:var(--purple);">임시저장</button>
+                <button id="reset-editor-btn" type="button">새 글</button>
+                <button id="delete-post-btn" type="button" class="danger" disabled>삭제</button>
               </div>
               <p id="autosave-status" class="muted status-text">자동 임시저장 준비 중</p>
             </div>
           </div>
 
           <div class="editor-layout">
+            <!-- 기본 정보 -->
             <section class="editor-block tone-blue">
               <div class="editor-block-header">
                 <div>
@@ -82,7 +119,7 @@
 
               <div class="grid two">
                 <label>글 제목<input id="post-title" type="text" placeholder="예: Chirpy 블로그 설정 기록"></label>
-                <label>파일 이름 (.md)<input id="post-slug" type="text" placeholder="자동 생성 (숫자 순번)" readonly disabled style="background:#f3f5f8;color:var(--muted)"></label>
+                <label>파일 이름 (.md)<input id="post-slug" type="text" placeholder="자동 생성 (숫자 순번)" readonly disabled style="background:var(--bg);color:var(--muted)"></label>
               </div>
 
               <div class="grid two">
@@ -92,7 +129,7 @@
 
               <div class="grid two">
                 <label>표시 제목 (줄바꿈 가능)
-                  <textarea id="post-hero-title" class="small-area" rows="3" placeholder="비워두면 글 제목과 같습니다. 줄을 나누고 싶으면 Enter로 줄바꿈하세요."></textarea>
+                  <textarea id="post-hero-title" class="small-area" rows="3" placeholder="비워두면 글 제목과 같습니다. Enter로 줄바꿈."></textarea>
                 </label>
                 <label>목록 요약
                   <input id="post-summary" type="text" placeholder="홈/추천 목록에 보일 짧은 문장">
@@ -104,7 +141,7 @@
                   <input id="post-hero-image-position" type="text" placeholder="예: 50% 38%">
                 </label>
                 <label>파일 메모
-                  <input type="text" value="표시 제목, 목록 요약, 표지 초점은 저장 시 프론트매터에 함께 기록됩니다." readonly style="background:#f3f5f8;color:var(--muted)">
+                  <input type="text" value="표시 제목, 목록 요약, 표지 초점은 저장 시 프론트매터에 함께 기록됩니다." readonly style="background:var(--bg);color:var(--muted)">
                 </label>
               </div>
 
@@ -119,48 +156,50 @@
               </div>
 
               <!-- 표지 이미지 -->
-              <div class="cover-image-section" style="margin-top:.8rem;padding:.8rem;border:1px dashed var(--border);border-radius:8px;background:var(--bg-alt, #f9fafb)">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
-                  <div style="display:flex;align-items:center;gap:.5rem">
-                    <strong>📷 표지 이미지</strong>
-                    <span class="muted" style="font-size:.75rem">글 상단 배경에 표시 (본문 X)</span>
+              <div class="cover-image-section">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <strong style="font-size:0.88rem">표지 이미지</strong>
+                    <span class="muted" style="font-size:0.72rem">글 상단 배경에 표시</span>
                   </div>
-                  <button id="remove-cover-btn" type="button" style="font-size:.75rem;padding:2px 8px">제거</button>
+                  <button id="remove-cover-btn" type="button" style="font-size:0.72rem;padding:4px 10px">제거</button>
                 </div>
-                <label id="cover-drop-zone" style="display:flex;align-items:center;justify-content:center;gap:.5rem;padding:.8rem;border:2px dashed var(--border);border-radius:6px;cursor:pointer;text-align:center;color:var(--muted-text);font-size:.85rem;transition:border-color .2s">
+                <label id="cover-drop-zone" class="cover-drop-zone">
                   <span id="cover-drop-text">이미지를 선택하면 자동 업로드됩니다</span>
                   <input id="cover-image-file" type="file" accept=".png,.jpg,.jpeg,.webp,.gif" style="display:none">
                   <button id="upload-cover-btn" type="button" style="display:none">표지 업로드</button>
                 </label>
-                <div id="cover-preview-area" style="margin-top:.5rem;display:none">
-                  <img id="cover-preview-img" src="" alt="표지 미리보기" style="height:120px;width:100%;object-fit:cover;object-position:50% 18%;border-radius:6px;border:1px solid var(--border)">
-                  <span id="cover-path-display" class="muted" style="display:block;font-size:.75rem;margin-top:.2rem"></span>
+                <div id="cover-preview-area" style="margin-top:8px;display:none">
+                  <img id="cover-preview-img" src="" alt="표지 미리보기" style="height:120px;width:100%;object-fit:cover;object-position:50% 18%;border-radius:8px;border:1px solid var(--line)">
+                  <span id="cover-path-display" class="muted" style="display:block;font-size:0.72rem;margin-top:4px"></span>
                 </div>
                 <input id="cover-image-path" type="hidden" value="">
               </div>
             </section>
 
+            <!-- 글 옵션 -->
             <section class="editor-block tone-sand">
               <div class="editor-block-header">
                 <div>
                   <h3>글 옵션</h3>
-                  <p class="muted">표시 기능과 작성 편의 기능을 체크박스로 나눠서 켜고 끕니다.</p>
+                  <p class="muted">표시 기능과 작성 편의 기능을 켜고 끕니다.</p>
                 </div>
                 <span class="editor-chip">설정</span>
               </div>
 
               <div class="grid three option-grid">
-                <label class="checkbox"><input id="post-draft" type="checkbox">📝 임시저장 (_drafts)</label>
-                <label class="checkbox"><input id="post-hidden" type="checkbox">🙈 숨기기 (hidden)</label>
-                <label class="checkbox"><input id="post-pin" type="checkbox">📌 상단 고정</label>
-                <label class="checkbox"><input id="post-toc" type="checkbox" checked>📑 TOC 표시</label>
-                <label class="checkbox"><input id="post-comments" type="checkbox" checked>💬 댓글 허용</label>
-                <label class="checkbox"><input id="post-date-refresh" type="checkbox" checked>🕐 새 글 때 현재 시각 자동</label>
-                <label class="checkbox"><input id="post-mermaid" type="checkbox">🔀 Mermaid</label>
-                <label class="checkbox"><input id="post-math" type="checkbox">🔢 수식(Math)</label>
+                <label class="checkbox"><input id="post-draft" type="checkbox"> 임시저장 (_drafts)</label>
+                <label class="checkbox"><input id="post-hidden" type="checkbox"> 숨기기 (hidden)</label>
+                <label class="checkbox"><input id="post-pin" type="checkbox"> 상단 고정</label>
+                <label class="checkbox"><input id="post-toc" type="checkbox" checked> TOC 표시</label>
+                <label class="checkbox"><input id="post-comments" type="checkbox" checked> 댓글 허용</label>
+                <label class="checkbox"><input id="post-date-refresh" type="checkbox" checked> 새 글 때 현재 시각</label>
+                <label class="checkbox"><input id="post-mermaid" type="checkbox"> Mermaid</label>
+                <label class="checkbox"><input id="post-math" type="checkbox"> 수식 (Math)</label>
               </div>
             </section>
 
+            <!-- 서식 도구 -->
             <section class="editor-block tone-slate">
               <div class="editor-block-header">
                 <div>
@@ -176,7 +215,7 @@
                   <button type="button" class="tb-btn" data-wrap-before="*" data-wrap-after="*" data-wrap-placeholder="기울임" title="기울임"><i>I</i></button>
                   <button type="button" class="tb-btn" data-wrap-before="<u>" data-wrap-after="</u>" data-wrap-placeholder="밑줄" title="밑줄"><u>U</u></button>
                   <button type="button" class="tb-btn" data-wrap-before="~~" data-wrap-after="~~" data-wrap-placeholder="취소선" title="취소선"><s>S</s></button>
-                  <button type="button" class="tb-btn" data-wrap-before="<mark>" data-wrap-after="</mark>" data-wrap-placeholder="형광펜" title="형광펜"><span style="background:#fde68a;padding:0 3px;border-radius:2px;">H</span></button>
+                  <button type="button" class="tb-btn" data-wrap-before="<mark>" data-wrap-after="</mark>" data-wrap-placeholder="형광펜" title="형광펜"><span style="background:#F5D5A0;padding:0 3px;border-radius:2px;">H</span></button>
                   <button type="button" class="tb-btn" data-wrap-before="<sup>" data-wrap-after="</sup>" data-wrap-placeholder="위첨자" title="위첨자">X<sup style="font-size:9px">2</sup></button>
                   <button type="button" class="tb-btn" data-wrap-before="<sub>" data-wrap-after="</sub>" data-wrap-placeholder="아래첨자" title="아래첨자">X<sub style="font-size:9px">2</sub></button>
                 </div>
@@ -231,7 +270,7 @@
                   <button type="button" class="tb-swatch" data-text-color="#6b7280" style="--sw:#6b7280" title="회색"></button>
                   <button type="button" class="tb-swatch tb-swatch-custom" data-text-color="custom" title="직접 선택">
                     <span>+</span>
-                    <input type="color" class="tb-color-input" value="#355f67">
+                    <input type="color" class="tb-color-input" value="#DA7756">
                   </button>
                 </div>
 
@@ -244,6 +283,7 @@
               </div>
             </section>
 
+            <!-- 본문 -->
             <section class="editor-block tone-ink" id="body-block">
               <div class="editor-block-header">
                 <div>
@@ -251,8 +291,8 @@
                   <p class="muted">옵시디언 초안을 붙여넣고 필요한 부분만 다듬으면 됩니다.</p>
                 </div>
                 <div class="row" style="gap:6px">
-                  <span id="word-counter" class="editor-chip" style="font-size:11px;min-width:auto;padding:4px 8px">0자 · 0단어 · 약 0분</span>
-                  <button type="button" id="fullscreen-btn" class="editor-chip" style="cursor:pointer;font-size:11px;min-width:auto;padding:4px 8px" title="전체화면 글쓰기 (Esc로 나가기)">⛶ 집중모드</button>
+                  <span id="word-counter" class="editor-chip" style="font-size:0.68rem;min-width:auto;padding:4px 10px">0자 · 0단어 · 약 0분</span>
+                  <button type="button" id="fullscreen-btn" class="editor-chip" style="cursor:pointer;font-size:0.68rem;min-width:auto;padding:4px 10px;background:var(--purple-soft);color:var(--purple);border:1px solid rgba(139,92,246,0.12)" title="전체화면 글쓰기 (Esc로 나가기)">집중모드</button>
                 </div>
               </div>
 
@@ -260,8 +300,8 @@
                 <label>본문<textarea id="post-body" class="body-area" placeholder="여기에 글 내용을 작성하세요."></textarea></label>
                 <section class="preview-panel">
                   <div class="preview-panel-head">
-                    <h4>실시간 마크다운 미리보기</h4>
-                    <span class="preview-badge">.md 적용</span>
+                    <h4>실시간 미리보기</h4>
+                    <span class="preview-badge">Markdown</span>
                   </div>
                   <div id="post-body-preview" class="markdown-preview"></div>
                 </section>
@@ -275,6 +315,7 @@
           <input id="post-permalink" type="hidden">
         </section>
 
+        <!-- ===== Posts Manager ===== -->
         <section id="posts-manager" class="card screen">
           <div class="title-row">
             <div>
@@ -287,13 +328,11 @@
             </div>
           </div>
 
-          <!-- Stats bar -->
           <div class="pm-stats" id="pm-stats"></div>
 
-          <!-- Search & Filter -->
           <div class="pm-toolbar">
             <div class="pm-search-wrap">
-              <input id="post-search" type="text" placeholder="🔍 제목, 카테고리, 태그로 검색..." class="pm-search">
+              <input id="post-search" type="text" placeholder="제목, 카테고리, 태그로 검색..." class="pm-search">
             </div>
             <select id="filter-category" class="pm-filter"><option value="">전체 카테고리</option></select>
             <select id="filter-tag" class="pm-filter"><option value="">전체 태그</option></select>
@@ -304,7 +343,6 @@
             </select>
           </div>
 
-          <!-- Tab switcher -->
           <div class="pm-tabs">
             <button type="button" class="pm-tab active" data-pm-tab="all">전체 <span class="pm-badge" id="pm-count-all">0</span></button>
             <button type="button" class="pm-tab" data-pm-tab="published">발행 <span class="pm-badge" id="pm-count-published">0</span></button>
@@ -313,10 +351,10 @@
             <button type="button" class="pm-tab" data-pm-tab="hidden">숨김 <span class="pm-badge pm-badge-hidden" id="pm-count-hidden">0</span></button>
           </div>
 
-          <!-- Post list -->
           <div id="pm-list" class="pm-list"></div>
         </section>
 
+        <!-- ===== Images ===== -->
         <section id="images" class="card screen">
           <div class="title-row">
             <div>
@@ -345,6 +383,7 @@
           <label>결과<textarea id="image-result" class="small-area" readonly></textarea></label>
         </section>
 
+        <!-- ===== Deploy ===== -->
         <section id="deploy" class="card screen">
           <div class="title-row">
             <div>
@@ -353,15 +392,14 @@
             </div>
           </div>
 
-          <!-- 바로가기 링크 -->
-          <div class="deploy-shortcuts" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
-            <a href="https://jmchoi4u.github.io/" target="_blank" class="shortcut-btn">🌐 블로그</a>
-            <a href="https://github.com/jmchoi4u/jmchoi4u.github.io" target="_blank" class="shortcut-btn">🐙 GitHub 레포</a>
-            <a href="https://github.com/jmchoi4u/jmchoi4u.github.io/actions" target="_blank" class="shortcut-btn">⚙️ Actions</a>
-            <a href="https://github.com/jmchoi4u/jmchoi4u.github.io/settings/pages" target="_blank" class="shortcut-btn">📄 Pages 설정</a>
-            <a href="https://jmchoi4u.goatcounter.com" target="_blank" class="shortcut-btn">📊 GoatCounter</a>
-            <a href="https://search.google.com/search-console" target="_blank" class="shortcut-btn">🔍 Search Console</a>
-            <a href="https://analytics.google.com/" target="_blank" class="shortcut-btn">📈 Google Analytics</a>
+          <div class="deploy-shortcuts" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;">
+            <a href="https://jmchoi4u.github.io/" target="_blank" class="shortcut-btn">블로그</a>
+            <a href="https://github.com/jmchoi4u/jmchoi4u.github.io" target="_blank" class="shortcut-btn">GitHub</a>
+            <a href="https://github.com/jmchoi4u/jmchoi4u.github.io/actions" target="_blank" class="shortcut-btn">Actions</a>
+            <a href="https://github.com/jmchoi4u/jmchoi4u.github.io/settings/pages" target="_blank" class="shortcut-btn">Pages</a>
+            <a href="https://jmchoi4u.goatcounter.com" target="_blank" class="shortcut-btn">GoatCounter</a>
+            <a href="https://search.google.com/search-console" target="_blank" class="shortcut-btn">Search Console</a>
+            <a href="https://analytics.google.com/" target="_blank" class="shortcut-btn">Analytics</a>
           </div>
 
           <div class="deploy-grid">
@@ -416,6 +454,7 @@
           </div>
         </section>
 
+        <!-- ===== Template Manager ===== -->
         <section id="template-manager" class="card screen">
           <div class="title-row">
             <div>
@@ -452,6 +491,7 @@
           </div>
         </section>
 
+        <!-- ===== Markdown Help ===== -->
         <section id="markdown-help" class="card screen">
           <div class="title-row">
             <div>
@@ -510,7 +550,7 @@ bundle exec jekyll serve
 
             <div class="soft-box">
               <h3>글자색</h3>
-              <pre class="help-code" data-md-source><code>&lt;span style="color: #355f67;"&gt;색상 글자&lt;/span&gt;
+              <pre class="help-code" data-md-source><code>&lt;span style="color: #DA7756;"&gt;색상 글자&lt;/span&gt;
 
 Markdown 기본 문법에는 색상 기능이 없어서
 HTML 태그 방식으로 넣는 것이 가장 안정적입니다.</code></pre>
@@ -537,6 +577,7 @@ HTML 태그 방식으로 넣는 것이 가장 안정적입니다.</code></pre>
           </div>
         </section>
 
+        <!-- ===== Settings ===== -->
         <section id="settings" class="card screen">
           <div class="title-row">
             <div>
@@ -545,7 +586,6 @@ HTML 태그 방식으로 넣는 것이 가장 안정적입니다.</code></pre>
             </div>
           </div>
 
-          <!-- 빠른 설정 -->
           <article class="soft-box" style="margin-bottom:1.2rem">
             <h3>빠른 설정</h3>
             <div class="grid two" style="gap:.6rem">
@@ -554,7 +594,7 @@ HTML 태그 방식으로 넣는 것이 가장 안정적입니다.</code></pre>
               <label style="grid-column:1/-1">블로그 설명 (SEO용)<input id="qs-description" type="text" placeholder="문제 해결 과정을 정리하는 개인 블로그입니다."></label>
               <label>프로필 이미지 경로<input id="qs-avatar" type="text" placeholder="/assets/img/profile/ai_profile2.png"></label>
               <div style="display:flex;align-items:end;gap:.5rem">
-                <img id="qs-avatar-preview" src="" alt="미리보기" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:1px solid var(--border);display:none">
+                <img id="qs-avatar-preview" src="" alt="미리보기" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:1px solid var(--line);display:none">
                 <button id="qs-save-btn" type="button" class="primary">빠른 설정 저장</button>
               </div>
             </div>

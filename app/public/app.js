@@ -1,6 +1,30 @@
 const AUTOSAVE_KEY = "jm-blog-editor-autosave-v1";
 const AUTOSAVE_DELAY_MS = 1500;
 
+/* ── Toast Notification System ── */
+function showToast(title, message = "", type = "info", duration = 4000) {
+  const container = document.getElementById("toast-container");
+  if (!container) return;
+
+  const icons = { success: "\u2713", error: "\u2717", info: "\u2139" };
+  const toast = document.createElement("div");
+  toast.className = `toast toast-${type}`;
+  toast.innerHTML = `
+    <span class="toast-icon">${icons[type] || icons.info}</span>
+    <div class="toast-body">
+      <div class="toast-title">${title}</div>
+      ${message ? `<div class="toast-message">${message}</div>` : ""}
+    </div>
+    <button class="toast-close" onclick="this.parentElement.remove()">\u00d7</button>
+  `;
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.classList.add("toast-out");
+    setTimeout(() => toast.remove(), 300);
+  }, duration);
+}
+
 const state = {
   rawKind: "config",
   uploadedMarkdown: "",
@@ -204,6 +228,11 @@ async function api(url, options = {}) {
 
 function setOutput(title, text) {
   el.commandOutput.textContent = `${title}\n\n${text || "(출력 없음)"}`;
+  // Auto-show toast for key results
+  const isError = /실패|오류|error/i.test(title);
+  const isSuccess = /완료|성공/i.test(title);
+  if (isSuccess) showToast(title, (text || "").split("\n")[0], "success");
+  else if (isError) showToast(title, (text || "").split("\n")[0], "error", 6000);
 }
 
 function setActivePanel(panelId) {
@@ -957,7 +986,7 @@ async function refreshPreviewIfRunning() {
 
 async function publishDraft(relativePath) {
   if (el.originalPath.value === relativePath && hasUnsavedChanges()) {
-    alert("현재 열어 둔 임시저장 글에 저장되지 않은 변경이 있습니다. 먼저 저장한 뒤 발행해 주세요.");
+    showToast("저장 필요", "현재 열어 둔 임시저장 글에 저장되지 않은 변경이 있습니다.", "error");
     return;
   }
 
@@ -1002,7 +1031,7 @@ async function deletePostByPath(relativePath, title = "") {
 
 async function deleteCurrentPost() {
   if (!el.originalPath.value) {
-    alert("삭제할 글을 먼저 열어 주세요.");
+    showToast("삭제 불가", "삭제할 글을 먼저 열어 주세요.", "error");
     return;
   }
   await deletePostByPath(el.originalPath.value, el.title.value.trim());
@@ -1070,7 +1099,7 @@ async function shutdownApp() {
 async function uploadImage() {
   const file = el.imageFile.files?.[0];
   if (!file) {
-    alert("먼저 이미지 파일을 선택하세요.");
+    showToast("파일 없음", "먼저 이미지 파일을 선택하세요.", "error");
     return;
   }
   const dataUrl = await new Promise((resolve, reject) => {
@@ -1194,7 +1223,7 @@ function bind() {
   document.querySelector("#reset-editor-btn").addEventListener("click", () => run(beginNewPost));
   document.querySelector("#upload-image-btn").addEventListener("click", () => run(uploadImage));
   document.querySelector("#insert-image-btn").addEventListener("click", () => {
-    if (!state.uploadedMarkdown) return alert("먼저 이미지를 저장하세요.");
+    if (!state.uploadedMarkdown) { showToast("이미지 없음", "먼저 이미지를 저장하세요.", "error"); return; }
     insertAtCursor(state.uploadedMarkdown);
   });
   document.querySelector("#build-btn").addEventListener("click", () => run(buildSite));
@@ -1326,7 +1355,7 @@ function bind() {
         const relativePath = toggleHiddenButton.dataset.toggleHiddenPath;
         const result = await api("/api/toggle-hidden", { method: "POST", body: JSON.stringify({ relativePath }) });
         if (result.ok) {
-          alert(result.hidden ? "글이 숨겨졌습니다." : "글이 다시 보입니다.");
+          showToast(result.hidden ? "글 숨김" : "글 보이기", result.hidden ? "글이 숨겨졌습니다." : "글이 다시 보입니다.", "success");
           await loadPosts();
         }
       });
@@ -1472,7 +1501,7 @@ function bind() {
     if (!block) return;
     state.fullscreen = !state.fullscreen;
     block.classList.toggle("fullscreen-mode", state.fullscreen);
-    fullscreenBtn.textContent = state.fullscreen ? "✕ 집중모드 끝내기" : "⛶ 집중모드";
+    fullscreenBtn.textContent = state.fullscreen ? "나가기" : "집중모드";
     if (state.fullscreen) el.body.focus();
   }
   if (fullscreenBtn) {
@@ -1595,7 +1624,7 @@ async function run(task) {
     await task();
   } catch (error) {
     setOutput("오류", error.message || "알 수 없는 오류");
-    alert(error.message || "알 수 없는 오류");
+    showToast("오류", error.message || "알 수 없는 오류", "error", 6000);
   } finally {
     document.body.classList.remove("loading");
   }

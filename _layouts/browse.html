@@ -1,0 +1,189 @@
+---
+layout: page
+---
+
+{% include lang.html %}
+
+<!-- 탭 전환 -->
+<div class="browse-tabs">
+  <button class="browse-tab active" data-target="browse-categories">카테고리</button>
+  <button class="browse-tab" data-target="browse-tags">태그</button>
+</div>
+
+<!-- ═══ 카테고리 섹션 ═══ -->
+<div id="browse-categories" class="browse-section">
+{% assign HEAD_PREFIX = 'h_' %}
+{% assign LIST_PREFIX = 'l_' %}
+{% assign group_index = 0 %}
+{% assign sort_categories = site.categories | sort %}
+
+{% for category in sort_categories %}
+  {% assign category_name = category | first %}
+  {% assign posts_of_category = category | last %}
+  {% assign first_post = posts_of_category | first %}
+
+  {% if category_name == first_post.categories[0] %}
+    {% assign sub_categories = '' | split: '' %}
+
+    {% for post in posts_of_category %}
+      {% if post.hidden == true %}{% continue %}{% endif %}
+      {% assign second_category = post.categories[1] %}
+      {% if second_category %}
+        {% unless sub_categories contains second_category %}
+          {% assign sub_categories = sub_categories | push: second_category %}
+        {% endunless %}
+      {% endif %}
+    {% endfor %}
+
+    {% assign sub_categories = sub_categories | sort %}
+    {% assign sub_categories_size = sub_categories | size %}
+
+    {% assign top_posts_size = 0 %}
+    {% for post in site.categories[category_name] %}
+      {% unless post.hidden == true %}
+        {% assign top_posts_size = top_posts_size | plus: 1 %}
+      {% endunless %}
+    {% endfor %}
+
+    {% if top_posts_size == 0 %}{% continue %}{% endif %}
+
+    <div class="card categories">
+      <div
+        id="{{ HEAD_PREFIX }}{{ group_index }}"
+        class="card-header d-flex justify-content-between hide-border-bottom"
+      >
+        <span class="ms-2">
+          <i class="far fa-folder{% if sub_categories_size > 0 %}-open{% endif %} fa-fw"></i>
+          {% capture _category_url %}/categories/{{ category_name | slugify | url_encode }}/{% endcapture %}
+          <a href="{{ _category_url | relative_url }}" class="mx-2">{{ category_name }}</a>
+          <span class="text-muted small font-weight-light">
+            {% if sub_categories_size > 0 %}
+              {{ sub_categories_size }}
+              {% if sub_categories_size > 1 %}
+                {{ site.data.locales[lang].categories.category_measure.plural | default: site.data.locales[lang].categories.category_measure }}
+              {% else %}
+                {{ site.data.locales[lang].categories.category_measure.singular | default: site.data.locales[lang].categories.category_measure }}
+              {% endif -%},
+            {% endif %}
+            {{ top_posts_size }}
+            {% if top_posts_size > 1 %}
+              {{ site.data.locales[lang].categories.post_measure.plural | default: site.data.locales[lang].categories.post_measure }}
+            {% else %}
+              {{ site.data.locales[lang].categories.post_measure.singular | default: site.data.locales[lang].categories.post_measure }}
+            {% endif %}
+          </span>
+        </span>
+
+        {% if sub_categories_size > 0 %}
+          <a href="#{{ LIST_PREFIX }}{{ group_index }}" data-bs-toggle="collapse" aria-expanded="true"
+             aria-label="{{ HEAD_PREFIX }}{{ group_index }}-trigger" class="category-trigger hide-border-bottom">
+            <i class="fas fa-fw fa-angle-down"></i>
+          </a>
+        {% else %}
+          <span data-bs-toggle="collapse" class="category-trigger hide-border-bottom disabled">
+            <i class="fas fa-fw fa-angle-right"></i>
+          </span>
+        {% endif %}
+      </div>
+
+      {% if sub_categories_size > 0 %}
+        <div id="{{ LIST_PREFIX }}{{ group_index }}" class="collapse show" aria-expanded="true">
+          <ul class="list-group">
+            {% for sub_category in sub_categories %}
+              <li class="list-group-item">
+                <i class="far fa-folder fa-fw"></i>
+                {% capture _sub_ctg_url %}/categories/{{ sub_category | slugify | url_encode }}/{% endcapture %}
+                <a href="{{ _sub_ctg_url | relative_url }}" class="mx-2">{{ sub_category }}</a>
+                {% assign posts_size = 0 %}
+                {% for post in site.categories[sub_category] %}
+                  {% unless post.hidden == true %}
+                    {% assign posts_size = posts_size | plus: 1 %}
+                  {% endunless %}
+                {% endfor %}
+                <span class="text-muted small font-weight-light">
+                  {{ posts_size }}
+                  {% if posts_size > 1 %}
+                    {{ site.data.locales[lang].categories.post_measure.plural | default: site.data.locales[lang].categories.post_measure }}
+                  {% else %}
+                    {{ site.data.locales[lang].categories.post_measure.singular | default: site.data.locales[lang].categories.post_measure }}
+                  {% endif %}
+                </span>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+    </div>
+
+    {% assign group_index = group_index | plus: 1 %}
+  {% endif %}
+{% endfor %}
+</div>
+
+<!-- ═══ 태그 섹션 ═══ -->
+<div id="browse-tags" class="browse-section" style="display:none;">
+  <div id="tags" class="d-flex flex-wrap mx-xl-2">
+    {% assign tags = '' | split: '' %}
+    {% for t in site.tags %}
+      {% assign visible_count = 0 %}
+      {% for post in t[1] %}
+        {% unless post.hidden == true %}
+          {% assign visible_count = visible_count | plus: 1 %}
+        {% endunless %}
+      {% endfor %}
+      {% if visible_count > 0 %}
+        {% assign tags = tags | push: t[0] %}
+      {% endif %}
+    {% endfor %}
+
+    {% assign sorted_tags = tags | sort_natural %}
+
+    {% for t in sorted_tags %}
+      {% assign visible_count = 0 %}
+      {% for post in site.tags[t] %}
+        {% unless post.hidden == true %}
+          {% assign visible_count = visible_count | plus: 1 %}
+        {% endunless %}
+      {% endfor %}
+      <div>
+        <a class="tag" href="{{ t | slugify | url_encode | prepend: '/tags/' | append: '/' | relative_url }}">
+          {{ t -}}
+          <span class="text-muted">{{ visible_count }}</span>
+        </a>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<style>
+  .browse-tabs{
+    display:flex;gap:0;margin-bottom:1.5rem;
+    border-bottom:2px solid var(--main-border-color,#e9ecef);
+  }
+  .browse-tab{
+    padding:0.6rem 1.2rem;border:none;background:none;
+    font-size:0.95rem;font-weight:600;cursor:pointer;
+    color:var(--text-muted-color,#868e96);
+    border-bottom:2px solid transparent;
+    margin-bottom:-2px;transition:all .2s;
+  }
+  .browse-tab:hover{color:var(--heading-color)}
+  .browse-tab.active{
+    color:var(--heading-color);
+    border-bottom-color:var(--link-color,#3d7cff);
+  }
+</style>
+
+<script>
+(function(){
+  var tabs = document.querySelectorAll('.browse-tab');
+  tabs.forEach(function(tab){
+    tab.addEventListener('click', function(){
+      tabs.forEach(function(t){ t.classList.remove('active'); });
+      tab.classList.add('active');
+      document.querySelectorAll('.browse-section').forEach(function(s){ s.style.display='none'; });
+      document.getElementById(tab.getAttribute('data-target')).style.display='block';
+    });
+  });
+})();
+</script>

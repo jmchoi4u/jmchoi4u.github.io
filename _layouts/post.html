@@ -44,6 +44,9 @@ script_includes:
       <div class="post-hero-center">
         <div class="post-hero-copy">
           <h1 data-toc-skip>{{ page.hero_title | default: page.title | newline_to_br }}</h1>
+          {% if page.description %}
+            <p class="post-hero-desc">{{ page.description }}</p>
+          {% endif %}
         </div>
       </div>
 
@@ -60,10 +63,15 @@ script_includes:
             {% endif %}
             {% if page.tags.size > 0 %}
               <span class="post-hero-tags">
-                <i class="fa fa-tags"></i>
-                {% for tag in page.tags %}
-                  <a href="{{ site.baseurl }}/tags/{{ tag | slugify | url_encode }}/" class="post-hero-tag-pill">{{ tag }}</a>
-                {% endfor %}
+                <button class="post-hero-tag-toggle" id="tag-toggle" type="button" aria-label="태그 보기">
+                  <i class="fa fa-tags"></i>
+                  <span class="tag-toggle-count">{{ page.tags.size }}</span>
+                </button>
+                <span class="post-hero-tag-list" id="tag-list">
+                  {% for tag in page.tags %}
+                    <a href="{{ site.baseurl }}/tags/{{ tag | slugify | url_encode }}/" class="post-hero-tag-pill">{{ tag }}</a>
+                  {% endfor %}
+                </span>
               </span>
             {% endif %}
           </div>
@@ -116,21 +124,27 @@ script_includes:
   </div>
 
   <section class="post-author-card" aria-label="작성자 소개">
-    <div class="post-author-copy">
-      <p class="post-author-eyebrow">About</p>
-      <h2 class="post-author-name">{{ site.social.name }}</h2>
-      <p class="post-author-tagline">{{ site.tagline }}</p>
-      <div class="post-author-actions">
-        <a class="author-email-link" href="mailto:{{ site.social.email }}">{{ site.social.email }}</a>
-        <a href="https://ctee.kr/place/jmchoi4u" target="_blank" rel="noopener noreferrer" class="author-support-btn">
-          <i class="fas fa-dollar-sign"></i>
-          <span>후원하기</span>
-        </a>
-        <a href="https://buymeacoffee.com/jmchoi4u" target="_blank" rel="noopener noreferrer" class="author-support-btn author-support-btn-alt">
-          <i class="fas fa-dollar-sign"></i>
-          <span>Support</span>
-        </a>
+    <div class="post-author-inner">
+      <div class="post-author-copy">
+        <p class="post-author-eyebrow">About</p>
+        <h2 class="post-author-name">{{ site.social.name }}</h2>
+        <p class="post-author-tagline">{{ site.tagline }}</p>
+        <div class="post-author-actions">
+          <a class="author-email-link" href="mailto:{{ site.social.email }}">{{ site.social.email }}</a>
+          <a href="https://ctee.kr/place/jmchoi4u" target="_blank" rel="noopener noreferrer" class="author-support-btn">
+            <i class="fas fa-dollar-sign"></i>
+            <span>후원하기</span>
+          </a>
+          <a href="https://buymeacoffee.com/jmchoi4u" target="_blank" rel="noopener noreferrer" class="author-support-btn author-support-btn-alt">
+            <i class="fas fa-dollar-sign"></i>
+            <span>Support</span>
+          </a>
+        </div>
       </div>
+      {% if site.avatar and site.avatar != empty %}
+        {% assign avatar_thumb = site.avatar | replace: '.png', '_thumb.png' | replace: '.jpg', '_thumb.jpg' %}
+        <img class="post-author-avatar" src="{{ avatar_thumb | relative_url }}" alt="{{ site.social.name }}" loading="lazy" width="80" height="80">
+      {% endif %}
     </div>
   </section>
 </article>
@@ -191,7 +205,7 @@ script_includes:
   var fab = document.getElementById('post-fab');
   var floatingTocHeadings = [];
   var tocEndAnchor = document.querySelector('.post-author-card') || document.querySelector('.post-bottom-nav') || document.getElementById('tail-wrapper');
-  var gcId = {{ site.analytics.goatcounter.id | jsonify | default: 'null' }};
+  var gcId = {% if site.pageviews.provider == 'goatcounter' %}{{ site.analytics.goatcounter.id | jsonify | default: 'null' }}{% else %}null{% endif %};
 
   function slugifyHeading(text) {
     return (text || '')
@@ -246,7 +260,7 @@ script_includes:
 
   function buildFloatingToc() {
     var floatingToc = getFloatingTocContainer();
-    if (!floatingToc || window.innerWidth < 992) return;
+    if (!floatingToc || window.innerWidth < 1200) return;
     var articleContent = document.querySelector('article .content');
     var headings = articleContent ? Array.prototype.slice.call(articleContent.querySelectorAll('h2, h3, h4')) : [];
     floatingTocHeadings = headings;
@@ -311,9 +325,15 @@ script_includes:
         endToc = tocEndAnchor.getBoundingClientRect().top <= window.innerHeight - 140;
       }
 
+      /* Fade out hero content on scroll (brunch style) */
+      var fadeProgress = Math.min(y / (heroH * 0.4), 1);
+      var heroFooter = document.querySelector('.post-hero-footer');
       if (heroCenter) {
-        heroCenter.style.opacity = '1';
+        heroCenter.style.opacity = String(1 - fadeProgress);
         heroCenter.style.transform = 'translate3d(0,' + (-titleLift) + 'px,0)';
+      }
+      if (heroFooter) {
+        heroFooter.style.opacity = String(1 - fadeProgress);
       }
 
       if (revealUi) {
@@ -516,6 +536,23 @@ script_includes:
   }
   if (themeToggle) themeToggle.addEventListener('click', triggerThemeToggle);
   if (floatingThemeToggle) floatingThemeToggle.addEventListener('click', triggerThemeToggle);
+
+  /* Tag toggle */
+  var tagToggle = document.getElementById('tag-toggle');
+  var tagList = document.getElementById('tag-list');
+  if (tagToggle && tagList) {
+    tagToggle.addEventListener('click', function(e) {
+      e.stopPropagation();
+      tagList.classList.toggle('open');
+      tagToggle.classList.toggle('active');
+    });
+    document.addEventListener('click', function(e) {
+      if (!tagList.contains(e.target) && e.target !== tagToggle) {
+        tagList.classList.remove('open');
+        tagToggle.classList.remove('active');
+      }
+    });
+  }
 
   /* FAB TOC button */
   var fabToc = document.getElementById('fab-toc');

@@ -172,7 +172,7 @@ script_includes:
 (function(){
   document.body.classList.add('post-page');
 
-  // ── Reading progress ──
+  /* Reading progress */
   var bar = document.getElementById('reading-progress');
   if (bar) {
     window.addEventListener('scroll', function() {
@@ -182,7 +182,7 @@ script_includes:
     }, { passive: true });
   }
 
-  // ── Hero scroll detection ──
+  /* Hero scroll detection */
   var heroEl = document.getElementById('post-hero-wrapper');
   var heroCenter = document.querySelector('.post-hero-center');
   var heroCopy = document.querySelector('.post-hero-copy');
@@ -338,7 +338,7 @@ script_includes:
     handleHeroScroll();
   }
 
-  // ── FAB actions ──
+  /* FAB actions */
   var fabTop = document.getElementById('fab-top');
   var fabComment = document.getElementById('fab-comment');
   var fabShare = document.getElementById('fab-share');
@@ -422,7 +422,7 @@ script_includes:
     });
   }
 
-  // ── View count ──
+  /* View count */
   if (gcId) {
     var pUrl = {{ page.url | jsonify }}.replace(/\/$/, '');
     requestGoatCounterCount(pUrl, function(views) {
@@ -437,11 +437,11 @@ script_includes:
     });
   }
 
-  // Hide default back-to-top
+  /* Hide default back-to-top */
   var btt = document.getElementById('back-to-top');
   if (btt) btt.style.display = 'none';
 
-  // ── Menu button (sidebar toggle) ──
+  /* Menu button (sidebar toggle) */
   var heroMenu = document.getElementById('hero-menu');
   var floatingMenu = document.getElementById('floating-menu');
   var sidebar = document.getElementById('sidebar');
@@ -497,7 +497,7 @@ script_includes:
   window.addEventListener('resize', applySidebarState);
   applySidebarState();
 
-  // ── Theme toggle (dark/light) ──
+  /* Theme toggle (dark/light) */
   var themeToggle = document.getElementById('hero-theme-toggle');
   var floatingThemeToggle = document.getElementById('floating-theme-toggle');
   function triggerThemeToggle() {
@@ -517,7 +517,7 @@ script_includes:
   if (themeToggle) themeToggle.addEventListener('click', triggerThemeToggle);
   if (floatingThemeToggle) floatingThemeToggle.addEventListener('click', triggerThemeToggle);
 
-  // ── FAB TOC button ──
+  /* FAB TOC button */
   var fabToc = document.getElementById('fab-toc');
   if (fabToc) {
     fabToc.addEventListener('click', function() {

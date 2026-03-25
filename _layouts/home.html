@@ -67,7 +67,7 @@ layout: default
 
           <div class="col-md-5">
             <div class="preview-img">
-              <img src="{{ src }}" alt="{{ alt }}">
+              <img src="{{ src }}" alt="{{ alt }}" style="object-position:{{ post.card_image_position | default: post.image_position | default: '50% 50%' }};">
             </div>
           </div>
           {% assign card_body_col = '7' %}
@@ -103,7 +103,7 @@ layout: default
               </span>
             </h1>
 
-            <div class="card-text content mt-0 mb-2" style="font-size:0.85rem;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden">
+            <div class="card-text content mt-0 mb-2" style="font-size:0.85rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">
               <p style="margin:0">{% include post-summary.html %}</p>
             </div>
 

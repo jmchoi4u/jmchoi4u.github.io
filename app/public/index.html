@@ -90,6 +90,24 @@
                 <label>설명<input id="post-description" type="text" placeholder="검색 결과에 보일 짧은 설명"></label>
               </div>
 
+              <div class="grid two">
+                <label>표시 제목 (줄바꿈 가능)
+                  <textarea id="post-hero-title" class="small-area" rows="3" placeholder="비워두면 글 제목과 같습니다. 줄을 나누고 싶으면 Enter로 줄바꿈하세요."></textarea>
+                </label>
+                <label>목록 요약
+                  <input id="post-summary" type="text" placeholder="홈/추천 목록에 보일 짧은 문장">
+                </label>
+              </div>
+
+              <div class="grid two">
+                <label>표지 초점 위치
+                  <input id="post-hero-image-position" type="text" placeholder="예: 50% 38%">
+                </label>
+                <label>파일 메모
+                  <input type="text" value="표시 제목, 목록 요약, 표지 초점은 저장 시 프론트매터에 함께 기록됩니다." readonly style="background:#f3f5f8;color:var(--muted)">
+                </label>
+              </div>
+
               <div class="grid three">
                 <label>카테고리 1
                   <input id="post-category-main" type="text" list="category-options" placeholder="예: 개발">
@@ -98,6 +116,27 @@
                   <input id="post-category-sub" type="text" list="category-options" placeholder="예: Jekyll">
                 </label>
                 <label>태그<input id="post-tags" type="text" placeholder="예: chirpy, github-pages, seo"></label>
+              </div>
+
+              <!-- 표지 이미지 -->
+              <div class="cover-image-section" style="margin-top:.8rem;padding:.8rem;border:1px dashed var(--border);border-radius:8px;background:var(--bg-alt, #f9fafb)">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
+                  <div style="display:flex;align-items:center;gap:.5rem">
+                    <strong>📷 표지 이미지</strong>
+                    <span class="muted" style="font-size:.75rem">글 상단 배경에 표시 (본문 X)</span>
+                  </div>
+                  <button id="remove-cover-btn" type="button" style="font-size:.75rem;padding:2px 8px">제거</button>
+                </div>
+                <label id="cover-drop-zone" style="display:flex;align-items:center;justify-content:center;gap:.5rem;padding:.8rem;border:2px dashed var(--border);border-radius:6px;cursor:pointer;text-align:center;color:var(--muted-text);font-size:.85rem;transition:border-color .2s">
+                  <span id="cover-drop-text">이미지를 선택하면 자동 업로드됩니다</span>
+                  <input id="cover-image-file" type="file" accept=".png,.jpg,.jpeg,.webp,.gif" style="display:none">
+                  <button id="upload-cover-btn" type="button" style="display:none">표지 업로드</button>
+                </label>
+                <div id="cover-preview-area" style="margin-top:.5rem;display:none">
+                  <img id="cover-preview-img" src="" alt="표지 미리보기" style="height:120px;width:100%;object-fit:cover;object-position:50% 18%;border-radius:6px;border:1px solid var(--border)">
+                  <span id="cover-path-display" class="muted" style="display:block;font-size:.75rem;margin-top:.2rem"></span>
+                </div>
+                <input id="cover-image-path" type="hidden" value="">
               </div>
             </section>
 
@@ -229,17 +268,7 @@
               </div>
             </section>
 
-            <section class="editor-block tone-rose">
-              <div class="editor-block-header">
-                <div>
-                  <h3>추가 front matter</h3>
-                  <p class="muted">대표 이미지, alt 설명 같은 옵션을 직접 적고 싶을 때만 사용합니다.</p>
-                </div>
-                <span class="editor-chip">선택</span>
-              </div>
-
-              <label>추가 front matter<textarea id="post-extra" class="small-area" placeholder="image:&#10;  path: /assets/img/posts/sample/cover.png&#10;  alt: 대표 이미지 설명"></textarea></label>
-            </section>
+            <textarea id="post-extra" class="small-area" style="display:none"></textarea>
           </div>
 
           <input id="original-path" type="hidden">

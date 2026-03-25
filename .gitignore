@@ -42,6 +42,7 @@ Desktop.ini
 *.temp
 *.bak
 *.swp
+AGENT_COLLAB_LOG.md
 
 # Generated theme assets
 _sass/vendors/

@@ -1,4 +1,4 @@
-<!-- Post bottom navigation: 추천글 + 최신글 -->
+<!-- Post bottom navigation: 좌측 추천글 1개 + 우측 관련글 1개 -->
 
 {% include lang.html %}
 
@@ -6,7 +6,7 @@
 {% for p in site.posts %}
   {% if p.hidden == true or p.url == page.url %}{% continue %}{% endif %}
   {% assign filtered_latest = filtered_latest | push: p %}
-  {% if filtered_latest.size >= 3 %}{% break %}{% endif %}
+  {% if filtered_latest.size >= 5 %}{% break %}{% endif %}
 {% endfor %}
 
 {% assign related = '' | split: '' %}
@@ -26,136 +26,221 @@
     {% endunless %}
   {% endfor %}
 {% endfor %}
-{% assign related = related | slice: 0, 3 %}
+
+{% assign related_pick = related | first %}
+{% assign latest_pick = filtered_latest | first %}
+{% assign recommend_pick = related_pick | default: filtered_latest[1] | default: latest_pick %}
+
+<div class="post-floating-bottom" aria-hidden="true">
+  <div class="post-floating-bottom-inner">
+    {% if latest_pick %}
+      <a class="post-floating-bottom-link left" href="{{ latest_pick.url | relative_url }}">
+        <span class="post-floating-bottom-caption">최신글</span>
+        <span class="post-floating-bottom-title">{{ latest_pick.title }}</span>
+      </a>
+    {% endif %}
+
+    {% if recommend_pick %}
+      <a class="post-floating-bottom-link right" href="{{ recommend_pick.url | relative_url }}">
+        <span class="post-floating-bottom-caption">추천글</span>
+        <span class="post-floating-bottom-title">{{ recommend_pick.title }}</span>
+      </a>
+    {% endif %}
+  </div>
+</div>
 
 <nav class="post-bottom-nav mt-4 mb-3" aria-label="Post Bottom Navigation">
-  <div class="row g-3">
-    <!-- 추천글 (관련글 + 인기글로 3개 채움) -->
-    <div class="col-12 col-md-6">
-      <div class="bottom-nav-section recommend-section">
-        <h4 class="bottom-nav-title">
-          <i class="fas fa-star" style="color:#fbbf24;"></i> 추천글
-        </h4>
-        <ul class="bottom-nav-list" id="recommend-list">
-          {% for p in related %}
-            <li data-url="{{ p.url }}">
-              <a href="{{ p.url | relative_url }}">
-                <span class="bottom-nav-link-title">{{ p.title }}</span>
-                <span class="bottom-nav-date">{{ p.date | date: "%m/%d" }}</span>
-              </a>
-            </li>
-          {% endfor %}
-        </ul>
-      </div>
-    </div>
+  <div class="post-bottom-nav-grid">
+    {% if latest_pick %}
+      <a id="recommend-card" class="post-bottom-card post-bottom-card-left" href="{{ latest_pick.url | relative_url }}" data-current-url="{{ page.url }}">
+        <span class="post-bottom-label">추천글</span>
+        <strong id="recommend-card-title" class="post-bottom-title">{{ latest_pick.title }}</strong>
+        <span id="recommend-card-date" class="post-bottom-date">{{ latest_pick.date | date: "%Y.%m.%d" }}</span>
+      </a>
+    {% endif %}
 
-    <!-- 최신글 -->
-    <div class="col-12 col-md-6">
-      <div class="bottom-nav-section">
-        <h4 class="bottom-nav-title">
-          <i class="fas fa-fire" style="color:#f59e0b;"></i> 최신글
-        </h4>
-        <ul class="bottom-nav-list">
-          {% for p in filtered_latest %}
-            <li>
-              <a href="{{ p.url | relative_url }}">
-                <span class="bottom-nav-link-title">{{ p.title }}</span>
-                <span class="bottom-nav-date">{{ p.date | date: "%m/%d" }}</span>
-              </a>
-            </li>
-          {% endfor %}
-        </ul>
-      </div>
-    </div>
+    {% if related_pick %}
+      <a class="post-bottom-card post-bottom-card-right" href="{{ related_pick.url | relative_url }}">
+        <span class="post-bottom-label">관련글</span>
+        <strong class="post-bottom-title">{{ related_pick.title }}</strong>
+        <span class="post-bottom-date">{{ related_pick.date | date: "%Y.%m.%d" }}</span>
+      </a>
+    {% elsif filtered_latest.size > 1 %}
+      {% assign fallback_related = filtered_latest[1] %}
+      <a class="post-bottom-card post-bottom-card-right" href="{{ fallback_related.url | relative_url }}">
+        <span class="post-bottom-label">관련글</span>
+        <strong class="post-bottom-title">{{ fallback_related.title }}</strong>
+        <span class="post-bottom-date">{{ fallback_related.date | date: "%Y.%m.%d" }}</span>
+      </a>
+    {% endif %}
   </div>
 </nav>
 
 <script>
 (function() {
+  var recommendCard = document.getElementById('recommend-card');
+  if (!recommendCard) return;
+
   var gcId = {{ site.analytics.goatcounter.id | jsonify | default: 'null' }};
-  var currentUrl = {{ page.url | jsonify }};
-  var recommendList = document.getElementById('recommend-list');
-  if (!recommendList) return;
+  var currentUrl = recommendCard.getAttribute('data-current-url');
+  var titleEl = document.getElementById('recommend-card-title');
+  var dateEl = document.getElementById('recommend-card-date');
+  var relatedCard = document.querySelector('.post-bottom-card-right');
+  var relatedHref = relatedCard ? relatedCard.getAttribute('href') : '';
 
-  // 이미 있는 추천글 URL 수집
-  var existingUrls = [];
-  var existingItems = recommendList.querySelectorAll('li[data-url]');
-  existingItems.forEach(function(li) { existingUrls.push(li.getAttribute('data-url')); });
-
-  var currentCount = existingItems.length;
-  if (currentCount >= 3) return; // 이미 3개면 끝
-  var needed = 3 - currentCount;
-
-  // 모든 포스트 목록
   var allPosts = [
     {% for post in site.posts limit: 30 %}{% unless post.hidden == true %}
-    { url: {{ post.url | jsonify }}, title: {{ post.title | jsonify }}, href: {{ post.url | relative_url | jsonify }}, date: {{ post.date | date: "%m/%d" | jsonify }} },
+    { url: {{ post.url | jsonify }}, href: {{ post.url | relative_url | jsonify }}, title: {{ post.title | jsonify }}, date: {{ post.date | date: "%Y.%m.%d" | jsonify }} },
     {% endunless %}{% endfor %}
   ];
 
+  function applyPick(post) {
+    if (!post) return;
+    recommendCard.href = post.href;
+    if (titleEl) titleEl.textContent = post.title;
+    if (dateEl) dateEl.textContent = post.date;
+  }
+
+  function chooseFallback(posts) {
+    for (var i = 0; i < posts.length; i++) {
+      var post = posts[i];
+      if (post.url === currentUrl) continue;
+      if (relatedHref && post.href === relatedHref) continue;
+      return post;
+    }
+    return null;
+  }
+
   if (!gcId) {
-    // GoatCounter 없으면 최신순으로 채움
-    fillWithPosts(allPosts, needed);
+    applyPick(chooseFallback(allPosts));
     return;
   }
 
-  // GoatCounter에서 조회수 가져와서 인기순으로 채움
-  Promise.all(allPosts.map(function(p) {
-    var uri = p.url.replace(/\/$/, '');
-    return fetch('https://' + gcId + '.goatcounter.com/counter/' + encodeURIComponent(uri) + '.json')
-      .then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })
-      .then(function(d) { p.views = parseInt((d.count || '0').replace(/\D/g, ''), 10) || 0; return p; })
-      .catch(function() { p.views = 0; return p; });
-  })).then(function(results) {
-    // 조회수가 하나라도 있으면 인기순, 없으면 최신순
-    var hasViews = results.some(function(p) { return p.views > 0; });
-    if (hasViews) results.sort(function(a, b) { return b.views - a.views; });
-    fillWithPosts(results, needed);
-  }).catch(function() {
-    fillWithPosts(allPosts, needed);
-  });
-
-  function fillWithPosts(posts, count) {
-    var added = 0;
-    for (var i = 0; i < posts.length && added < count; i++) {
-      var p = posts[i];
-      // 현재 글, 이미 추천에 있는 글 제외
-      if (p.url === currentUrl || existingUrls.indexOf(p.url) !== -1) continue;
-      var li = document.createElement('li');
-      var a = document.createElement('a');
-      a.href = p.href;
-      var titleSpan = document.createElement('span');
-      titleSpan.className = 'bottom-nav-link-title';
-      titleSpan.textContent = p.title;
-      var dateSpan = document.createElement('span');
-      dateSpan.className = 'bottom-nav-date';
-      dateSpan.textContent = p.date;
-      a.appendChild(titleSpan);
-      a.appendChild(dateSpan);
-      li.appendChild(a);
-      recommendList.appendChild(li);
-      existingUrls.push(p.url);
-      added++;
-    }
+  var readGoatCounterCount = window.requestGoatCounterCount;
+  if (typeof readGoatCounterCount !== 'function') {
+    applyPick(chooseFallback(allPosts));
+    return;
   }
+
+  Promise.all(allPosts.map(function(post) {
+    return new Promise(function(resolve) {
+      readGoatCounterCount(post.url, function(views) {
+        post.views = views || 0;
+        resolve(post);
+      });
+    });
+  })).then(function(posts) {
+    posts.sort(function(a, b) { return b.views - a.views; });
+    applyPick(chooseFallback(posts) || chooseFallback(allPosts));
+  }).catch(function() {
+    applyPick(chooseFallback(allPosts));
+  });
 })();
 </script>
 
 <style>
-  .post-bottom-nav{border-top:1px solid var(--border-color,#e9ecef);padding-top:1.5rem}
-  .bottom-nav-section{background:var(--card-bg,rgba(0,0,0,0.02));border-radius:10px;padding:1rem 1.2rem;transition:box-shadow 0.2s}
-  .bottom-nav-section:hover{box-shadow:0 4px 16px rgba(0,0,0,0.08)}
-  [data-mode="dark"] .bottom-nav-section{background:rgba(255,255,255,0.04)}
-  [data-mode="dark"] .bottom-nav-section:hover{box-shadow:0 4px 16px rgba(0,0,0,0.3)}
-  .recommend-section{border-left:3px solid #fbbf24;background:linear-gradient(135deg,rgba(251,191,36,0.06),rgba(251,191,36,0.02))}
-  [data-mode="dark"] .recommend-section{background:linear-gradient(135deg,rgba(251,191,36,0.1),rgba(251,191,36,0.03))}
-  .bottom-nav-title{font-size:0.9rem;font-weight:700;margin-bottom:0.6rem;color:var(--heading-color)}
-  .bottom-nav-title i{margin-right:5px}
-  .bottom-nav-list{list-style:none;padding:0;margin:0}
-  .bottom-nav-list li{padding:0;margin:0}
-  .bottom-nav-list li+li{border-top:1px solid var(--border-color,rgba(0,0,0,0.05))}
-  .bottom-nav-list a{display:flex;justify-content:space-between;align-items:center;gap:8px;text-decoration:none;color:var(--text-color);font-size:0.85rem;padding:7px 6px;border-radius:6px;transition:background 0.15s,transform 0.1s}
-  .bottom-nav-list a:hover{background:var(--btn-border-color,rgba(0,0,0,0.05));transform:translateX(3px);color:var(--link-color,#0056b3)}
-  .bottom-nav-link-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
-  .bottom-nav-date{font-size:0.72rem;color:var(--text-muted-color,#868e96);white-space:nowrap;flex-shrink:0}
+  .post-bottom-nav{
+    border-top:1px solid var(--main-border-color,#e9ecef);
+    padding-top:1.4rem;
+    max-width:760px;
+    margin:0 auto;
+  }
+  .post-bottom-nav-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:1rem;
+  }
+  .post-bottom-card{
+    display:flex;
+    flex-direction:column;
+    gap:0.35rem;
+    min-height:106px;
+    padding:1rem 1.1rem;
+    border:1px solid rgba(95,124,186,0.22);
+    border-radius:16px;
+    background:var(--card-bg,#fff);
+    color:var(--text-color);
+    text-decoration:none;
+    box-shadow:0 14px 30px rgba(15,23,42,0.07);
+    transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  }
+  .post-bottom-card:hover{
+    transform:translateY(-2px);
+    box-shadow:0 18px 36px rgba(15,23,42,0.11);
+    border-color:rgba(61,124,255,0.34);
+    color:var(--text-color);
+  }
+  .post-bottom-card-left{
+    text-align:left;
+  }
+  .post-bottom-card-right{
+    text-align:right;
+  }
+  .post-bottom-label{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:max-content;
+    min-height:28px;
+    padding:0.22rem 0.7rem;
+    border-radius:999px;
+    font-size:0.74rem;
+    font-weight:700;
+    letter-spacing:-0.01em;
+    color:#6f8fce;
+    background:rgba(111,143,206,0.12);
+    border:1px solid rgba(111,143,206,0.22);
+  }
+  .post-bottom-card-right .post-bottom-label{
+    margin-left:auto;
+    color:#c29d56;
+    background:rgba(194,157,86,0.12);
+    border-color:rgba(194,157,86,0.24);
+  }
+  .post-bottom-title{
+    font-size:1.08rem;
+    line-height:1.55;
+    font-weight:700;
+    color:var(--heading-color);
+    display:-webkit-box;
+    overflow:hidden;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+  }
+  .post-bottom-date{
+    font-size:0.78rem;
+    color:var(--text-muted-color,#8b8b8b);
+    margin-top:auto;
+  }
+  @media(max-width:768px){
+    .post-bottom-nav-grid{
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:0.7rem;
+    }
+    .post-bottom-card-right{
+      text-align:right;
+    }
+    .post-bottom-card{
+      min-height:96px;
+      padding:0.85rem 0.82rem;
+      border-radius:14px;
+    }
+    .post-bottom-title{
+      font-size:0.95rem;
+      line-height:1.45;
+    }
+    .post-bottom-date,
+    .post-bottom-label{
+      font-size:0.72rem;
+    }
+  }
+  @media(max-width:420px){
+    .post-bottom-card{
+      min-height:90px;
+      padding:0.78rem 0.72rem;
+    }
+    .post-bottom-title{
+      font-size:0.9rem;
+    }
+  }
 </style>

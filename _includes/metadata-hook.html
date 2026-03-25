@@ -5,3 +5,202 @@
   crossorigin="anonymous"
 ></script>
 -->
+
+<!-- Noto Sans KR (브런치 스타일) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap">
+
+<style>
+  /* ── 전체 폰트: Noto Sans KR (브런치 스타일) ── */
+  body,
+  #sidebar,
+  #topbar,
+  .post-meta,
+  .post-tag-pill,
+  .card,
+  .categories,
+  .tag,
+  .breadcrumb,
+  .pagination,
+  .post-navigation,
+  footer,
+  input, button, select, textarea {
+    font-family: "Noto Sans KR", "Malgun Gothic", -apple-system, sans-serif !important;
+  }
+
+  /* ── 본문: 너무 가늘지 않게, 읽기 편한 웨이트 ── */
+  .content,
+  .post-content,
+  #content .content {
+    font-family: "Noto Sans KR", "Malgun Gothic", sans-serif !important;
+    font-weight: 400;
+    letter-spacing: -0.2px;
+    word-break: keep-all;
+  }
+
+  /* ── 제목: 500~700 웨이트 ── */
+  h1, h2, h3, h4, h5, h6,
+  .post-hero-content h1,
+  .post-hero-center h1,
+  .home-card .card-title,
+  .card-title {
+    font-family: "Noto Sans KR", "Malgun Gothic", sans-serif !important;
+    font-weight: 700;
+    letter-spacing: -0.8px;
+  }
+
+  .content h2, .content h3, .content h4 {
+    font-weight: 500;
+    letter-spacing: -0.5px;
+  }
+
+  /* ── 본문 bold는 조금 더 또렷하게 ── */
+  .content strong,
+  .content b {
+    font-weight: 600;
+  }
+
+  /* ── 코드: 모노스페이스 유지 ── */
+  .content code, .content pre,
+  code, pre {
+    font-family: "JetBrains Mono", "D2Coding", "Fira Code", monospace !important;
+  }
+
+  /* ── heading anchor(#) 완전 숨기기 ── */
+  .content .anchor {
+    display: none !important;
+  }
+
+  /* ══════════════════════════════════════
+     라이트 모드 — 따뜻한 크림 톤
+     ══════════════════════════════════════ */
+  @media (prefers-color-scheme: light) {
+    html:not([data-mode="dark"]) {
+      --main-bg: #faf8f5;
+      --text-color: #2c2c2c;
+      --heading-color: #1a1a1a;
+      --text-muted-color: #6b6b6b;
+      --link-color: #1a6b4a;
+      --link-underline-color: #c8ddd2;
+      --sidebar-bg: #f0ede8;
+      --sidebar-border-color: #e4e0da;
+      --sidebar-muted-color: #5a5a5a;
+      --sidebar-active-color: #1a1a1a;
+      --sidebar-hover-bg: rgba(0,0,0,0.05);
+      --topbar-bg: rgba(250,248,245,0.85);
+      --card-bg: #ffffff;
+      --card-shadow: rgba(0,0,0,0.04) 0 2px 8px, rgba(0,0,0,0.06) 0 0 0 1px;
+      --blockquote-border-color: #d4cfc7;
+      --blockquote-text-color: #555;
+      --inline-code-bg: rgba(0,0,0,0.04);
+      --highlight-bg-color: #f5f2ed;
+      --btn-border-color: #e4e0da;
+      --tag-border: #ddd8d0;
+      --tag-hover: #ebe7e0;
+      --main-border-color: #ebe7e0;
+      --tb-odd-bg: #f8f6f2;
+      --prompt-tip-bg: rgba(26,107,74,0.08);
+      --prompt-info-bg: rgba(26,80,130,0.08);
+      --toc-highlight: #1a6b4a;
+    }
+  }
+  html[data-mode="light"] {
+    --main-bg: #faf8f5;
+    --text-color: #2c2c2c;
+    --heading-color: #1a1a1a;
+    --text-muted-color: #6b6b6b;
+    --link-color: #1a6b4a;
+    --link-underline-color: #c8ddd2;
+    --sidebar-bg: #f0ede8;
+    --sidebar-border-color: #e4e0da;
+    --sidebar-muted-color: #5a5a5a;
+    --sidebar-active-color: #1a1a1a;
+    --sidebar-hover-bg: rgba(0,0,0,0.05);
+    --topbar-bg: rgba(250,248,245,0.85);
+    --card-bg: #ffffff;
+    --card-shadow: rgba(0,0,0,0.04) 0 2px 8px, rgba(0,0,0,0.06) 0 0 0 1px;
+    --blockquote-border-color: #d4cfc7;
+    --blockquote-text-color: #555;
+    --inline-code-bg: rgba(0,0,0,0.04);
+    --highlight-bg-color: #f5f2ed;
+    --btn-border-color: #e4e0da;
+    --tag-border: #ddd8d0;
+    --tag-hover: #ebe7e0;
+    --main-border-color: #ebe7e0;
+    --tb-odd-bg: #f8f6f2;
+    --prompt-tip-bg: rgba(26,107,74,0.08);
+    --prompt-info-bg: rgba(26,80,130,0.08);
+    --toc-highlight: #1a6b4a;
+  }
+
+  /* ══════════════════════════════════════
+     다크 모드 — 부드러운 차콜 톤
+     ══════════════════════════════════════ */
+  @media (prefers-color-scheme: dark) {
+    html:not([data-mode="light"]) {
+      --main-bg: #1c1c1f;
+      --text-color: #d0d0d0;
+      --heading-color: #e8e8e8;
+      --text-muted-color: #8a8a8a;
+      --link-color: #7cb89e;
+      --link-underline-color: rgba(124,184,158,0.3);
+      --sidebar-bg: #18181b;
+      --sidebar-border-color: #2a2a2d;
+      --sidebar-muted-color: #8a8a8a;
+      --sidebar-active-color: #f0f0f0;
+      --sidebar-hover-bg: rgba(255,255,255,0.05);
+      --topbar-bg: rgba(28,28,31,0.8);
+      --card-bg: #222225;
+      --card-hover-bg: #2e2e32;
+      --card-shadow: rgba(0,0,0,0.3) 0 4px 12px;
+      --blockquote-border-color: #3a3a3d;
+      --blockquote-text-color: #999;
+      --main-border-color: #2e2e32;
+      --inline-code-bg: rgba(255,255,255,0.06);
+      --highlight-bg-color: #252528;
+      --btn-border-color: #3a3a3d;
+      --btn-backtotop-border-color: #2a2a2d;
+      --tag-hover: rgba(124,184,158,0.12);
+      --tb-odd-bg: #252528;
+      --tb-even-bg: #1e1e21;
+      --toc-highlight: #7cb89e;
+      --prompt-tip-bg: rgba(124,184,158,0.1);
+      --prompt-info-bg: rgba(100,160,220,0.1);
+      --card-header-bg: #282830;
+      --search-border-color: #3a3a3d;
+    }
+  }
+  html[data-mode="dark"] {
+    --main-bg: #1c1c1f;
+    --text-color: #d0d0d0;
+    --heading-color: #e8e8e8;
+    --text-muted-color: #8a8a8a;
+    --link-color: #7cb89e;
+    --link-underline-color: rgba(124,184,158,0.3);
+    --sidebar-bg: #18181b;
+    --sidebar-border-color: #2a2a2d;
+    --sidebar-muted-color: #8a8a8a;
+    --sidebar-active-color: #f0f0f0;
+    --sidebar-hover-bg: rgba(255,255,255,0.05);
+    --topbar-bg: rgba(28,28,31,0.8);
+    --card-bg: #222225;
+    --card-hover-bg: #2e2e32;
+    --card-shadow: rgba(0,0,0,0.3) 0 4px 12px;
+    --blockquote-border-color: #3a3a3d;
+    --blockquote-text-color: #999;
+    --main-border-color: #2e2e32;
+    --inline-code-bg: rgba(255,255,255,0.06);
+    --highlight-bg-color: #252528;
+    --btn-border-color: #3a3a3d;
+    --btn-backtotop-border-color: #2a2a2d;
+    --tag-hover: rgba(124,184,158,0.12);
+    --tb-odd-bg: #252528;
+    --tb-even-bg: #1e1e21;
+    --toc-highlight: #7cb89e;
+    --prompt-tip-bg: rgba(124,184,158,0.1);
+    --prompt-info-bg: rgba(100,160,220,0.1);
+    --card-header-bg: #282830;
+    --search-border-color: #3a3a3d;
+  }
+</style>

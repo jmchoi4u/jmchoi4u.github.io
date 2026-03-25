@@ -33,6 +33,9 @@ const el = {
   slug: document.querySelector("#post-slug"),
   date: document.querySelector("#post-date"),
   draft: document.querySelector("#post-draft"),
+  heroTitle: document.querySelector("#post-hero-title"),
+  summary: document.querySelector("#post-summary"),
+  heroImagePosition: document.querySelector("#post-hero-image-position"),
   categoryMain: document.querySelector("#post-category-main"),
   categorySub: document.querySelector("#post-category-sub"),
   tags: document.querySelector("#post-tags"),
@@ -61,7 +64,12 @@ const el = {
   templateSelect: document.querySelector("#template-select"),
   templateName: document.querySelector("#template-name"),
   templateEditor: document.querySelector("#template-editor"),
-  templatePreview: document.querySelector("#template-preview")
+  templatePreview: document.querySelector("#template-preview"),
+  coverImageFile: document.querySelector("#cover-image-file"),
+  coverImagePath: document.querySelector("#cover-image-path"),
+  coverPreviewArea: document.querySelector("#cover-preview-area"),
+  coverPreviewImg: document.querySelector("#cover-preview-img"),
+  coverPathDisplay: document.querySelector("#cover-path-display")
 };
 
 function formatNow() {
@@ -146,7 +154,29 @@ function renderMarkdown(target, markdownText, options = {}) {
 }
 
 function updateBodyPreview() {
-  renderMarkdown(el.bodyPreview, el.body.value);
+  const title = (el.heroTitle.value.trim() || el.title.value.trim());
+  const desc = document.querySelector("#post-description").value.trim();
+  const cover = el.coverImagePath.value.trim();
+  const coverPosition = el.heroImagePosition.value.trim() || "50% 18%";
+  let header = "";
+  if (cover || title) {
+    header += `<div class="preview-post-header" style="margin-bottom:1.2rem">`;
+    if (cover) {
+      header += `<div style="width:100%;height:220px;overflow:hidden;border-radius:8px;margin-bottom:.8rem"><img src="${cover}" alt="표지" style="width:100%;height:100%;object-fit:cover;object-position:${coverPosition}"></div>`;
+    }
+    if (title) {
+      header += `<h1 style="margin:0 0 .3rem;font-size:1.6rem;font-weight:700;line-height:1.3">${title.replace(/</g,"&lt;").replace(/\r?\n/g, "<br>")}</h1>`;
+    }
+    if (desc) {
+      header += `<p style="margin:0 0 .5rem;color:#888;font-size:.9rem">${desc.replace(/</g,"&lt;")}</p>`;
+    }
+    header += `<hr style="border:none;border-top:1px solid #e0e0e0;margin:.8rem 0">`;
+    header += `</div>`;
+  }
+  el.bodyPreview.innerHTML = header;
+  const bodyDiv = document.createElement("div");
+  renderMarkdown(bodyDiv, el.body.value);
+  el.bodyPreview.appendChild(bodyDiv);
 }
 
 function updateTemplatePreview() {
@@ -211,6 +241,9 @@ function currentEditorData() {
     slug: el.slug.value.trim(),
     date: el.date.value.trim(),
     draft: el.draft.checked,
+    heroTitle: el.heroTitle.value.trim(),
+    summary: el.summary.value.trim(),
+    heroImagePosition: el.heroImagePosition.value.trim(),
     categories: parseCategories(),
     tags: parseTags(el.tags.value),
     description: el.description.value.trim(),
@@ -221,6 +254,7 @@ function currentEditorData() {
     mermaid: el.mermaid.checked,
     math: el.math.checked,
     extra: el.extra.value,
+    coverImage: el.coverImagePath.value.trim(),
     body: el.body.value,
     relativePath: el.originalPath.value || ""
   };
@@ -336,6 +370,9 @@ function resetEditor() {
   el.slug.value = "";
   el.date.value = el.dateRefresh.checked ? formatNow() : "";
   el.draft.checked = false;
+  el.heroTitle.value = "";
+  el.summary.value = "";
+  el.heroImagePosition.value = "";
   el.categoryMain.value = "";
   el.categorySub.value = "";
   el.tags.value = "";
@@ -347,6 +384,9 @@ function resetEditor() {
   el.mermaid.checked = false;
   el.math.checked = false;
   el.extra.value = "";
+  el.coverImagePath.value = "";
+  el.coverImageFile.value = "";
+  updateCoverPreview();
   el.body.value = "";
   el.originalPath.value = "";
   el.permalink.value = "";
@@ -360,6 +400,9 @@ function fillEditor(data) {
   el.slug.value = formatPostFileName(data.slug || slugify((data.fileName || "").replace(/^\d{4}-\d{2}-\d{2}-/, "").replace(/\.md$/i, "")));
   el.date.value = data.date || formatNow();
   el.draft.checked = Boolean(data.draft);
+  el.heroTitle.value = String(data.heroTitle || "").replace(/<br\s*\/?>/gi, "\n");
+  el.summary.value = data.summary || "";
+  el.heroImagePosition.value = data.heroImagePosition || "";
   el.categoryMain.value = data.categories?.[0] || "";
   el.categorySub.value = data.categories?.[1] || "";
   el.tags.value = (data.tags || []).join(", ");
@@ -371,6 +414,8 @@ function fillEditor(data) {
   el.mermaid.checked = Boolean(data.mermaid);
   el.math.checked = Boolean(data.math);
   el.extra.value = data.extra || "";
+  el.coverImagePath.value = data.coverImage || "";
+  updateCoverPreview();
   el.body.value = data.body || "";
   el.originalPath.value = data.relativePath || "";
   el.permalink.value = data.permalink || "";
@@ -579,11 +624,11 @@ function renderInfoList(target, rows) {
 function parseTemplateText(text, fileName = "") {
   const normalized = String(text || "").replace(/\r\n/g, "\n");
   if (!normalized.startsWith("---\n")) {
-    return { fileName, title: "", date: formatNow(), categories: [], tags: [], description: "", toc: true, comments: true, pin: false, hidden: false, mermaid: false, math: false, extra: "", body: normalized };
+    return { fileName, title: "", date: formatNow(), heroTitle: "", summary: "", heroImagePosition: "", categories: [], tags: [], description: "", toc: true, comments: true, pin: false, hidden: false, mermaid: false, math: false, extra: "", body: normalized };
   }
   const end = normalized.indexOf("\n---\n", 4);
   if (end === -1) {
-    return { fileName, title: "", date: formatNow(), categories: [], tags: [], description: "", toc: true, comments: true, pin: false, hidden: false, mermaid: false, math: false, extra: "", body: normalized };
+    return { fileName, title: "", date: formatNow(), heroTitle: "", summary: "", heroImagePosition: "", categories: [], tags: [], description: "", toc: true, comments: true, pin: false, hidden: false, mermaid: false, math: false, extra: "", body: normalized };
   }
   const head = normalized.slice(4, end);
   const body = normalized.slice(end + 5).replace(/^\n/, "");
@@ -604,13 +649,16 @@ function parseTemplateText(text, fileName = "") {
       .filter(Boolean);
   const extra = head
     .split("\n")
-    .filter((line) => !/^(title|date|categories|tags|description|toc|comments|pin|hidden|mermaid|math):/.test(line.trim()))
+    .filter((line) => !/^(title|date|hero_title|summary|hero_image_position|categories|tags|description|toc|comments|pin|hidden|mermaid|math):/.test(line.trim()))
     .join("\n")
     .trim();
   return {
     fileName,
     title: pick(/^title:\s*(.+)$/m),
     date: pick(/^date:\s*(.+)$/m) || formatNow(),
+    heroTitle: pick(/^hero_title:\s*(.+)$/m),
+    summary: pick(/^summary:\s*(.+)$/m),
+    heroImagePosition: pick(/^hero_image_position:\s*(.+)$/m),
     categories: parseList(pick(/^categories:\s*(.+)$/m)),
     tags: parseList(pick(/^tags:\s*(.+)$/m)),
     description: pick(/^description:\s*(.+)$/m),
@@ -708,8 +756,15 @@ async function loadRaw(kind = state.rawKind) {
 }
 
 function loadQuickSettings(yaml) {
-  const get = (key) => { const m = yaml.match(new RegExp(`^${key}:\\s*(.+)`, "m")); return m ? m[1].trim().replace(/^["']|["']$/g, "") : ""; };
-  const desc = (() => { const m = yaml.match(/^description:\s*>-?\s*\n([\s\S]*?)(?=\n\S|\n*$)/m); return m ? m[1].trim() : get("description"); })();
+  const get = (key) => {
+    const m = yaml.match(new RegExp(`^${key}:\\s*(.+)`, "m"));
+    if (!m) return "";
+    return m[1].replace(/\s*#.*$/, "").trim().replace(/^["']|["']$/g, "");
+  };
+  const desc = (() => {
+    const m = yaml.match(/^description:\s*>-?\s*(?:#.*)?\n([\s\S]*?)(?=\n\S|\n*$)/m);
+    return m ? m[1].trim() : get("description");
+  })();
   document.querySelector("#qs-title").value = get("title");
   document.querySelector("#qs-tagline").value = get("tagline");
   document.querySelector("#qs-description").value = desc;
@@ -731,8 +786,8 @@ async function saveQuickSettings() {
   const desc = document.querySelector("#qs-description").value.trim();
   const avatar = document.querySelector("#qs-avatar").value.trim();
 
-  yaml = yaml.replace(/^(title:\s*).*$/m, `$1${title}`);
-  yaml = yaml.replace(/^(tagline:\s*).*$/m, `$1${tagline}`);
+  yaml = yaml.replace(/^(title:\s*)([^#\n]*)(.*)$/m, `$1${title} $3`);
+  yaml = yaml.replace(/^(tagline:\s*)([^#\n]*)(.*)$/m, `$1${tagline} $3`);
   yaml = yaml.replace(/^(description:\s*>-?\s*\n)[\s\S]*?(?=\n\S)/m, `$1  ${desc}`);
   yaml = yaml.replace(/^(avatar:\s*).*$/m, `$1${avatar}`);
   yaml = yaml.replace(/^(social_preview_image:\s*).*$/m, `$1${avatar}`);
@@ -741,6 +796,51 @@ async function saveQuickSettings() {
   setOutput("빠른 설정 저장 완료", "블로그 이름/소개/설명/프로필 이미지가 저장되었습니다.");
   if (state.rawKind === "config") el.rawEditor.value = yaml;
   await loadSummary();
+}
+
+/* ── 표지 이미지 ── */
+function updateCoverPreview() {
+  const p = el.coverImagePath.value.trim();
+  const coverPosition = el.heroImagePosition.value.trim() || "50% 18%";
+  if (p) {
+    el.coverPreviewImg.src = p;
+    el.coverPreviewImg.style.objectPosition = coverPosition;
+    el.coverPathDisplay.textContent = p;
+    el.coverPreviewArea.style.display = "block";
+  } else {
+    el.coverPreviewArea.style.display = "none";
+    el.coverPathDisplay.textContent = "";
+  }
+}
+
+async function uploadCoverImage() {
+  const file = el.coverImageFile.files[0];
+  if (!file) throw new Error("표지 이미지 파일을 먼저 선택하세요.");
+  const reader = new FileReader();
+  const dataUrl = await new Promise((resolve, reject) => {
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+  const slug = el.slug.value.trim() || el.title.value.trim() || "cover";
+  const folder = slug.replace(/[^a-zA-Z0-9가-힣_-]/g, "-").toLowerCase() || "cover";
+  const data = await api("/api/upload-image", {
+    method: "POST",
+    body: JSON.stringify({ area: "posts", folderName: folder, fileName: file.name, dataUrl })
+  });
+  el.coverImagePath.value = data.sitePath;
+  updateCoverPreview();
+  updateBodyPreview();
+  setOutput("표지 이미지 업로드 완료", `경로: ${data.sitePath}\n글을 자동 저장합니다...`);
+  // 업로드 후 자동 저장
+  await savePost();
+}
+
+function removeCoverImage() {
+  el.coverImagePath.value = "";
+  el.coverImageFile.value = "";
+  updateCoverPreview();
+  updateBodyPreview();
 }
 
 async function openPost(path) {
@@ -807,9 +907,13 @@ async function savePost() {
       slug: resolvePostSlug(el.slug.value.trim(), el.title.value.trim(), el.date.value.trim()),
       date: el.date.value.trim() || formatNow(),
       draft: el.draft.checked,
+      heroTitle: el.heroTitle.value.trim(),
+      summary: el.summary.value.trim(),
+      heroImagePosition: el.heroImagePosition.value.trim(),
       categories: parseCategories(),
       tags: parseTags(el.tags.value),
       description: el.description.value.trim(),
+      coverImage: el.coverImagePath.value.trim(),
       toc: el.toc.checked,
       comments: el.comments.checked,
       pin: el.pin.checked,
@@ -1100,6 +1204,11 @@ function bind() {
   document.querySelector("#publish-btn").addEventListener("click", () => run(publishSite));
   document.querySelector("#shutdown-app-btn").addEventListener("click", () => run(shutdownApp));
   document.querySelector("#save-raw-btn").addEventListener("click", () => run(saveRaw));
+  document.querySelector("#qs-save-btn").addEventListener("click", () => run(saveQuickSettings));
+  document.querySelector("#qs-avatar").addEventListener("input", updateAvatarPreview);
+  document.querySelector("#upload-cover-btn").addEventListener("click", () => run(uploadCoverImage));
+  document.querySelector("#remove-cover-btn").addEventListener("click", removeCoverImage);
+  el.coverImageFile.addEventListener("change", () => { if (el.coverImageFile.files[0]) run(uploadCoverImage); });
   document.querySelector("#load-template-btn").addEventListener("click", () => run(loadTemplateText));
   document.querySelector("#new-template-btn").addEventListener("click", newTemplate);
   document.querySelector("#save-template-btn").addEventListener("click", () => run(saveTemplateText));
@@ -1154,6 +1263,9 @@ function bind() {
     el.title,
     el.slug,
     el.date,
+    el.heroTitle,
+    el.summary,
+    el.heroImagePosition,
     el.categoryMain,
     el.categorySub,
     el.tags,
@@ -1175,6 +1287,12 @@ function bind() {
   ].forEach((field) => {
     field?.addEventListener("change", scheduleAutosave);
   });
+
+  // 제목·설명 변경 시 미리보기 헤더도 업데이트
+  el.title.addEventListener("input", updateBodyPreview);
+  el.heroTitle.addEventListener("input", updateBodyPreview);
+  el.heroImagePosition.addEventListener("input", () => { updateBodyPreview(); updateCoverPreview(); });
+  el.description.addEventListener("input", updateBodyPreview);
 
   el.postSearch?.addEventListener("input", (event) => {
     state.searchQuery = event.target.value || "";

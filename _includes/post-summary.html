@@ -1,0 +1,2 @@
+{% assign summary_source = post.summary | default: post.description | default: post.excerpt %}
+{{ summary_source | strip_html | replace: '<br>', ' ' | replace: '&nbsp;', ' ' | strip_newlines | replace: '  ', ' ' | strip }}

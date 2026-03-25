@@ -11,25 +11,79 @@ script_includes:
 {% include lang.html %}
 
 {% include toc-status.html %}
+{% capture post_words %}{{ page.content | number_of_words }}{% endcapture %}
+{% assign estimated_read_time = post_words | divided_by: 220 | at_least: 1 %}
 
 <article class="px-1" data-toc="{{ enable_toc }}">
   <header>
-    <!-- Hero Banner -->
-    <div class="post-hero{% unless page.image %} post-hero-default{% endunless %}">
+    <!-- ═══ Brunch-style Full Hero ═══ -->
+    <div id="post-hero-wrapper" class="post-hero{% unless page.image %} post-hero-default{% endunless %}">
       {% if page.image %}
         {% assign hero_src = page.image.path | default: page.image %}
-        <img src="{{ hero_src }}" class="post-hero-bg" alt="" aria-hidden="true">
+        {% assign hero_position = page.hero_image_position | default: page.image_position | default: '50% 50%' %}
+        <div class="post-hero-bg" aria-hidden="true" style="background-image:url('{{ hero_src | relative_url }}'); background-position:{{ hero_position }};"></div>
       {% endif %}
-      <div class="post-hero-content">
-        <h1 data-toc-skip>{{ page.title }}</h1>
-        {% if page.description %}
-          <p class="post-hero-desc">{{ page.description }}</p>
+      <div class="post-hero-overlay"></div>
+
+      <!-- 왼쪽 위 메뉴 버튼 -->
+      <button class="hero-action-btn hero-menu-btn" id="hero-menu" type="button" aria-label="메뉴">
+        <i class="fas fa-bars"></i>
+      </button>
+
+      <!-- 상단 우측 액션 버튼 -->
+      <div class="hero-actions">
+        <button class="hero-action-btn" id="hero-theme-toggle" type="button" aria-label="흑백 모드 전환"><i class="fas fa-adjust"></i></button>
+        <a class="hero-action-btn hero-action-link" href="https://ctee.kr/place/jmchoi4u" target="_blank" rel="noopener noreferrer" aria-label="Support">
+          <i class="fas fa-dollar-sign"></i>
+        </a>
+        <button class="hero-action-btn" id="hero-share" type="button" aria-label="공유"><i class="fas fa-share-alt"></i></button>
+        <button class="hero-action-btn" id="hero-comment-btn" type="button" aria-label="댓글"><i class="fas fa-comment-dots"></i></button>
+      </div>
+
+      <!-- 제목+설명: 중앙 -->
+      <div class="post-hero-center">
+        <div class="post-hero-copy">
+          <h1 data-toc-skip>{{ page.hero_title | default: page.title | newline_to_br }}</h1>
+        </div>
+      </div>
+
+      <div class="post-hero-footer">
+        {% if page.categories.size > 0 or page.tags.size > 0 %}
+          <div class="post-hero-taxonomy">
+            {% if page.categories.size > 0 %}
+              <span class="post-hero-folder">
+                <i class="far fa-folder-open"></i>
+                {% for category in page.categories %}
+                  <a href="{{ site.baseurl }}/categories/{{ category | slugify | url_encode }}/">{{ category }}</a>{% unless forloop.last %}, {% endunless %}
+                {% endfor %}
+              </span>
+            {% endif %}
+            {% if page.tags.size > 0 %}
+              <span class="post-hero-tags">
+                <i class="fa fa-tags"></i>
+                {% for tag in page.tags %}
+                  <a href="{{ site.baseurl }}/tags/{{ tag | slugify | url_encode }}/" class="post-hero-tag-pill">{{ tag }}</a>
+                {% endfor %}
+              </span>
+            {% endif %}
+          </div>
         {% endif %}
+
+        <!-- 작가+날짜: 맨 아래 -->
+        <div class="post-hero-bottom">
+          <span class="post-hero-meta-pill">by {{ site.social.name }}</span>
+          <span class="post-hero-meta-pill">{{ page.date | date: "%Y.%m.%d" }}</span>
+          <span class="post-hero-meta-pill" id="hero-views" style="display:none">
+            <i class="fas fa-eye"></i> <span id="hero-views-num"></span>
+          </span>
+          <span class="post-hero-meta-pill"><i class="far fa-clock"></i> {{ estimated_read_time }}분 읽기</span>
+        </div>
       </div>
-      <div class="post-hero-meta">
-        {{ page.date | date: "%Y/%m/%d" }} · By {{ site.social.name }} · {% capture _words %}{{ content | number_of_words }}{% endcapture %}{% assign _wpm = 200 %}{% assign _reading_time = _words | divided_by: _wpm | at_least: 1 %}{{ _reading_time }} {{ site.data.locales[lang].post.read_time.unit }} {{ site.data.locales[lang].post.read_time.prompt }}
-        <span id="hero-views" style="display:none"> · 👁 <span id="hero-views-num"></span>회</span>
-      </div>
+
+      <!-- 스크롤 화살표: 우측 하단 -->
+      <button class="post-hero-arrow" onclick="window.scrollTo({top:document.getElementById('post-hero-wrapper').offsetHeight,behavior:'smooth'})" aria-label="아래로 스크롤">
+        <i class="fas fa-arrow-down"></i>
+      </button>
     </div>
   </header>
 
@@ -61,68 +115,64 @@ script_includes:
     {{ content }}
   </div>
 
-  <!-- Support -->
-  <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 3rem; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 8px;">
-    <span style="font-size: 0.78rem; color: var(--text-muted-color, #868e96);">
-      후원해주시는 마음은 서버 비용 등 블로그 운영에 활용하겠습니다.
-    </span>
-    <span style="display: flex; gap: 6px; flex-shrink: 0;">
-      <a href="https://ctee.kr/place/jmchoi4u" target="_blank" rel="noopener noreferrer"
-         style="display: inline-block; background: #FFDD00; color: #000; font-size: 0.75rem; font-weight: 500; padding: 4px 10px; border-radius: 20px; text-decoration: none; white-space: nowrap;">
-        ☕ 커피 한잔 후원하기
-      </a>
-      <a href="https://buymeacoffee.com/jmchoi4u" target="_blank" rel="noopener noreferrer"
-         style="display: inline-block; background: #FFDD00; color: #000; font-size: 0.75rem; font-weight: 500; padding: 4px 10px; border-radius: 20px; text-decoration: none; white-space: nowrap;">
-        ☕ Buy me a coffee
-      </a>
-    </span>
-  </div>
-
-  <div class="post-tail-wrapper text-muted" style="margin-top:0.8rem;">
-    <!-- categories + tags on same line -->
-    <div class="d-flex flex-wrap align-items-center gap-2" style="margin-bottom:0.5rem;">
-      {% if page.categories.size > 0 %}
-        <span>
-          <i class="far fa-folder-open fa-fw me-1"></i>
-          {% for category in page.categories %}
-            <a href="{{ site.baseurl }}/categories/{{ category | slugify | url_encode }}/">{{ category }}</a>
-            {%- unless forloop.last -%},{%- endunless -%}
-          {% endfor %}
-        </span>
-      {% endif %}
-      {% if page.tags.size > 0 %}
-        <span class="post-tags" style="display:inline-flex;flex-wrap:wrap;align-items:center;gap:4px;">
-          <i class="fa fa-tags fa-fw me-1"></i>
-          {% for tag in page.tags %}
-            <a
-              href="{{ site.baseurl }}/tags/{{ tag | slugify | url_encode }}/"
-              class="post-tag no-text-decoration"
-            >
-              {{- tag -}}
-            </a>
-          {% endfor %}
-        </span>
-      {% endif %}
+  <section class="post-author-card" aria-label="작성자 소개">
+    <div class="post-author-copy">
+      <p class="post-author-eyebrow">About</p>
+      <h2 class="post-author-name">{{ site.social.name }}</h2>
+      <p class="post-author-tagline">{{ site.tagline }}</p>
+      <div class="post-author-actions">
+        <a class="author-email-link" href="mailto:{{ site.social.email }}">{{ site.social.email }}</a>
+        <a href="https://ctee.kr/place/jmchoi4u" target="_blank" rel="noopener noreferrer" class="author-support-btn">
+          <i class="fas fa-dollar-sign"></i>
+          <span>후원하기</span>
+        </a>
+        <a href="https://buymeacoffee.com/jmchoi4u" target="_blank" rel="noopener noreferrer" class="author-support-btn author-support-btn-alt">
+          <i class="fas fa-dollar-sign"></i>
+          <span>Support</span>
+        </a>
+      </div>
     </div>
-
-    <div
-      class="
-        post-tail-bottom
-        d-flex justify-content-between align-items-center mt-5 pb-2
-      "
-    >
-      <div class="license-wrapper"></div>
-
-      {% include post-sharing.html lang=lang %}
-    </div>
-    <!-- .post-tail-bottom -->
-  </div>
-  <!-- div.post-tail-wrapper -->
+  </section>
 </article>
+
+<div id="post-floating-topbar" class="post-floating-topbar" aria-hidden="true">
+  <div class="post-floating-topbar-inner">
+    <div class="post-floating-topbar-left">
+      <button class="post-floating-icon-btn" id="floating-menu" type="button" aria-label="메뉴">
+        <i class="fas fa-bars"></i>
+      </button>
+    </div>
+    <div class="post-floating-topbar-actions">
+      <button class="post-floating-icon-btn" id="floating-theme-toggle" type="button" aria-label="흑백 모드 전환">
+        <i class="fas fa-adjust"></i>
+      </button>
+      <a class="post-floating-icon-link" href="https://ctee.kr/place/jmchoi4u" target="_blank" rel="noopener noreferrer" aria-label="Support">
+        <i class="fas fa-dollar-sign"></i>
+      </a>
+      <button class="post-floating-icon-btn" id="floating-comment-btn" type="button" aria-label="댓글">
+        <i class="fas fa-comment-dots"></i>
+      </button>
+      <button class="post-floating-icon-btn" id="floating-share" type="button" aria-label="공유">
+        <i class="fas fa-share-alt"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Floating Action Bar (scrolled) ═══ -->
+<div id="post-fab" class="post-fab">
+  <button class="fab-btn" id="fab-toc" aria-label="바로가기"><i class="fas fa-list-ul"></i></button>
+  <button class="fab-btn" id="fab-share" aria-label="공유"><i class="fas fa-share-alt"></i></button>
+  <button class="fab-btn" id="fab-comment" aria-label="댓글"><i class="fas fa-comment"></i></button>
+  <button class="fab-btn" id="fab-top" aria-label="맨 위로"><i class="fas fa-arrow-up"></i></button>
+</div>
+<div id="link-copy-toast" class="link-copy-toast" aria-live="polite">Copied</div>
 
 <script>
 (function(){
-  // Reading progress bar (PC + Mobile)
+  document.body.classList.add('post-page');
+
+  // ── Reading progress ──
   var bar = document.getElementById('reading-progress');
   if (bar) {
     window.addEventListener('scroll', function() {
@@ -132,21 +182,350 @@ script_includes:
     }, { passive: true });
   }
 
-  // Hero view count (3회 이상만 표시)
+  // ── Hero scroll detection ──
+  var heroEl = document.getElementById('post-hero-wrapper');
+  var heroCenter = document.querySelector('.post-hero-center');
+  var heroCopy = document.querySelector('.post-hero-copy');
+  var heroBottom = document.querySelector('.post-hero-bottom');
+  var arrow = heroEl ? heroEl.querySelector('.post-hero-arrow') : null;
+  var fab = document.getElementById('post-fab');
+  var floatingTocHeadings = [];
+  var tocEndAnchor = document.querySelector('.post-author-card') || document.querySelector('.post-bottom-nav') || document.getElementById('tail-wrapper');
   var gcId = {{ site.analytics.goatcounter.id | jsonify | default: 'null' }};
+
+  function slugifyHeading(text) {
+    return (text || '')
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s\-가-힣]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/\-+/g, '-');
+  }
+
+  function ensureHeadingId(heading, index) {
+    if (heading.id) return heading.id;
+    var baseId = slugifyHeading(heading.textContent) || ('section-' + index);
+    var nextId = baseId;
+    var seq = 2;
+    while (document.getElementById(nextId)) {
+      nextId = baseId + '-' + seq;
+      seq += 1;
+    }
+    heading.id = nextId;
+    return nextId;
+  }
+
+  function getPanelWrapper() {
+    return document.getElementById('panel-wrapper');
+  }
+
+  function getFloatingTocContainer() {
+    var panelWrapper = getPanelWrapper();
+    if (!panelWrapper) return null;
+    var tocWrapper = panelWrapper.querySelector('#toc-wrapper');
+    if (!tocWrapper) return null;
+
+    var themeToc = tocWrapper.querySelector('#toc');
+    if (themeToc) {
+      themeToc.style.display = 'none';
+    }
+
+    var container = tocWrapper.querySelector('#floating-rail-toc');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'floating-rail-toc';
+      if (themeToc && themeToc.parentNode === tocWrapper) {
+        tocWrapper.insertBefore(container, themeToc.nextSibling);
+      } else {
+        tocWrapper.appendChild(container);
+      }
+    }
+
+    return container;
+  }
+
+  function buildFloatingToc() {
+    var floatingToc = getFloatingTocContainer();
+    if (!floatingToc || window.innerWidth < 992) return;
+    var articleContent = document.querySelector('article .content');
+    var headings = articleContent ? Array.prototype.slice.call(articleContent.querySelectorAll('h2, h3, h4')) : [];
+    floatingTocHeadings = headings;
+    floatingToc.innerHTML = '';
+    if (!headings.length) return;
+
+    var list = document.createElement('ol');
+    list.className = 'floating-toc-list';
+
+    headings.forEach(function(heading, index) {
+      var level = parseInt(heading.tagName.replace('H', ''), 10);
+      var item = document.createElement('li');
+      item.className = 'floating-toc-item level-' + level;
+
+      var link = document.createElement('a');
+      link.className = 'floating-toc-link';
+      link.href = '#' + ensureHeadingId(heading, index + 1);
+      link.textContent = heading.textContent.trim();
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+
+      item.appendChild(link);
+      list.appendChild(item);
+    });
+
+    floatingToc.appendChild(list);
+    updateFloatingTocActive();
+  }
+
+  function updateFloatingTocActive() {
+    if (!floatingTocHeadings.length) return;
+    var activeId = floatingTocHeadings[0].id;
+    floatingTocHeadings.forEach(function(heading) {
+      if (heading.getBoundingClientRect().top <= 180) activeId = heading.id;
+    });
+    Array.prototype.slice.call(document.querySelectorAll('.floating-toc-link')).forEach(function(link) {
+      var isActive = link.getAttribute('href') === '#' + activeId;
+      link.classList.toggle('is-active', isActive);
+      if (link.parentElement) link.parentElement.classList.toggle('is-active', isActive);
+    });
+  }
+
+  buildFloatingToc();
+  window.addEventListener('resize', buildFloatingToc);
+  window.addEventListener('load', function() {
+    buildFloatingToc();
+    window.dispatchEvent(new Event('scroll'));
+  });
+
+  if (heroEl) {
+    function handleHeroScroll() {
+      var y = window.scrollY || document.documentElement.scrollTop;
+      var heroH = heroEl.offsetHeight;
+      var heroRect = heroEl.getBoundingClientRect();
+      var titleLift = Math.min(y / (heroH * 0.5), 1) * 26;
+      var revealUi = heroRect.bottom <= 64;
+      var endToc = false;
+
+      if (tocEndAnchor) {
+        endToc = tocEndAnchor.getBoundingClientRect().top <= window.innerHeight - 140;
+      }
+
+      if (heroCenter) {
+        heroCenter.style.opacity = '1';
+        heroCenter.style.transform = 'translate3d(0,' + (-titleLift) + 'px,0)';
+      }
+
+      if (revealUi) {
+        document.body.classList.add('scrolled-past-hero');
+      } else {
+        document.body.classList.remove('scrolled-past-hero');
+      }
+
+      document.body.classList.toggle('post-toc-visible', revealUi && !endToc && floatingTocHeadings.length > 0);
+
+      if (arrow) arrow.style.opacity = Math.max(0, 1 - y / (heroH * 0.28));
+
+      if (fab) {
+        if (y > heroH * 0.72) fab.classList.add('fab-visible');
+        else fab.classList.remove('fab-visible');
+      }
+
+      updateFloatingTocActive();
+    }
+    window.addEventListener('scroll', handleHeroScroll, { passive: true });
+    window.addEventListener('resize', handleHeroScroll);
+    handleHeroScroll();
+  }
+
+  // ── FAB actions ──
+  var fabTop = document.getElementById('fab-top');
+  var fabComment = document.getElementById('fab-comment');
+  var fabShare = document.getElementById('fab-share');
+  var floatingShare = document.getElementById('floating-share');
+  var floatingCommentBtn = document.getElementById('floating-comment-btn');
+  var copyToast = document.getElementById('link-copy-toast');
+  var copyToastTimer = null;
+
+  if (fabTop) fabTop.addEventListener('click', function() { window.scrollTo({ top: 0, behavior: 'smooth' }); });
+  if (fabComment) fabComment.addEventListener('click', function() {
+    var c = document.getElementById('disqus_thread') || document.getElementById('utterances') || document.getElementById('giscus') || document.querySelector('.comment');
+    if (c) c.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    else { var t = document.getElementById('tail-wrapper'); if (t) t.scrollIntoView({ behavior: 'smooth' }); }
+  });
+
+  function copyPageLink() {
+    navigator.clipboard.writeText(window.location.href).then(function() {
+      if (!copyToast) return;
+      copyToast.classList.add('show');
+      if (copyToastTimer) clearTimeout(copyToastTimer);
+      copyToastTimer = setTimeout(function() {
+        copyToast.classList.remove('show');
+      }, 1400);
+    }).catch(function() {});
+  }
+  var heroShare = document.getElementById('hero-share');
+  if (heroShare) heroShare.addEventListener('click', copyPageLink);
+  if (fabShare) fabShare.addEventListener('click', copyPageLink);
+  if (floatingShare) floatingShare.addEventListener('click', copyPageLink);
+
+  function requestGoatCounterCount(path, callback) {
+    if (typeof callback !== 'function') return;
+    if (!gcId) {
+      callback(0);
+      return;
+    }
+
+    var hostname = window.location.hostname || '';
+    if (/^(localhost|127\.0\.0\.1)$/i.test(hostname)) {
+      callback(0);
+      return;
+    }
+
+    var normalizedPath = (path || '/').replace(/\/$/, '') || '/';
+    var request = new XMLHttpRequest();
+    request.open('GET', 'https://' + gcId + '.goatcounter.com/counter/' + encodeURIComponent(normalizedPath) + '.json', true);
+    request.onload = function() {
+      if (request.status < 200 || request.status >= 300) {
+        callback(0);
+        return;
+      }
+
+      try {
+        var data = JSON.parse(request.responseText || '{}');
+        var views = parseInt((data.count || '0').replace(/\D/g, ''), 10) || 0;
+        callback(views);
+      } catch (error) {
+        callback(0);
+      }
+    };
+    request.onerror = function() {
+      callback(0);
+    };
+    request.send();
+  }
+  window.requestGoatCounterCount = requestGoatCounterCount;
+
+  var heroCommentBtn = document.getElementById('hero-comment-btn');
+  if (heroCommentBtn) {
+    heroCommentBtn.addEventListener('click', function() {
+      var c = document.getElementById('disqus_thread') || document.getElementById('utterances') || document.getElementById('giscus') || document.querySelector('.comment');
+      if (c) c.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      else { var t = document.getElementById('tail-wrapper'); if (t) t.scrollIntoView({ behavior: 'smooth' }); }
+    });
+  }
+  if (floatingCommentBtn) {
+    floatingCommentBtn.addEventListener('click', function() {
+      var c = document.getElementById('disqus_thread') || document.getElementById('utterances') || document.getElementById('giscus') || document.querySelector('.comment');
+      if (c) c.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      else { var t = document.getElementById('tail-wrapper'); if (t) t.scrollIntoView({ behavior: 'smooth' }); }
+    });
+  }
+
+  // ── View count ──
   if (gcId) {
-    var pageUrl = {{ page.url | jsonify }}.replace(/\/$/, '');
-    fetch('https://' + gcId + '.goatcounter.com/counter/' + encodeURIComponent(pageUrl) + '.json')
-      .then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })
-      .then(function(d) {
-        var views = parseInt((d.count || '0').replace(/\D/g, ''), 10) || 0;
-        if (views >= 3) {
-          var el = document.getElementById('hero-views');
-          var num = document.getElementById('hero-views-num');
-          if (el && num) { num.textContent = views; el.style.display = 'inline'; }
+    var pUrl = {{ page.url | jsonify }}.replace(/\/$/, '');
+    requestGoatCounterCount(pUrl, function(views) {
+      if (views >= 3) {
+        var el = document.getElementById('hero-views');
+        var num = document.getElementById('hero-views-num');
+        if (el && num) {
+          num.textContent = views;
+          el.style.display = 'inline-flex';
         }
-      })
-      .catch(function() {});
+      }
+    });
+  }
+
+  // Hide default back-to-top
+  var btt = document.getElementById('back-to-top');
+  if (btt) btt.style.display = 'none';
+
+  // ── Menu button (sidebar toggle) ──
+  var heroMenu = document.getElementById('hero-menu');
+  var floatingMenu = document.getElementById('floating-menu');
+  var sidebar = document.getElementById('sidebar');
+  var mainWrapper = document.getElementById('main-wrapper');
+  function applySidebarState() {
+    var isOpen = document.body.hasAttribute('sidebar-display');
+    if (sidebar) {
+      sidebar.style.setProperty('transform', isOpen ? 'translateX(0)' : 'translateX(-100%)', 'important');
+      sidebar.style.setProperty('z-index', isOpen ? '260' : '220', 'important');
+    }
+    if (mainWrapper && window.innerWidth >= 850) {
+      mainWrapper.style.setProperty('margin-left', isOpen ? '260px' : '0', 'important');
+    }
+  }
+  function toggleSidebar() {
+    if (document.body.hasAttribute('sidebar-display')) {
+      document.body.removeAttribute('sidebar-display');
+    } else {
+      document.body.setAttribute('sidebar-display', '');
+    }
+    applySidebarState();
+  }
+  function closeSidebar() {
+    if (!document.body.hasAttribute('sidebar-display')) return;
+    document.body.removeAttribute('sidebar-display');
+    applySidebarState();
+  }
+  if (heroMenu) {
+    heroMenu.addEventListener('click', function(e) {
+      e.stopPropagation();
+      toggleSidebar();
+    });
+  }
+  if (floatingMenu) {
+    floatingMenu.addEventListener('click', function(e) {
+      e.stopPropagation();
+      toggleSidebar();
+    });
+  }
+  document.addEventListener('click', function(e) {
+    if (!document.body.hasAttribute('sidebar-display')) return;
+    var sidebar = document.getElementById('sidebar');
+    var sidebarBtn = document.getElementById('sidebar-trigger');
+    if (heroMenu && heroMenu.contains(e.target)) return;
+    if (floatingMenu && floatingMenu.contains(e.target)) return;
+    if (sidebar && sidebar.contains(e.target)) return;
+    if (sidebarBtn && sidebarBtn.contains(e.target)) return;
+    closeSidebar();
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeSidebar();
+  });
+  window.addEventListener('resize', applySidebarState);
+  applySidebarState();
+
+  // ── Theme toggle (dark/light) ──
+  var themeToggle = document.getElementById('hero-theme-toggle');
+  var floatingThemeToggle = document.getElementById('floating-theme-toggle');
+  function triggerThemeToggle() {
+    var chirpyToggle = document.getElementById('mode-toggle') || document.querySelector('[data-mode-toggle]') || document.querySelector('.mode-toggle');
+    if (chirpyToggle) {
+      chirpyToggle.click();
+    } else {
+      var html = document.documentElement;
+      var current = html.getAttribute('data-mode');
+      if (current === 'dark') {
+        html.setAttribute('data-mode', 'light');
+      } else {
+        html.setAttribute('data-mode', 'dark');
+      }
+    }
+  }
+  if (themeToggle) themeToggle.addEventListener('click', triggerThemeToggle);
+  if (floatingThemeToggle) floatingThemeToggle.addEventListener('click', triggerThemeToggle);
+
+  // ── FAB TOC button ──
+  var fabToc = document.getElementById('fab-toc');
+  if (fabToc) {
+    fabToc.addEventListener('click', function() {
+      var tocTrigger = document.getElementById('toc-solo-trigger');
+      if (tocTrigger) { tocTrigger.click(); return; }
+      var tocPopup = document.getElementById('toc-popup');
+      if (tocPopup && tocPopup.showModal) tocPopup.showModal();
+    });
   }
 })();
 </script>

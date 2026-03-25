@@ -167,14 +167,18 @@ function yamlString(value) {
   return `"${String(value || "").replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
 }
 
+function yamlInlineBreaks(value) {
+  return String(value || "").replace(/\r?\n/g, "<br>");
+}
+
 function parseDoc(text, fileName = "") {
   const normalized = text.replace(/\r\n/g, "\n");
   if (!normalized.startsWith("---\n")) {
-    return { fileName, title: "", date: "", categories: [], tags: [], description: "", extra: "", body: normalized, draft: false, hidden: false, permalink: "" };
+    return { fileName, title: "", date: "", heroTitle: "", summary: "", heroImagePosition: "", categories: [], tags: [], description: "", extra: "", body: normalized, draft: false, hidden: false, permalink: "" };
   }
   const end = normalized.indexOf("\n---\n", 4);
   if (end === -1) {
-    return { fileName, title: "", date: "", categories: [], tags: [], description: "", extra: "", body: normalized, draft: false, hidden: false, permalink: "" };
+    return { fileName, title: "", date: "", heroTitle: "", summary: "", heroImagePosition: "", categories: [], tags: [], description: "", extra: "", body: normalized, draft: false, hidden: false, permalink: "" };
   }
   const head = normalized.slice(4, end);
   const body = normalized.slice(end + 5).replace(/^\n/, "");
@@ -187,15 +191,24 @@ function parseDoc(text, fileName = "") {
     if (!value) return fallback;
     return value === "true";
   };
+  const coverImageObjectMatch = head.match(/^image:\s*\n\s+path:\s*(.+)$/m);
+  const coverImageScalarMatch = head.match(/^image:\s*(.+)$/m);
+  const coverImage = coverImageObjectMatch
+    ? coverImageObjectMatch[1].trim().replace(/^["']|["']$/g, "")
+    : (coverImageScalarMatch ? coverImageScalarMatch[1].trim().replace(/^["']|["']$/g, "") : "");
   const extra = head
     .split("\n")
-    .filter((line) => !/^(title|date|categories|tags|description|toc|comments|pin|mermaid|math|permalink|hidden):/.test(line.trim()))
+    .filter((line) => !/^(title|date|hero_title|summary|hero_image_position|categories|tags|description|toc|comments|pin|mermaid|math|permalink|hidden|image):/.test(line.trim()))
+    .filter((line) => !(coverImageObjectMatch && /^\s+path:/.test(line)))
     .join("\n")
     .trim();
   return {
     fileName,
     title: pick(/^title:\s*(.+)$/m),
     date: pick(/^date:\s*(.+)$/m),
+    heroTitle: pick(/^hero_title:\s*(.+)$/m),
+    summary: pick(/^summary:\s*(.+)$/m),
+    heroImagePosition: pick(/^hero_image_position:\s*(.+)$/m),
     categories: parseList(pick(/^categories:\s*(.+)$/m)),
     tags: parseList(pick(/^tags:\s*(.+)$/m)),
     description: pick(/^description:\s*(.+)$/m),
@@ -205,6 +218,7 @@ function parseDoc(text, fileName = "") {
     mermaid: pickBool("mermaid", false),
     math: pickBool("math", false),
     hidden: pickBool("hidden", false),
+    coverImage,
     permalink: pick(/^permalink:\s*(.+)$/m),
     extra,
     body
@@ -217,6 +231,15 @@ function makeDoc(data) {
     `title: ${yamlString(data.title || "제목 없음")}`,
     `date: ${data.date}`
   ];
+  if (data.heroTitle) {
+    lines.push(`hero_title: ${yamlString(yamlInlineBreaks(data.heroTitle))}`);
+  }
+  if (data.summary) {
+    lines.push(`summary: ${yamlString(data.summary)}`);
+  }
+  if (data.heroImagePosition) {
+    lines.push(`hero_image_position: ${yamlString(data.heroImagePosition)}`);
+  }
   if ((data.categories || []).length) {
     lines.push(`categories: [${data.categories.map(yamlString).join(", ")}]`);
   }
@@ -233,6 +256,10 @@ function makeDoc(data) {
   lines.push(`math: ${data.math ? "true" : "false"}`);
   if (data.hidden) {
     lines.push(`hidden: true`);
+  }
+  if (data.coverImage) {
+    lines.push(`image:`);
+    lines.push(`  path: ${data.coverImage}`);
   }
   if (data.permalink) {
     lines.push(`permalink: ${data.permalink}`);
@@ -345,7 +372,7 @@ async function moveFile(source, target) {
 
 async function run(command, cwd = repoRoot) {
   return await new Promise((resolve) => {
-    const child = spawn(command, { cwd, shell: true, env: process.env });
+    const child = spawn(command, { cwd, shell: true, env: process.env, windowsHide: true });
     let stdout = "";
     let stderr = "";
     child.stdout.on("data", (chunk) => { stdout += chunk.toString(); });
@@ -534,6 +561,9 @@ async function savePost(data) {
   const content = makeDoc({
     title: data.title,
     date,
+    heroTitle: data.heroTitle,
+    summary: data.summary,
+    heroImagePosition: data.heroImagePosition,
     categories,
     tags,
     description: data.description,
@@ -543,6 +573,7 @@ async function savePost(data) {
     hidden: Boolean(data.hidden),
     mermaid: Boolean(data.mermaid),
     math: Boolean(data.math),
+    coverImage: data.coverImage || "",
     permalink,
     extra: data.extra,
     body: data.body
@@ -606,6 +637,9 @@ async function publishDraft(data) {
     slug: resolvePostSlug(draftBaseName, parsed.title, parsed.date),
     date: parsed.date,
     draft: false,
+    heroTitle: parsed.heroTitle || "",
+    summary: parsed.summary || "",
+    heroImagePosition: parsed.heroImagePosition || "",
     categories: parsed.categories,
     tags: parsed.tags,
     description: parsed.description,
@@ -615,6 +649,7 @@ async function publishDraft(data) {
     hidden: Boolean(parsed.hidden),
     mermaid: Boolean(parsed.mermaid),
     math: Boolean(parsed.math),
+    coverImage: parsed.coverImage || "",
     permalink: parsed.permalink || "",
     extra: parsed.extra,
     body: parsed.body
@@ -653,7 +688,8 @@ async function startPreview() {
   state.previewProcess = spawn(`bundle exec jekyll serve --livereload --host 127.0.0.1 --port ${PREVIEW_PORT}`, {
     cwd: repoRoot,
     shell: true,
-    env: process.env
+    env: process.env,
+    windowsHide: true
   });
   state.previewProcess.stdout.on("data", (chunk) => rememberPreview(chunk.toString().trim()));
   state.previewProcess.stderr.on("data", (chunk) => rememberPreview(chunk.toString().trim()));
@@ -813,7 +849,7 @@ for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"]) {
 }
 
 function openBrowser(url) {
-  spawn(`start "" "${url}"`, { shell: true, detached: true, stdio: "ignore" }).unref();
+  spawn(`start "" "${url}"`, { shell: true, detached: true, stdio: "ignore", windowsHide: true }).unref();
 }
 
 let listenRetries = 0;

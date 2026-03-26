@@ -142,6 +142,55 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
 .cover-preview{position:relative;margin-top:8px;border-radius:8px;overflow:hidden}
 .cover-preview img{width:100%;height:120px;object-fit:cover}
 .cover-preview .cover-remove{position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,.5);color:#fff;border:none;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+
+/* === Sidebar (hidden on mobile) === */
+.sidebar{display:none}
+.content-wrap{display:flex;flex-direction:column;flex:1;min-width:0;height:100vh;height:100dvh}
+
+/* === Desktop layout (768px+) === */
+@media(min-width:768px){
+  .app{flex-direction:row}
+  .sidebar{display:flex;flex-direction:column;width:220px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--line);height:100vh;height:100dvh}
+  .sidebar-brand{display:flex;align-items:center;gap:10px;padding:20px 18px 16px}
+  .sidebar-logo{width:36px;height:36px;background:var(--point);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;flex-shrink:0}
+  .sidebar-title{font-size:.92rem;font-weight:700;letter-spacing:-.01em}
+  .sidebar-nav{flex:1;padding:8px 10px;display:flex;flex-direction:column;gap:2px}
+  .sidebar-btn{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border:none;background:none;border-radius:10px;font-size:.85rem;color:var(--muted);cursor:pointer;text-align:left;transition:all .15s}
+  .sidebar-btn:hover{background:var(--bg);color:var(--text)}
+  .sidebar-btn.active{background:var(--point-s);color:var(--point);font-weight:600}
+  .sidebar-icon{font-size:1.1rem;width:20px;text-align:center}
+  .sidebar-footer{padding:12px 18px;border-top:1px solid var(--line);font-size:.72rem;color:var(--muted)}
+  .sidebar-user{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .bottombar{display:none!important}
+  .content-wrap{height:100vh;height:100dvh}
+  .topbar h1{font-size:1.05rem}
+  .view{padding:24px 32px;padding-bottom:40px;max-width:900px;margin:0 auto}
+  .view.active{display:block}
+  textarea.editor-input{min-height:450px}
+  .editor-row{grid-template-columns:1fr 1fr 1fr;gap:14px}
+  .editor-checks{gap:12px 20px}
+  .card{padding:16px 20px;cursor:pointer}
+  .card:hover{border-color:var(--point);box-shadow:var(--shadow)}
+  .card-title{font-size:.95rem}
+  .btn-fab{bottom:32px;right:32px;width:56px;height:56px}
+  .preview-content{max-width:720px;margin:0 auto;font-size:.95rem}
+  .preview-content h1{font-size:1.6rem}
+  .preview-content h2{font-size:1.3rem}
+  .toast-wrap{left:auto;right:24px;top:24px;width:360px}
+  .auth-view{min-height:60vh}
+  .search-bar input{font-size:.9rem;padding:12px 16px 12px 40px}
+  .md-toolbar button{min-width:36px;height:36px;font-size:14px}
+  .md-toolbar button:hover{background:var(--point-s);color:var(--point)}
+  .setting-item{padding:16px 0}
+}
+
+/* === Wide desktop (1200px+) === */
+@media(min-width:1200px){
+  .sidebar{width:260px}
+  .view{max-width:1000px;padding:32px 48px}
+  textarea.editor-input{min-height:550px}
+  .editor-row{grid-template-columns:1fr 1fr 1fr 1fr;gap:16px}
+}
 </style>
 </head>
 <body>
@@ -149,15 +198,39 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
   <!-- Toast -->
   <div class="toast-wrap" id="toasts"></div>
 
-  <!-- Topbar -->
-  <div class="topbar">
-    <button class="topbar-back" id="topbar-back" onclick="goBack()">&larr;</button>
-    <h1 id="topbar-title">Blog Studio</h1>
-    <div id="topbar-actions"></div>
-  </div>
+  <!-- Sidebar (PC only) -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-logo">J</div>
+      <span class="sidebar-title">Blog Studio</span>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="sidebar-btn active" data-view="list" onclick="showView('list')">
+        <span class="sidebar-icon">&#9776;</span>글 목록
+      </button>
+      <button class="sidebar-btn" data-view="editor" onclick="newPost()">
+        <span class="sidebar-icon">&#9998;</span>새 글
+      </button>
+      <button class="sidebar-btn" data-view="settings" onclick="showView('settings')">
+        <span class="sidebar-icon">&#9881;</span>설정
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user" id="sidebar-user"></div>
+    </div>
+  </aside>
 
-  <!-- Main content area -->
-  <div class="main" id="main-scroll">
+  <!-- Right content wrapper -->
+  <div class="content-wrap">
+    <!-- Topbar -->
+    <div class="topbar">
+      <button class="topbar-back" id="topbar-back" onclick="goBack()">&larr;</button>
+      <h1 id="topbar-title">Blog Studio</h1>
+      <div id="topbar-actions"></div>
+    </div>
+
+    <!-- Main content area -->
+    <div class="main" id="main-scroll">
 
     <!-- Auth View -->
     <div class="view active" id="view-auth">
@@ -354,12 +427,13 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
     </div>
   </div>
 
-  <!-- Bottom bar -->
-  <div class="bottombar" id="bottombar" style="display:none">
-    <button onclick="showView('list')" data-view="list"><span class="bar-icon">&#9776;</span>글 목록</button>
-    <button onclick="newPost()" data-view="editor"><span class="bar-icon">&#9998;</span>새 글</button>
-    <button onclick="showView('settings')" data-view="settings"><span class="bar-icon">&#9881;</span>설정</button>
-  </div>
+    <!-- Bottom bar (mobile only) -->
+    <div class="bottombar" id="bottombar" style="display:none">
+      <button onclick="showView('list')" data-view="list"><span class="bar-icon">&#9776;</span>글 목록</button>
+      <button onclick="newPost()" data-view="editor"><span class="bar-icon">&#9998;</span>새 글</button>
+      <button onclick="showView('settings')" data-view="settings"><span class="bar-icon">&#9881;</span>설정</button>
+    </div>
+  </div><!-- /content-wrap -->
 </div>
 
 <!-- Markdown parser -->
@@ -621,7 +695,9 @@ function onLoginSuccess() {
   resetActivity();
   document.getElementById('settings-user').textContent = S.user.login;
   document.getElementById('settings-repo').textContent = OWNER + '/' + REPO;
+  document.getElementById('sidebar-user').textContent = S.user.login;
   document.getElementById('bottombar').style.display = 'flex';
+  document.getElementById('sidebar').style.display = '';
   showView('list');
   loadPosts();
 }
@@ -1170,6 +1246,9 @@ function showView(id) {
   });
 
   document.querySelectorAll('.bottombar button').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.view === id);
+  });
+  document.querySelectorAll('.sidebar-btn').forEach(function(b) {
     b.classList.toggle('active', b.dataset.view === id);
   });
 

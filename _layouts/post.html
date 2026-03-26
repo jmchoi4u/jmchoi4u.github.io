@@ -120,13 +120,6 @@ script_includes:
   {% endif %}
 
   <div class="content">
-    <div class="post-content-meta" data-toc-skip>
-      <span class="post-hero-meta-pill">{{ page.date | date: "%Y.%m.%d" }}</span>
-      <span class="post-hero-meta-pill" id="content-views" style="display:none">
-        <i class="fas fa-eye"></i> <span id="content-views-num"></span>
-      </span>
-      <span class="post-hero-meta-pill"><i class="far fa-clock"></i> {{ estimated_read_time }}분 읽기</span>
-    </div>
     {{ content }}
   </div>
 

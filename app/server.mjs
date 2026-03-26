@@ -410,6 +410,14 @@ function normalizeRepoPath(filePath = "") {
   return String(filePath || "").trim().replace(/\\/g, "/");
 }
 
+function isLocalOnlyPath(filePath = "") {
+  const normalized = normalizeRepoPath(filePath);
+  return LOCAL_ONLY_STAGE_EXCLUDES.some((prefix) => {
+    const base = normalizeRepoPath(prefix);
+    return normalized === base || normalized.startsWith(`${base}/`);
+  });
+}
+
 function canAutoResolveConflict(filePath) {
   const normalized = normalizeRepoPath(filePath);
   return AUTO_RESOLVE_OURS_PREFIXES.some((prefix) => normalized.startsWith(prefix));
@@ -420,6 +428,32 @@ async function unstageLocalOnlyPaths() {
     // 로컬 전용 설정/로그는 배포 커밋에 섞이지 않도록 자동으로 스테이징에서만 제외합니다.
     await run(`git reset -q HEAD -- "${relativePath}"`);
   }
+}
+
+async function listDirtyPaths(options = {}) {
+  const includeUntracked = Boolean(options.includeUntracked);
+  const result = await run(`git status --porcelain=v1 --untracked-files=${includeUntracked ? "all" : "no"}`);
+  if (result.code !== 0) {
+    return [];
+  }
+
+  return String(result.stdout || "")
+    .split(/\r?\n/)
+    .map((line) => line.slice(3).trim())
+    .map((filePath) => normalizeRepoPath(filePath))
+    .filter(Boolean);
+}
+
+async function listStagedPaths() {
+  const result = await run("git diff --cached --name-only");
+  if (result.code !== 0) {
+    return [];
+  }
+
+  return String(result.stdout || "")
+    .split(/\r?\n/)
+    .map((filePath) => normalizeRepoPath(filePath))
+    .filter(Boolean);
 }
 
 async function listConflictPaths() {
@@ -473,8 +507,9 @@ async function syncBeforeLaunch() {
     return { ok: true, skipped: true, reason: "not-repo" };
   }
 
-  const dirty = await run("git status --porcelain=v1 --untracked-files=no");
-  if (String(dirty.stdout || "").trim()) {
+  const dirtyPaths = await listDirtyPaths();
+  const blockingDirtyPaths = dirtyPaths.filter((filePath) => !isLocalOnlyPath(filePath));
+  if (blockingDirtyPaths.length > 0) {
     return { ok: true, skipped: true, reason: "dirty-worktree" };
   }
 
@@ -968,12 +1003,26 @@ async function publish(message) {
   const add = await run("git add -A");
   if (add.code !== 0) return { ok: false, error: "git add 실패: 파일 스테이징 중 오류가 발생했습니다.", step: "add", ...add };
   await unstageLocalOnlyPaths();
-  const msgFile = path.join(logsDir, "commit-msg.tmp");
-  await fs.writeFile(msgFile, commitMessage, "utf8");
-  const commit = await run(`git commit -F "${msgFile.replace(/\\/g, "/")}"`);
-  await fs.unlink(msgFile).catch(() => {});
-  const nothing = `${commit.stdout}\n${commit.stderr}`.includes("nothing to commit");
-  if (commit.code !== 0 && !nothing) return { ok: false, error: `git commit 실패: ${commit.stderr || commit.stdout || "알 수 없는 오류"}`, step: "commit", ...commit };
+  const stagedPaths = await listStagedPaths();
+
+  let commit = { code: 0, stdout: "", stderr: "" };
+  const nothing = stagedPaths.length === 0;
+
+  if (!nothing) {
+    const msgFile = path.join(logsDir, "commit-msg.tmp");
+    await fs.writeFile(msgFile, commitMessage, "utf8");
+    commit = await run(`git commit -F "${msgFile.replace(/\\/g, "/")}"`);
+    await fs.unlink(msgFile).catch(() => {});
+
+    if (commit.code !== 0) {
+      return {
+        ok: false,
+        error: `git commit 실패: ${commit.stderr || commit.stdout || "알 수 없는 오류"}`,
+        step: "commit",
+        ...commit
+      };
+    }
+  }
 
   const sync = await syncRemoteBranch();
   if (!sync.ok) {

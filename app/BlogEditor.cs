@@ -69,18 +69,6 @@ class BlogEditor
 
         serverProcess.Start();
 
-        // Wait a moment for server to start, then open browser
-        Thread.Sleep(1500);
-        try
-        {
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = "http://127.0.0.1:4317",
-                UseShellExecute = true
-            });
-        }
-        catch { /* browser open failed, user can navigate manually */ }
-
         Console.WriteLine("Blog editor running at http://127.0.0.1:4317");
         Console.WriteLine("Press Ctrl+C or close this window to stop.");
 

@@ -29,6 +29,12 @@ const LOCAL_ONLY_STAGE_EXCLUDES = [
   "AGENT_COLLAB_LOG.md",
   "app/logs"
 ];
+const AUTO_RESOLVE_OURS_PREFIXES = [
+  "_posts/",
+  "_drafts/",
+  "assets/img/posts/",
+  "assets/img/profile/"
+];
 
 const rawFiles = {
   config: path.join(repoRoot, "_config.yml"),
@@ -400,11 +406,107 @@ function looksLikeNoUpstream(result) {
   return /has no upstream branch|no upstream branch/i.test(text);
 }
 
+function normalizeRepoPath(filePath = "") {
+  return String(filePath || "").trim().replace(/\\/g, "/");
+}
+
+function canAutoResolveConflict(filePath) {
+  const normalized = normalizeRepoPath(filePath);
+  return AUTO_RESOLVE_OURS_PREFIXES.some((prefix) => normalized.startsWith(prefix));
+}
+
 async function unstageLocalOnlyPaths() {
   for (const relativePath of LOCAL_ONLY_STAGE_EXCLUDES) {
     // 로컬 전용 설정/로그는 배포 커밋에 섞이지 않도록 자동으로 스테이징에서만 제외합니다.
     await run(`git reset -q HEAD -- "${relativePath}"`);
   }
+}
+
+async function listConflictPaths() {
+  const result = await run("git diff --name-only --diff-filter=U");
+  if (result.code !== 0) {
+    return [];
+  }
+
+  return String(result.stdout || "")
+    .split(/\r?\n/)
+    .map((line) => normalizeRepoPath(line))
+    .filter(Boolean);
+}
+
+async function autoResolveConflictsWithOurs(conflictPaths) {
+  const outputs = [];
+
+  for (const filePath of conflictPaths) {
+    const checkout = await run(`git checkout --ours -- "${filePath}"`);
+    outputs.push(checkout.stdout, checkout.stderr);
+    if (checkout.code !== 0) {
+      return {
+        ok: false,
+        stdout: joinOutput(...outputs),
+        stderr: `ours 선택 실패: ${filePath}`
+      };
+    }
+
+    const add = await run(`git add -- "${filePath}"`);
+    outputs.push(add.stdout, add.stderr);
+    if (add.code !== 0) {
+      return {
+        ok: false,
+        stdout: joinOutput(...outputs),
+        stderr: `충돌 표시 해제 실패: ${filePath}`
+      };
+    }
+  }
+
+  const commit = await run("git commit --no-edit");
+  return {
+    ok: commit.code === 0,
+    stdout: joinOutput(...outputs, commit.stdout),
+    stderr: joinOutput(commit.stderr)
+  };
+}
+
+async function syncBeforeLaunch() {
+  const insideRepo = await run("git rev-parse --is-inside-work-tree");
+  if (insideRepo.code !== 0) {
+    return { ok: true, skipped: true, reason: "not-repo" };
+  }
+
+  const dirty = await run("git status --porcelain=v1 --untracked-files=no");
+  if (String(dirty.stdout || "").trim()) {
+    return { ok: true, skipped: true, reason: "dirty-worktree" };
+  }
+
+  const upstream = await run("git rev-parse --abbrev-ref --symbolic-full-name @{u}");
+  if (upstream.code !== 0) {
+    return { ok: true, skipped: true, reason: "no-upstream" };
+  }
+
+  const fetch = await run("git fetch --prune");
+  if (fetch.code !== 0) {
+    return {
+      ok: false,
+      step: "launch-fetch",
+      error: fetch.stderr || fetch.stdout || "git fetch 오류"
+    };
+  }
+
+  const pull = await run("git pull --ff-only");
+  if (pull.code !== 0) {
+    return {
+      ok: false,
+      step: "launch-pull",
+      error: pull.stderr || pull.stdout || "git pull 오류"
+    };
+  }
+
+  return {
+    ok: true,
+    skipped: false,
+    stdout: joinOutput(fetch.stdout, pull.stdout),
+    stderr: joinOutput(fetch.stderr, pull.stderr)
+  };
 }
 
 async function syncRemoteBranch() {
@@ -425,6 +527,41 @@ async function syncRemoteBranch() {
 
   const pull = await run("git pull --no-edit --no-rebase");
   if (pull.code !== 0) {
+    const conflictPaths = await listConflictPaths();
+    if (conflictPaths.length > 0) {
+      const blocked = conflictPaths.filter((filePath) => !canAutoResolveConflict(filePath));
+      if (blocked.length > 0) {
+        await run("git merge --abort");
+        return {
+          ok: false,
+          step: "pull",
+          error: `자동으로 정리할 수 없는 충돌이 있습니다: ${blocked.join(", ")}`,
+          stdout: joinOutput(fetch.stdout, pull.stdout),
+          stderr: joinOutput(fetch.stderr, pull.stderr)
+        };
+      }
+
+      const resolved = await autoResolveConflictsWithOurs(conflictPaths);
+      if (!resolved.ok) {
+        await run("git merge --abort");
+        return {
+          ok: false,
+          step: "pull",
+          error: "원격 변경 자동 정리 중 오류가 발생했습니다.",
+          stdout: joinOutput(fetch.stdout, pull.stdout, resolved.stdout),
+          stderr: joinOutput(fetch.stderr, pull.stderr, resolved.stderr)
+        };
+      }
+
+      rememberLog("PUBLISH", `자동 충돌 해결 완료: ${conflictPaths.join(", ")}`);
+      return {
+        ok: true,
+        step: "pull-auto-resolved",
+        stdout: joinOutput(fetch.stdout, pull.stdout, resolved.stdout),
+        stderr: joinOutput(fetch.stderr, pull.stderr, resolved.stderr)
+      };
+    }
+
     await run("git merge --abort");
     return {
       ok: false,
@@ -612,21 +749,34 @@ async function getNextPostNumber() {
   return maxNum + 1;
 }
 
+function getExistingPostNumber(relativePath = "") {
+  const normalized = String(relativePath || "").replace(/\\/g, "/");
+  const postMatch = normalized.match(/^_posts\/\d{4}-\d{2}-\d{2}-(\d+)\.md$/);
+  if (postMatch) {
+    return parseInt(postMatch[1], 10);
+  }
+  const draftMatch = normalized.match(/^_drafts\/(\d+)\.md$/);
+  if (draftMatch) {
+    return parseInt(draftMatch[1], 10);
+  }
+  return null;
+}
+
 async function savePost(data) {
   const draft = Boolean(data.draft);
   const date = String(data.date || "").trim() || `${new Date().toISOString().slice(0, 16).replace("T", " ")}:00 +0900`;
   const categories = (data.categories || []).map((x) => String(x).trim()).filter(Boolean).slice(0, 2);
   const tags = (data.tags || []).map((x) => String(x).trim().toLowerCase()).filter(Boolean);
+  const originalPostNum = getExistingPostNumber(data.originalRelativePath);
 
-  // Auto-assign permalink number and use it as file slug
   let permalink = data.permalink || "";
   let postNum;
   if (!permalink) {
-    postNum = await getNextPostNumber();
+    postNum = originalPostNum || await getNextPostNumber();
     if (!draft) permalink = `/posts/${postNum}/`;
   } else {
     const numMatch = permalink.match(/\/posts\/(\d+)\/?/);
-    postNum = numMatch ? parseInt(numMatch[1], 10) : await getNextPostNumber();
+    postNum = numMatch ? parseInt(numMatch[1], 10) : (originalPostNum || await getNextPostNumber());
   }
 
   const slug = String(postNum);
@@ -984,6 +1134,12 @@ server.on("error", async (err) => {
 });
 
 server.listen(APP_PORT, "127.0.0.1", async () => {
+  const startupSync = await syncBeforeLaunch();
+  if (!startupSync.ok) {
+    rememberLog("SYNC", `시작 전 동기화 실패: ${startupSync.error}`);
+  } else if (!startupSync.skipped) {
+    rememberLog("SYNC", "편집기 시작 전 최신 변경 자동 동기화 완료");
+  }
   await appendLog("APP", `블로그 편집기 시작: ${APP_URL}`);
   openBrowser(APP_URL);
   console.log(`Blog editor running: ${APP_URL}`);

@@ -61,7 +61,7 @@ html,body{font-family:'Inter',-apple-system,'Segoe UI','Malgun Gothic',sans-seri
 
 /* === Cards === */
 .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:10px;transition:border-color .15s}
-.card:active{border-color:var(--point)}
+.card-actions{display:flex;gap:6px;margin-top:10px;padding-top:8px;border-top:1px solid var(--bg2)}
 .card-title{font-weight:600;font-size:.9rem;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .card-meta{display:flex;flex-wrap:wrap;gap:6px;font-size:.72rem;color:var(--muted)}
 .card-meta span{display:inline-flex;align-items:center;gap:3px}
@@ -866,23 +866,81 @@ function renderPosts() {
     var cats = (p.categories || []).join(' / ');
     var tags = (p.tags || []).slice(0, 3).map(function(t) { return '<span class="card-tag">' + esc(t) + '</span>'; }).join(' ');
 
-    return '<div class="card" onclick="editPost(\'' + esc(p.path) + '\')">'
+    var hideBtnLabel = p.hidden ? '보이기' : '숨기기';
+    var hideBtnCls = p.hidden ? 'btn-primary' : '';
+    var draftBtnLabel = p.isDraft ? '발행' : '임시저장';
+
+    return '<div class="card">'
       + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
       + '<span class="card-status ' + statusCls + '"></span>'
       + '<span style="font-size:.68rem;color:var(--muted)">' + statusLabel + '</span>'
       + (p.pin ? '<span style="font-size:.68rem">&#128204;</span>' : '')
       + '</div>'
-      + '<div class="card-title">' + esc(p.title || p.slug) + '</div>'
+      + '<div class="card-title" style="cursor:pointer" onclick="editPost(\'' + esc(p.path) + '\')">' + esc(p.title || p.slug) + '</div>'
       + '<div class="card-meta">'
       + (p.date ? '<span>' + p.date + '</span>' : '')
       + (cats ? '<span>' + esc(cats) + '</span>' : '')
       + '</div>'
       + (tags ? '<div class="card-meta" style="margin-top:3px">' + tags + '</div>' : '')
+      + '<div class="card-actions">'
+      + '<button class="btn btn-sm" onclick="editPost(\'' + esc(p.path) + '\')">수정</button>'
+      + '<button class="btn btn-sm ' + hideBtnCls + '" onclick="event.stopPropagation();quickToggleHidden(\'' + esc(p.path) + '\')">' + hideBtnLabel + '</button>'
+      + '<button class="btn btn-sm" onclick="event.stopPropagation();quickToggleDraft(\'' + esc(p.path) + '\')">' + draftBtnLabel + '</button>'
+      + '</div>'
       + '</div>';
   }).join('');
 }
 
 function filterPosts() { renderPosts(); }
+
+async function quickToggleHidden(path) {
+  var post = S.posts.find(function(p) { return p.path === path; });
+  if (!post || !post._content) return toast('글 데이터를 불러올 수 없습니다', 'error');
+
+  var content = post._content;
+  var newHidden = !post.hidden;
+
+  /* front matter에서 hidden 토글 */
+  if (content.match(/^hidden:\s*(true|false)\s*$/m)) {
+    content = content.replace(/^hidden:\s*(true|false)\s*$/m, 'hidden: ' + newHidden);
+  } else if (newHidden) {
+    content = content.replace(/\n---\n/, '\nhidden: true\n---\n');
+  }
+
+  try {
+    var result = await ghPutFile(post.path, content, post.sha, (newHidden ? 'hide' : 'show') + ' ' + post.path);
+    post.sha = result.content.sha;
+    post.hidden = newHidden;
+    post._content = content;
+    toast(newHidden ? '숨김 처리됨' : '보이기 처리됨', 'success');
+    renderPosts();
+  } catch (e) {
+    toast('실패: ' + e.message, 'error');
+  }
+}
+
+async function quickToggleDraft(path) {
+  var post = S.posts.find(function(p) { return p.path === path; });
+  if (!post || !post._content) return toast('글 데이터를 불러올 수 없습니다', 'error');
+
+  var content = post._content;
+  var wasDraft = post.isDraft;
+  var newDir = wasDraft ? '_posts' : '_drafts';
+  var newPath = newDir + '/' + post.name;
+
+  try {
+    /* delete old, create new */
+    await ghDeleteFile(post.path, post.sha, (wasDraft ? 'publish' : 'draft') + ' ' + post.name);
+    var result = await ghPutFile(newPath, content, null, (wasDraft ? 'publish' : 'draft') + ' ' + post.name);
+    post.path = newPath;
+    post.sha = result.content.sha;
+    post.isDraft = !wasDraft;
+    toast(wasDraft ? '발행 완료' : '임시저장으로 이동', 'success');
+    renderPosts();
+  } catch (e) {
+    toast('실패: ' + e.message, 'error');
+  }
+}
 
 function setListTab(tab, btn) {
   S.listTab = tab;

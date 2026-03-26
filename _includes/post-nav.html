@@ -1,23 +1,90 @@
-<!-- Post bottom navigation: 좌측 인기글 + 우측 최신글 -->
+<!-- Post bottom navigation: 좌측 관련글 + 우측 최신글 -->
 
 {% include lang.html %}
 
 {% assign filtered_latest = '' | split: '' %}
+{% assign related_same_cat_tag = '' | split: '' %}
+{% assign related_same_cat = '' | split: '' %}
+{% assign related_shared_tag = '' | split: '' %}
 {% for p in site.posts %}
   {% if p.hidden == true or p.url == page.url %}{% continue %}{% endif %}
   {% assign filtered_latest = filtered_latest | push: p %}
-  {% if filtered_latest.size >= 5 %}{% break %}{% endif %}
+
+  {% assign has_same_category = false %}
+  {% for c in p.categories %}
+    {% if page.categories contains c %}
+      {% assign has_same_category = true %}
+      {% break %}
+    {% endif %}
+  {% endfor %}
+
+  {% assign has_shared_tag = false %}
+  {% for t in p.tags %}
+    {% if page.tags contains t %}
+      {% assign has_shared_tag = true %}
+      {% break %}
+    {% endif %}
+  {% endfor %}
+
+  {% if has_same_category and has_shared_tag %}
+    {% assign related_same_cat_tag = related_same_cat_tag | push: p %}
+  {% elsif has_same_category %}
+    {% assign related_same_cat = related_same_cat | push: p %}
+  {% elsif has_shared_tag %}
+    {% assign related_shared_tag = related_shared_tag | push: p %}
+  {% endif %}
 {% endfor %}
 
 {% assign latest_pick = filtered_latest | first %}
-{% assign fallback_popular = filtered_latest[1] | default: latest_pick %}
+{% assign latest_url = latest_pick.url %}
+{% assign fallback_related = latest_pick %}
+{% for p in filtered_latest offset:1 limit:1 %}
+  {% assign fallback_related = p %}
+{% endfor %}
+
+{% assign related_href = '__NONE__' %}
+{% assign related_title = '' %}
+{% assign related_date = '' %}
+
+{% for candidate in related_same_cat_tag %}
+  {% if latest_url != '__NONE__' and candidate.url == latest_url %}{% continue %}{% endif %}
+  {% assign related_href = candidate.url | relative_url %}
+  {% assign related_title = candidate.title %}
+  {% assign related_date = candidate.date | date: "%Y.%m.%d" %}
+  {% break %}
+{% endfor %}
+{% if related_href == '__NONE__' %}
+  {% for candidate in related_same_cat %}
+    {% if latest_url != '__NONE__' and candidate.url == latest_url %}{% continue %}{% endif %}
+    {% assign related_href = candidate.url | relative_url %}
+    {% assign related_title = candidate.title %}
+    {% assign related_date = candidate.date | date: "%Y.%m.%d" %}
+    {% break %}
+  {% endfor %}
+{% endif %}
+{% if related_href == '__NONE__' %}
+  {% for candidate in related_shared_tag %}
+    {% if latest_url != '__NONE__' and candidate.url == latest_url %}{% continue %}{% endif %}
+    {% assign related_href = candidate.url | relative_url %}
+    {% assign related_title = candidate.title %}
+    {% assign related_date = candidate.date | date: "%Y.%m.%d" %}
+    {% break %}
+  {% endfor %}
+{% endif %}
+{% if related_href == '__NONE__' and fallback_related %}
+  {% assign related_href = fallback_related.url | relative_url %}
+  {% assign related_title = fallback_related.title %}
+  {% assign related_date = fallback_related.date | date: "%Y.%m.%d" %}
+{% endif %}
 
 <div class="post-floating-bottom" aria-hidden="true">
   <div class="post-floating-bottom-inner">
-    <a id="floating-popular" class="post-floating-bottom-link left" href="{{ fallback_popular.url | relative_url }}">
-      <span class="post-floating-bottom-caption">인기글</span>
-      <span class="post-floating-bottom-title" id="floating-popular-title">{{ fallback_popular.title }}</span>
+    {% if related_href != '__NONE__' %}
+    <a id="floating-related" class="post-floating-bottom-link left" href="{{ related_href }}">
+      <span class="post-floating-bottom-caption">관련글</span>
+      <span class="post-floating-bottom-title" id="floating-related-title">{{ related_title }}</span>
     </a>
+    {% endif %}
 
     {% if latest_pick %}
       <a class="post-floating-bottom-link right" href="{{ latest_pick.url | relative_url }}">
@@ -30,11 +97,13 @@
 
 <nav class="post-bottom-nav mt-4 mb-3" aria-label="Post Bottom Navigation">
   <div class="post-bottom-nav-grid">
-    <a id="popular-card" class="post-bottom-card post-bottom-card-left" href="{{ fallback_popular.url | relative_url }}">
-      <span class="post-bottom-label">인기글</span>
-      <strong id="popular-card-title" class="post-bottom-title">{{ fallback_popular.title }}</strong>
-      <span id="popular-card-date" class="post-bottom-date">{{ fallback_popular.date | date: "%Y.%m.%d" }}</span>
+    {% if related_href != '__NONE__' %}
+    <a id="related-card" class="post-bottom-card post-bottom-card-left" href="{{ related_href }}">
+      <span class="post-bottom-label">관련글</span>
+      <strong id="related-card-title" class="post-bottom-title">{{ related_title }}</strong>
+      <span id="related-card-date" class="post-bottom-date">{{ related_date }}</span>
     </a>
+    {% endif %}
 
     {% if latest_pick %}
       <a class="post-bottom-card post-bottom-card-right" href="{{ latest_pick.url | relative_url }}">
@@ -45,52 +114,6 @@
     {% endif %}
   </div>
 </nav>
-
-<script>
-(function(){
-  var readGC = window.requestGoatCounterCount;
-  if (typeof readGC !== 'function') return;
-
-  var currentUrl = {{ page.url | jsonify }};
-  var latestHref = document.querySelector('.post-bottom-card-right');
-  var latestUrl = latestHref ? latestHref.getAttribute('href') : '';
-
-  var allPosts = [
-    {% for post in site.posts limit: 30 %}{% unless post.hidden == true %}
-    { url: {{ post.url | jsonify }}, href: {{ post.url | relative_url | jsonify }}, title: {{ post.title | jsonify }}, date: {{ post.date | date: "%Y.%m.%d" | jsonify }} },
-    {% endunless %}{% endfor %}
-  ];
-
-  Promise.all(allPosts.map(function(p){
-    return new Promise(function(resolve){
-      readGC(p.url, function(v){ p.views = v || 0; resolve(p); });
-    });
-  })).then(function(posts){
-    posts.sort(function(a,b){ return b.views - a.views; });
-    for (var i = 0; i < posts.length; i++) {
-      var p = posts[i];
-      if (p.url === currentUrl) continue;
-      if (p.href === latestUrl) continue;
-      applyPopular(p);
-      return;
-    }
-  }).catch(function(){});
-
-  function applyPopular(p) {
-    var card = document.getElementById('popular-card');
-    var cardTitle = document.getElementById('popular-card-title');
-    var cardDate = document.getElementById('popular-card-date');
-    var floatingLink = document.getElementById('floating-popular');
-    var floatingTitle = document.getElementById('floating-popular-title');
-
-    if (card) card.href = p.href;
-    if (cardTitle) cardTitle.textContent = p.title;
-    if (cardDate) cardDate.textContent = p.date;
-    if (floatingLink) floatingLink.href = p.href;
-    if (floatingTitle) floatingTitle.textContent = p.title;
-  }
-})();
-</script>
 
 
 <style>

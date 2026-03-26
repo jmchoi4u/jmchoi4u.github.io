@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(node -e \"console.log\\(process.version\\)\")",
-      "Bash(powershell -NoProfile -Command \":*)"
+      "Bash(powershell -NoProfile -Command \":*)",
+      "mcp__Claude_Preview__preview_start",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:jmchoi4u.github.io)"
     ]
   }
 }

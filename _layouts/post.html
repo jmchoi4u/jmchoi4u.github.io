@@ -120,6 +120,13 @@ script_includes:
   {% endif %}
 
   <div class="content">
+    <div class="post-content-meta" data-toc-skip>
+      <span class="post-hero-meta-pill">{{ page.date | date: "%Y.%m.%d" }}</span>
+      <span class="post-hero-meta-pill" id="content-views" style="display:none">
+        <i class="fas fa-eye"></i> <span id="content-views-num"></span>
+      </span>
+      <span class="post-hero-meta-pill"><i class="far fa-clock"></i> {{ estimated_read_time }}분 읽기</span>
+    </div>
     {{ content }}
   </div>
 
@@ -205,7 +212,7 @@ script_includes:
   var fab = document.getElementById('post-fab');
   var floatingTocHeadings = [];
   var tocEndAnchor = document.querySelector('.post-author-card') || document.querySelector('.post-bottom-nav') || document.getElementById('tail-wrapper');
-  var gcId = {% if site.pageviews.provider == 'goatcounter' %}{{ site.analytics.goatcounter.id | jsonify | default: 'null' }}{% else %}null{% endif %};
+  var gcId = {{ site.analytics.goatcounter.id | jsonify | default: 'null' }};
 
   function slugifyHeading(text) {
     return (text || '')
@@ -446,13 +453,19 @@ script_includes:
   if (gcId) {
     var pUrl = {{ page.url | jsonify }}.replace(/\/$/, '');
     requestGoatCounterCount(pUrl, function(views) {
-      if (views >= 3) {
-        var el = document.getElementById('hero-views');
-        var num = document.getElementById('hero-views-num');
-        if (el && num) {
-          num.textContent = views;
-          el.style.display = 'inline-flex';
-        }
+      var heroElViews = document.getElementById('hero-views');
+      var heroNum = document.getElementById('hero-views-num');
+      var contentElViews = document.getElementById('content-views');
+      var contentNum = document.getElementById('content-views-num');
+
+      if (heroElViews && heroNum) {
+        heroNum.textContent = views;
+        heroElViews.style.display = 'inline-flex';
+      }
+
+      if (contentElViews && contentNum) {
+        contentNum.textContent = views;
+        contentElViews.style.display = 'inline-flex';
       }
     });
   }

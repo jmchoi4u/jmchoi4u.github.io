@@ -24,6 +24,11 @@ const draftsDir = path.join(repoRoot, "_drafts");
 const trashDir = path.join(repoRoot, "_trash");
 const templatesDir = path.join(repoRoot, "src", "templates");
 const assetsDir = path.join(repoRoot, "assets", "img");
+const LOCAL_ONLY_STAGE_EXCLUDES = [
+  ".claude",
+  "AGENT_COLLAB_LOG.md",
+  "app/logs"
+];
 
 const rawFiles = {
   config: path.join(repoRoot, "_config.yml"),
@@ -379,6 +384,76 @@ async function run(command, cwd = repoRoot) {
     child.stderr.on("data", (chunk) => { stderr += chunk.toString(); });
     child.on("close", (code) => resolve({ code, stdout, stderr }));
   });
+}
+
+function joinOutput(...parts) {
+  return parts.filter(Boolean).join("\n").trim();
+}
+
+function looksLikeNonFastForward(result) {
+  const text = `${result?.stdout || ""}\n${result?.stderr || ""}`;
+  return /fetch first|non-fast-forward|failed to push some refs/i.test(text);
+}
+
+function looksLikeNoUpstream(result) {
+  const text = `${result?.stdout || ""}\n${result?.stderr || ""}`;
+  return /has no upstream branch|no upstream branch/i.test(text);
+}
+
+async function unstageLocalOnlyPaths() {
+  for (const relativePath of LOCAL_ONLY_STAGE_EXCLUDES) {
+    // 로컬 전용 설정/로그는 배포 커밋에 섞이지 않도록 자동으로 스테이징에서만 제외합니다.
+    await run(`git reset -q HEAD -- "${relativePath}"`);
+  }
+}
+
+async function syncRemoteBranch() {
+  const upstream = await run("git rev-parse --abbrev-ref --symbolic-full-name @{u}");
+  if (upstream.code !== 0) {
+    return { ok: true, skipped: true, stdout: "", stderr: "" };
+  }
+
+  const fetch = await run("git fetch --prune");
+  if (fetch.code !== 0) {
+    return {
+      ok: false,
+      step: "fetch",
+      error: `원격 변경 확인 실패: ${fetch.stderr || fetch.stdout || "git fetch 오류"}`,
+      ...fetch
+    };
+  }
+
+  const pull = await run("git pull --no-edit --no-rebase");
+  if (pull.code !== 0) {
+    await run("git merge --abort");
+    return {
+      ok: false,
+      step: "pull",
+      error: "원격 변경을 자동으로 합치는 중 충돌이 발생했습니다. 다른 곳에서 같은 파일을 수정한 것 같습니다.",
+      stdout: joinOutput(fetch.stdout, pull.stdout),
+      stderr: joinOutput(fetch.stderr, pull.stderr)
+    };
+  }
+
+  return {
+    ok: true,
+    step: "pull",
+    stdout: joinOutput(fetch.stdout, pull.stdout),
+    stderr: joinOutput(fetch.stderr, pull.stderr)
+  };
+}
+
+async function pushCurrentBranch() {
+  let push = await run("git push");
+  if (push.code === 0) {
+    return push;
+  }
+
+  if (looksLikeNoUpstream(push)) {
+    push = await run("git push -u origin HEAD");
+  }
+
+  return push;
 }
 
 async function summary() {
@@ -742,17 +817,57 @@ async function publish(message) {
   const commitMessage = String(message || "").trim() || `blog update ${new Date().toISOString()}`;
   const add = await run("git add -A");
   if (add.code !== 0) return { ok: false, error: "git add 실패: 파일 스테이징 중 오류가 발생했습니다.", step: "add", ...add };
+  await unstageLocalOnlyPaths();
   const msgFile = path.join(logsDir, "commit-msg.tmp");
   await fs.writeFile(msgFile, commitMessage, "utf8");
   const commit = await run(`git commit -F "${msgFile.replace(/\\/g, "/")}"`);
   await fs.unlink(msgFile).catch(() => {});
   const nothing = `${commit.stdout}\n${commit.stderr}`.includes("nothing to commit");
   if (commit.code !== 0 && !nothing) return { ok: false, error: `git commit 실패: ${commit.stderr || commit.stdout || "알 수 없는 오류"}`, step: "commit", ...commit };
-  if (nothing) return { ok: true, step: "noop", ...commit };
-  const push = await run("git push");
-  if (push.code !== 0) return { ok: false, error: `git push 실패: ${push.stderr || push.stdout || "원격 저장소 연결을 확인하세요."}`, step: "push", ...push };
-  rememberLog("PUBLISH", "git push 완료");
-  return { ok: true, step: "push", stdout: `${commit.stdout}\n${push.stdout}`.trim(), stderr: `${commit.stderr}\n${push.stderr}`.trim() };
+
+  const sync = await syncRemoteBranch();
+  if (!sync.ok) {
+    return {
+      ok: false,
+      step: sync.step,
+      error: sync.error,
+      stdout: joinOutput(commit.stdout, sync.stdout),
+      stderr: joinOutput(commit.stderr, sync.stderr)
+    };
+  }
+
+  let push = await pushCurrentBranch();
+  if (push.code !== 0 && looksLikeNonFastForward(push)) {
+    const retrySync = await syncRemoteBranch();
+    if (!retrySync.ok) {
+      return {
+        ok: false,
+        step: retrySync.step,
+        error: retrySync.error,
+        stdout: joinOutput(commit.stdout, sync.stdout, retrySync.stdout),
+        stderr: joinOutput(commit.stderr, sync.stderr, push.stderr, retrySync.stderr)
+      };
+    }
+    push = await pushCurrentBranch();
+  }
+
+  if (push.code !== 0) {
+    return {
+      ok: false,
+      error: `git push 실패: ${push.stderr || push.stdout || "원격 저장소 연결을 확인하세요."}`,
+      step: "push",
+      stdout: joinOutput(commit.stdout, sync.stdout, push.stdout),
+      stderr: joinOutput(commit.stderr, sync.stderr, push.stderr)
+    };
+  }
+
+  rememberLog("PUBLISH", nothing ? "원격 동기화 후 git push 완료" : "커밋 후 원격 동기화 + git push 완료");
+  return {
+    ok: true,
+    step: nothing ? "push-only" : "push",
+    stdout: joinOutput(commit.stdout, sync.stdout, push.stdout),
+    stderr: joinOutput(commit.stderr, sync.stderr, push.stderr)
+  };
 }
 
 async function handleApi(req, res, url) {

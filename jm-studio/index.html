@@ -1,0 +1,1121 @@
+---
+layout: null
+sitemap: false
+---
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="robots" content="noindex,nofollow">
+<title>Blog Studio</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#DA7756">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+:root{--bg:#F5F0EB;--bg2:#EDE8E2;--panel:#fff;--line:#E5DDD4;--text:#1A1A1A;--muted:#8B7E74;--point:#DA7756;--point-h:#C4684A;--point-s:#FDF0EB;--danger:#C4453A;--success:#3D8C5C;--purple:#8B5CF6;--radius:12px;--shadow:0 2px 12px rgba(26,26,26,.06)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{font-family:'Inter',-apple-system,'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;min-height:100dvh;-webkit-font-smoothing:antialiased;overflow:hidden}
+::selection{background:rgba(218,119,86,.2)}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#CCC5BD;border-radius:99px}
+
+/* === Layout === */
+.app{display:flex;flex-direction:column;height:100vh;height:100dvh}
+.topbar{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line);flex-shrink:0;z-index:10}
+.topbar h1{font-size:.95rem;font-weight:700;flex:1;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar-back{display:none;border:none;background:none;font-size:1.1rem;cursor:pointer;color:var(--muted);padding:4px}
+.main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.bottombar{display:flex;background:var(--panel);border-top:1px solid var(--line);flex-shrink:0}
+.bottombar button{flex:1;border:none;background:none;padding:10px 0 8px;font-size:.65rem;color:var(--muted);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;transition:color .15s}
+.bottombar button.active{color:var(--point);font-weight:600}
+.bottombar .bar-icon{font-size:1.15rem}
+
+/* === Views === */
+.view{display:none;padding:16px;padding-bottom:80px}
+.view.active{display:block}
+
+/* === Auth === */
+.auth-view{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:70vh;text-align:center;padding:24px}
+.auth-logo{width:64px;height:64px;background:var(--point);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff;margin-bottom:16px}
+.auth-view h2{font-size:1.2rem;margin-bottom:4px}
+.auth-view p{color:var(--muted);font-size:.82rem;margin-bottom:20px;max-width:300px;line-height:1.5}
+.auth-input{width:100%;max-width:340px;padding:12px 16px;border:1px solid var(--line);border-radius:var(--radius);font-size:.88rem;background:var(--panel);outline:none;margin-bottom:12px;text-align:center}
+.auth-input:focus{border-color:var(--point);box-shadow:0 0 0 3px rgba(218,119,86,.12)}
+
+/* === Buttons === */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 18px;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);color:var(--text);font-size:.85rem;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--point);color:#fff;border-color:var(--point)}
+.btn-primary:hover{background:var(--point-h)}
+.btn-danger{background:#FEF0EF;color:var(--danger);border-color:#F0D0CD}
+.btn-sm{padding:6px 12px;font-size:.78rem;border-radius:8px}
+.btn-block{width:100%}
+.btn-fab{position:fixed;bottom:72px;right:16px;width:52px;height:52px;border-radius:50%;background:var(--point);color:#fff;border:none;font-size:1.4rem;box-shadow:0 4px 16px rgba(218,119,86,.3);z-index:20;cursor:pointer}
+.btn-fab:active{transform:scale(.92)}
+
+/* === Cards === */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:10px;transition:border-color .15s}
+.card:active{border-color:var(--point)}
+.card-title{font-weight:600;font-size:.9rem;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-meta{display:flex;flex-wrap:wrap;gap:6px;font-size:.72rem;color:var(--muted)}
+.card-meta span{display:inline-flex;align-items:center;gap:3px}
+.card-tag{background:var(--point-s);color:var(--point);padding:1px 6px;border-radius:4px;font-size:.65rem;font-weight:600}
+.card-status{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.status-published{background:var(--success)}
+.status-draft{background:var(--purple)}
+.status-hidden{background:var(--muted)}
+
+/* === Editor === */
+.editor-section{margin-bottom:16px}
+.editor-label{font-size:.75rem;font-weight:600;color:var(--muted);margin-bottom:5px;display:block}
+.editor-input{width:100%;padding:10px 14px;border:1px solid var(--line);border-radius:10px;font-size:.88rem;background:var(--panel);outline:none;color:var(--text)}
+.editor-input:focus{border-color:var(--point);box-shadow:0 0 0 3px rgba(218,119,86,.12)}
+textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',monospace;font-size:.84rem;line-height:1.7;resize:vertical}
+.editor-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.editor-checks{display:flex;flex-wrap:wrap;gap:8px 14px;padding:8px 0}
+.editor-check{display:flex;align-items:center;gap:5px;font-size:.8rem;cursor:pointer;color:var(--text)}
+.editor-check input{width:16px;height:16px;accent-color:var(--point)}
+.editor-actions{display:flex;gap:8px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+
+/* === Preview === */
+.preview-content{padding:16px;line-height:1.8;font-size:.92rem;word-break:break-word}
+.preview-content h1,.preview-content h2,.preview-content h3{margin:1em 0 .5em;letter-spacing:-.01em}
+.preview-content h1{font-size:1.4rem}.preview-content h2{font-size:1.2rem}.preview-content h3{font-size:1.05rem}
+.preview-content pre{padding:12px;border-radius:8px;background:#1E1C18;color:#E8E0D8;overflow-x:auto;font-size:.82rem}
+.preview-content code{font-family:'Cascadia Code','D2Coding',monospace;font-size:.88em}
+.preview-content blockquote{margin:.6em 0;padding:4px 14px;border-left:3px solid var(--point);color:var(--muted);background:var(--bg);border-radius:0 8px 8px 0}
+.preview-content img{max-width:100%;border-radius:8px}
+.preview-content table{width:100%;border-collapse:collapse;font-size:.85rem}
+.preview-content th,.preview-content td{padding:6px 10px;border:1px solid var(--line);text-align:left}
+.preview-content th{background:var(--bg);font-weight:600}
+
+/* === Search === */
+.search-bar{position:relative;margin-bottom:14px}
+.search-bar input{width:100%;padding:10px 14px 10px 36px;border:1px solid var(--line);border-radius:var(--radius);font-size:.85rem;background:var(--panel);outline:none}
+.search-bar input:focus{border-color:var(--point)}
+.search-bar::before{content:'';position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;border:2px solid var(--muted);border-radius:50%;pointer-events:none}
+
+/* === Toolbar === */
+.md-toolbar{display:flex;flex-wrap:wrap;gap:3px;padding:6px;background:var(--bg);border:1px solid var(--line);border-radius:10px;margin-bottom:8px}
+.md-toolbar button{min-width:32px;height:32px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:var(--text)}
+.md-toolbar button:active{background:var(--point-s);color:var(--point)}
+.md-sep{width:1px;height:24px;background:var(--line);margin:4px 3px;flex-shrink:0}
+
+/* === Toast === */
+.toast-wrap{position:fixed;top:12px;left:12px;right:12px;z-index:100;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.toast{pointer-events:auto;padding:12px 16px;border-radius:var(--radius);background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow);font-size:.82rem;animation:toast-in .3s ease}
+.toast-success{border-left:3px solid var(--success)}
+.toast-error{border-left:3px solid var(--danger)}
+@keyframes toast-in{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
+
+/* === Settings === */
+.setting-item{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--bg2)}
+.setting-item:last-child{border:none}
+.setting-label{font-size:.88rem;font-weight:500}
+.setting-sub{font-size:.72rem;color:var(--muted);margin-top:2px}
+
+/* === Empty === */
+.empty{text-align:center;padding:48px 20px;color:var(--muted);font-size:.85rem}
+
+/* === Tabs === */
+.tab-bar{display:flex;gap:2px;margin-bottom:14px;border-bottom:2px solid var(--bg2)}
+.tab-bar button{padding:8px 14px;border:none;background:none;font-size:.82rem;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;font-weight:500}
+.tab-bar button.active{color:var(--point);border-bottom-color:var(--point);font-weight:600}
+
+/* === Loading === */
+.loading{text-align:center;padding:40px;color:var(--muted)}
+.spinner{display:inline-block;width:24px;height:24px;border:2px solid var(--line);border-top-color:var(--point);border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* === Image upload === */
+.img-upload{border:2px dashed var(--line);border-radius:var(--radius);padding:24px;text-align:center;color:var(--muted);font-size:.82rem;cursor:pointer;transition:border-color .15s}
+.img-upload:active{border-color:var(--point);background:var(--point-s)}
+.img-upload input{display:none}
+
+/* === Cover preview === */
+.cover-preview{position:relative;margin-top:8px;border-radius:8px;overflow:hidden}
+.cover-preview img{width:100%;height:120px;object-fit:cover}
+.cover-preview .cover-remove{position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,.5);color:#fff;border:none;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <!-- Toast -->
+  <div class="toast-wrap" id="toasts"></div>
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <button class="topbar-back" id="topbar-back" onclick="goBack()">&larr;</button>
+    <h1 id="topbar-title">Blog Studio</h1>
+    <div id="topbar-actions"></div>
+  </div>
+
+  <!-- Main content area -->
+  <div class="main" id="main-scroll">
+    <!-- Auth View: PAT Input (first-time setup) -->
+    <div class="view active" id="view-auth">
+      <div class="auth-view">
+        <div class="auth-logo">J</div>
+        <h2>Blog Studio</h2>
+        <p>GitHub Personal Access Token을 입력하고 PIN을 설정하면, 다음부터는 PIN만으로 로그인합니다.</p>
+        <input class="auth-input" id="pat-input" type="password" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off">
+        <input class="auth-input" id="pin-setup" type="password" inputmode="numeric" pattern="[0-9]*" placeholder="PIN 설정 (4~8자리 숫자)" maxlength="8" autocomplete="off" style="margin-top:4px">
+        <button class="btn btn-primary btn-block" style="max-width:340px" onclick="doSetup()">설정 완료</button>
+        <p style="margin-top:16px;font-size:.72rem;color:var(--muted);max-width:340px;line-height:1.5">
+          GitHub &rarr; Settings &rarr; Developer settings &rarr; Personal access tokens &rarr; Fine-grained tokens<br>
+          권한: Contents (Read and write)
+        </p>
+      </div>
+    </div>
+
+    <!-- Lock View: PIN unlock (return visits) -->
+    <div class="view" id="view-lock">
+      <div class="auth-view">
+        <div class="auth-logo" style="background:var(--text)">&#128274;</div>
+        <h2>잠금 해제</h2>
+        <p>PIN을 입력하여 잠금을 해제하세요.</p>
+        <input class="auth-input" id="pin-unlock" type="password" inputmode="numeric" pattern="[0-9]*" placeholder="PIN (4~8자리)" maxlength="8" autocomplete="off">
+        <button class="btn btn-primary btn-block" style="max-width:340px" onclick="doUnlock()">잠금 해제</button>
+        <button class="btn btn-block" style="max-width:340px;margin-top:8px" onclick="doReset()">초기화 (재설정)</button>
+      </div>
+    </div>
+
+    <!-- Post List View -->
+    <div class="view" id="view-list">
+      <div class="search-bar">
+        <input type="text" id="search-input" placeholder="검색..." oninput="filterPosts()">
+      </div>
+      <div class="tab-bar" id="list-tabs">
+        <button class="active" data-tab="all" onclick="setListTab('all',this)">전체</button>
+        <button data-tab="published" onclick="setListTab('published',this)">발행</button>
+        <button data-tab="drafts" onclick="setListTab('drafts',this)">임시</button>
+      </div>
+      <div id="post-list"></div>
+      <button class="btn-fab" onclick="newPost()">+</button>
+    </div>
+
+    <!-- Editor View -->
+    <div class="view" id="view-editor">
+      <div class="editor-section">
+        <label class="editor-label">제목</label>
+        <input class="editor-input" id="ed-title" type="text" placeholder="글 제목">
+      </div>
+
+      <div class="editor-row">
+        <div class="editor-section">
+          <label class="editor-label">날짜</label>
+          <input class="editor-input" id="ed-date" type="text" placeholder="2026-03-26 09:00:00 +0900">
+        </div>
+        <div class="editor-section">
+          <label class="editor-label">설명</label>
+          <input class="editor-input" id="ed-desc" type="text" placeholder="SEO 설명">
+        </div>
+      </div>
+
+      <div class="editor-row">
+        <div class="editor-section">
+          <label class="editor-label">카테고리</label>
+          <input class="editor-input" id="ed-cats" type="text" placeholder="개발, Jekyll">
+        </div>
+        <div class="editor-section">
+          <label class="editor-label">태그</label>
+          <input class="editor-input" id="ed-tags" type="text" placeholder="chirpy, seo">
+        </div>
+      </div>
+
+      <div class="editor-section">
+        <label class="editor-label">표시 제목 (줄바꿈 가능)</label>
+        <input class="editor-input" id="ed-hero-title" type="text" placeholder="비워두면 글 제목 사용">
+      </div>
+
+      <div class="editor-section">
+        <label class="editor-label">표지 이미지</label>
+        <div class="img-upload" id="cover-upload" onclick="document.getElementById('cover-file').click()">
+          이미지를 선택하세요
+          <input type="file" id="cover-file" accept="image/*" onchange="uploadCover(this)">
+        </div>
+        <div class="cover-preview" id="cover-preview" style="display:none">
+          <img id="cover-img">
+          <button class="cover-remove" onclick="removeCover()">&times;</button>
+        </div>
+        <input type="hidden" id="ed-cover">
+      </div>
+
+      <div class="editor-section">
+        <label class="editor-label">옵션</label>
+        <div class="editor-checks">
+          <label class="editor-check"><input type="checkbox" id="ed-toc" checked> TOC</label>
+          <label class="editor-check"><input type="checkbox" id="ed-comments" checked> 댓글</label>
+          <label class="editor-check"><input type="checkbox" id="ed-pin"> 고정</label>
+          <label class="editor-check"><input type="checkbox" id="ed-hidden"> 숨김</label>
+          <label class="editor-check"><input type="checkbox" id="ed-draft"> 임시저장</label>
+          <label class="editor-check"><input type="checkbox" id="ed-mermaid"> Mermaid</label>
+          <label class="editor-check"><input type="checkbox" id="ed-math"> Math</label>
+        </div>
+      </div>
+
+      <div class="editor-section">
+        <label class="editor-label">본문</label>
+        <div class="md-toolbar" id="md-toolbar">
+          <button onclick="wrap('**','**')" title="굵게"><b>B</b></button>
+          <button onclick="wrap('*','*')" title="기울임"><i>I</i></button>
+          <button onclick="wrap('<u>','</u>')" title="밑줄"><u>U</u></button>
+          <button onclick="wrap('~~','~~')" title="취소선"><s>S</s></button>
+          <span class="md-sep"></span>
+          <button onclick="insert('## ')" title="H2">H2</button>
+          <button onclick="insert('### ')" title="H3">H3</button>
+          <span class="md-sep"></span>
+          <button onclick="insert('- ')" title="목록">&bull;</button>
+          <button onclick="insert('> ')" title="인용">&ldquo;</button>
+          <button onclick="wrap('`','`')" title="코드">&lt;/&gt;</button>
+          <button onclick="insert('```\n\n```')" title="코드블록">{ }</button>
+          <button onclick="wrap('[','](https://)')" title="링크">&#128279;</button>
+          <button onclick="triggerBodyImage()" title="이미지">&#128247;</button>
+        </div>
+        <textarea class="editor-input" id="ed-body" placeholder="마크다운으로 작성하세요..." oninput="autoSave()"></textarea>
+      </div>
+
+      <div class="editor-actions">
+        <button class="btn btn-primary" style="flex:1" onclick="savePost()">저장</button>
+        <button class="btn" onclick="togglePreview()">미리보기</button>
+        <button class="btn btn-danger btn-sm" id="ed-delete-btn" style="display:none" onclick="deletePost()">삭제</button>
+      </div>
+    </div>
+
+    <!-- Preview View -->
+    <div class="view" id="view-preview">
+      <div class="preview-content" id="preview-content"></div>
+    </div>
+
+    <!-- Settings View -->
+    <div class="view" id="view-settings">
+      <div class="card">
+        <div class="setting-item">
+          <div>
+            <div class="setting-label">로그인 상태</div>
+            <div class="setting-sub" id="settings-user">-</div>
+          </div>
+        </div>
+        <div class="setting-item">
+          <div>
+            <div class="setting-label">Repository</div>
+            <div class="setting-sub" id="settings-repo">-</div>
+          </div>
+        </div>
+        <div class="setting-item">
+          <div>
+            <div class="setting-label">토큰 변경</div>
+            <div class="setting-sub">새 PAT로 교체합니다</div>
+          </div>
+          <button class="btn btn-sm" onclick="changeToken()">변경</button>
+        </div>
+        <div class="setting-item">
+          <div>
+            <div class="setting-label">로그아웃</div>
+            <div class="setting-sub">토큰을 삭제하고 로그아웃합니다</div>
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="doLogout()">로그아웃</button>
+        </div>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <div class="setting-item">
+          <div>
+            <div class="setting-label">블로그 열기</div>
+            <div class="setting-sub">jmchoi4u.github.io</div>
+          </div>
+          <a href="https://jmchoi4u.github.io" target="_blank" class="btn btn-sm">열기</a>
+        </div>
+        <div class="setting-item">
+          <div>
+            <div class="setting-label">GitHub 레포</div>
+          </div>
+          <a href="https://github.com/jmchoi4u/jmchoi4u.github.io" target="_blank" class="btn btn-sm">열기</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom bar -->
+  <div class="bottombar" id="bottombar" style="display:none">
+    <button onclick="showView('list')" data-view="list"><span class="bar-icon">&#9776;</span>글 목록</button>
+    <button onclick="newPost()" data-view="editor"><span class="bar-icon">&#9998;</span>새 글</button>
+    <button onclick="showView('settings')" data-view="settings"><span class="bar-icon">&#9881;</span>설정</button>
+  </div>
+</div>
+
+<!-- Markdown parser -->
+<script src="https://cdn.jsdelivr.net/npm/marked@15.0.4/marked.min.js"></script>
+
+<script>
+/* ═══════ Config ═══════ */
+const OWNER = 'jmchoi4u';
+const REPO = 'jmchoi4u.github.io';
+const CRYPT_KEY = 'jm-studio-enc';
+const AUTOSAVE_KEY = 'jm-studio-autosave';
+const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+const API = 'https://api.github.com';
+
+/* ═══════ State ═══════ */
+const S = {
+  token: '',
+  user: null,
+  posts: [],
+  editing: null,      // { path, sha, isNew }
+  listTab: 'all',
+  viewStack: [],
+  bodyImageInput: null,
+  lastActivity: Date.now()
+};
+
+/* ═══════ Crypto: AES-GCM with PIN ═══════ */
+async function deriveKey(pin, salt) {
+  const enc = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(pin), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+    keyMaterial,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt', 'decrypt']
+  );
+}
+
+async function encryptPAT(pat, pin) {
+  const enc = new TextEncoder();
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await deriveKey(pin, salt);
+  const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(pat));
+  // Store as base64: salt + iv + ciphertext
+  const buf = new Uint8Array(salt.length + iv.length + encrypted.byteLength);
+  buf.set(salt, 0);
+  buf.set(iv, salt.length);
+  buf.set(new Uint8Array(encrypted), salt.length + iv.length);
+  return btoa(String.fromCharCode(...buf));
+}
+
+async function decryptPAT(stored, pin) {
+  const raw = Uint8Array.from(atob(stored), c => c.charCodeAt(0));
+  const salt = raw.slice(0, 16);
+  const iv = raw.slice(16, 28);
+  const data = raw.slice(28);
+  const key = await deriveKey(pin, salt);
+  const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, data);
+  return new TextDecoder().decode(decrypted);
+}
+
+/* ═══════ Session Timeout ═══════ */
+function resetActivity() { S.lastActivity = Date.now(); }
+function checkSession() {
+  if (S.token && Date.now() - S.lastActivity > SESSION_TIMEOUT) {
+    lockSession();
+  }
+}
+function lockSession() {
+  S.token = '';
+  S.user = null;
+  document.getElementById('bottombar').style.display = 'none';
+  const hasStored = localStorage.getItem(CRYPT_KEY);
+  showView(hasStored ? 'lock' : 'auth');
+  toast('세션 만료 - PIN을 다시 입력하세요', 'info');
+}
+
+/* ═══════ Init ═══════ */
+window.addEventListener('DOMContentLoaded', () => {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+  marked.setOptions({ gfm: true, breaks: true });
+
+  // Activity tracking for session timeout
+  ['touchstart', 'click', 'keydown', 'scroll'].forEach(evt =>
+    document.addEventListener(evt, resetActivity, { passive: true })
+  );
+  setInterval(checkSession, 60000); // check every minute
+
+  // Check if encrypted PAT exists
+  const stored = localStorage.getItem(CRYPT_KEY);
+  if (stored) {
+    showView('lock');
+  } else {
+    showView('auth');
+  }
+
+  // Enter key support for PIN inputs
+  document.getElementById('pin-setup').addEventListener('keydown', e => { if (e.key === 'Enter') doSetup(); });
+  document.getElementById('pin-unlock').addEventListener('keydown', e => { if (e.key === 'Enter') doUnlock(); });
+});
+
+/* ═══════ Auth ═══════ */
+async function doSetup() {
+  const pat = document.getElementById('pat-input').value.trim();
+  const pin = document.getElementById('pin-setup').value.trim();
+  if (!pat) return toast('토큰을 입력하세요', 'error');
+  if (!pin || pin.length < 4 || !/^\d+$/.test(pin)) return toast('PIN은 4~8자리 숫자로 입력하세요', 'error');
+
+  S.token = pat;
+  try {
+    // Verify token first
+    const user = await ghApi('/user');
+    // Check if this user owns the repo
+    if (user.login.toLowerCase() !== OWNER.toLowerCase()) {
+      S.token = '';
+      return toast('이 토큰은 레포지토리 소유자의 것이 아닙니다', 'error');
+    }
+
+    // Encrypt and store
+    const encrypted = await encryptPAT(pat, pin);
+    localStorage.setItem(CRYPT_KEY, encrypted);
+
+    S.user = user;
+    onLoginSuccess();
+    toast('설정 완료', 'success');
+  } catch (e) {
+    S.token = '';
+    toast('인증 실패: ' + e.message, 'error');
+  }
+}
+
+async function doUnlock() {
+  const pin = document.getElementById('pin-unlock').value.trim();
+  if (!pin) return toast('PIN을 입력하세요', 'error');
+
+  const stored = localStorage.getItem(CRYPT_KEY);
+  if (!stored) return toast('저장된 토큰이 없습니다. 초기화해주세요.', 'error');
+
+  try {
+    const pat = await decryptPAT(stored, pin);
+    S.token = pat;
+    const user = await ghApi('/user');
+    S.user = user;
+    document.getElementById('pin-unlock').value = '';
+    onLoginSuccess();
+  } catch (e) {
+    S.token = '';
+    document.getElementById('pin-unlock').value = '';
+    toast('PIN이 올바르지 않습니다', 'error');
+  }
+}
+
+function doReset() {
+  if (!confirm('저장된 토큰을 삭제하고 초기화할까요?')) return;
+  localStorage.removeItem(CRYPT_KEY);
+  localStorage.removeItem(AUTOSAVE_KEY);
+  S.token = '';
+  S.user = null;
+  showView('auth');
+}
+
+function onLoginSuccess() {
+  resetActivity();
+  document.getElementById('settings-user').textContent = S.user.login;
+  document.getElementById('settings-repo').textContent = `${OWNER}/${REPO}`;
+  document.getElementById('bottombar').style.display = 'flex';
+  showView('list');
+  loadPosts();
+}
+
+function doLogout() {
+  if (!confirm('로그아웃할까요? (저장된 토큰도 삭제됩니다)')) return;
+  S.token = '';
+  S.user = null;
+  localStorage.removeItem(CRYPT_KEY);
+  localStorage.removeItem(AUTOSAVE_KEY);
+  document.getElementById('bottombar').style.display = 'none';
+  showView('auth');
+}
+
+function changeToken() {
+  // Show PAT setup view
+  document.getElementById('pat-input').value = '';
+  document.getElementById('pin-setup').value = '';
+  showView('auth');
+}
+
+/* ═══════ GitHub API ═══════ */
+async function ghApi(path, opts = {}) {
+  const url = path.startsWith('http') ? path : `${API}${path}`;
+  const res = await fetch(url, {
+    headers: {
+      'Authorization': `Bearer ${S.token}`,
+      'Accept': 'application/vnd.github.v3+json',
+      ...(opts.headers || {})
+    },
+    ...opts
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `HTTP ${res.status}`);
+  }
+  if (res.status === 204) return {};
+  return res.json();
+}
+
+async function ghGetFile(path) {
+  return ghApi(`/repos/${OWNER}/${REPO}/contents/${path}`);
+}
+
+async function ghPutFile(path, content, sha = null, message = '') {
+  const body = {
+    message: message || `blog update ${new Date().toISOString()}`,
+    content: btoa(unescape(encodeURIComponent(content)))
+  };
+  if (sha) body.sha = sha;
+  return ghApi(`/repos/${OWNER}/${REPO}/contents/${path}`, {
+    method: 'PUT',
+    body: JSON.stringify(body)
+  });
+}
+
+async function ghDeleteFile(path, sha, message = '') {
+  return ghApi(`/repos/${OWNER}/${REPO}/contents/${path}`, {
+    method: 'DELETE',
+    body: JSON.stringify({
+      message: message || `delete ${path}`,
+      sha
+    })
+  });
+}
+
+/* ═══════ Posts ═══════ */
+async function loadPosts() {
+  const listEl = document.getElementById('post-list');
+  listEl.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:8px">불러오는 중...</p></div>';
+
+  try {
+    // Load _posts
+    const postsData = await ghApi(`/repos/${OWNER}/${REPO}/contents/_posts`).catch(() => []);
+    const draftsData = await ghApi(`/repos/${OWNER}/${REPO}/contents/_drafts`).catch(() => []);
+
+    const posts = [];
+
+    for (const f of (Array.isArray(postsData) ? postsData : [])) {
+      if (!f.name.endsWith('.md')) continue;
+      posts.push({ name: f.name, path: f.path, sha: f.sha, isDraft: false });
+    }
+    for (const f of (Array.isArray(draftsData) ? draftsData : [])) {
+      if (!f.name.endsWith('.md')) continue;
+      posts.push({ name: f.name, path: f.path, sha: f.sha, isDraft: true });
+    }
+
+    // Parse front matter from filenames (basic info)
+    S.posts = posts.map(p => {
+      const dateMatch = p.name.match(/^(\d{4}-\d{2}-\d{2})-(.+)\.md$/);
+      return {
+        ...p,
+        date: dateMatch ? dateMatch[1] : '',
+        slug: dateMatch ? dateMatch[2] : p.name.replace(/\.md$/, ''),
+        title: null, // loaded on demand
+        _loaded: false
+      };
+    }).sort((a, b) => (b.date || b.name).localeCompare(a.date || a.name));
+
+    // Load titles from first few lines of each file
+    await loadPostTitles();
+    renderPosts();
+  } catch (e) {
+    listEl.innerHTML = `<div class="empty">불러오기 실패: ${e.message}</div>`;
+  }
+}
+
+async function loadPostTitles() {
+  // Batch load - for each post, get content and parse title
+  const promises = S.posts.map(async (p) => {
+    try {
+      const data = await ghGetFile(p.path);
+      const content = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ''))));
+      const fm = parseFrontMatter(content);
+      p.title = fm.title || p.slug;
+      p.description = fm.description || '';
+      p.categories = fm.categories || [];
+      p.tags = fm.tags || [];
+      p.hidden = fm.hidden === true || fm.hidden === 'true';
+      p.pin = fm.pin === true || fm.pin === 'true';
+      p.sha = data.sha;
+      p._content = content;
+      p._loaded = true;
+    } catch {
+      p.title = p.slug;
+    }
+  });
+  await Promise.all(promises);
+}
+
+function renderPosts() {
+  const listEl = document.getElementById('post-list');
+  const query = (document.getElementById('search-input').value || '').toLowerCase();
+  let filtered = S.posts;
+
+  if (S.listTab === 'published') filtered = filtered.filter(p => !p.isDraft);
+  if (S.listTab === 'drafts') filtered = filtered.filter(p => p.isDraft);
+
+  if (query) {
+    filtered = filtered.filter(p =>
+      (p.title || '').toLowerCase().includes(query) ||
+      (p.slug || '').toLowerCase().includes(query) ||
+      (p.categories || []).join(' ').toLowerCase().includes(query) ||
+      (p.tags || []).join(' ').toLowerCase().includes(query)
+    );
+  }
+
+  if (!filtered.length) {
+    listEl.innerHTML = '<div class="empty">글이 없습니다.</div>';
+    return;
+  }
+
+  listEl.innerHTML = filtered.map(p => {
+    const statusCls = p.isDraft ? 'status-draft' : (p.hidden ? 'status-hidden' : 'status-published');
+    const statusLabel = p.isDraft ? '임시' : (p.hidden ? '숨김' : '발행');
+    const cats = (p.categories || []).join(' / ');
+    const tags = (p.tags || []).slice(0, 3).map(t => `<span class="card-tag">${esc(t)}</span>`).join(' ');
+
+    return `<div class="card" onclick="editPost('${esc(p.path)}')">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <span class="card-status ${statusCls}"></span>
+        <span style="font-size:.68rem;color:var(--muted)">${statusLabel}</span>
+        ${p.pin ? '<span style="font-size:.68rem">&#128204;</span>' : ''}
+      </div>
+      <div class="card-title">${esc(p.title || p.slug)}</div>
+      <div class="card-meta">
+        ${p.date ? `<span>${p.date}</span>` : ''}
+        ${cats ? `<span>${esc(cats)}</span>` : ''}
+      </div>
+      ${tags ? `<div class="card-meta" style="margin-top:3px">${tags}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function filterPosts() { renderPosts(); }
+function setListTab(tab, btn) {
+  S.listTab = tab;
+  document.querySelectorAll('#list-tabs button').forEach(b => b.classList.toggle('active', b === btn));
+  renderPosts();
+}
+
+/* ═══════ Editor ═══════ */
+function newPost() {
+  S.editing = { path: null, sha: null, isNew: true };
+  clearEditor();
+  document.getElementById('ed-date').value = formatNow();
+  document.getElementById('ed-delete-btn').style.display = 'none';
+  showView('editor');
+  setTopbar('새 글', true);
+}
+
+async function editPost(path) {
+  showView('editor');
+  setTopbar('글 수정', true);
+
+  const post = S.posts.find(p => p.path === path);
+  if (!post) return toast('글을 찾을 수 없습니다', 'error');
+
+  try {
+    let content = post._content;
+    let sha = post.sha;
+    if (!content) {
+      const data = await ghGetFile(path);
+      content = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ''))));
+      sha = data.sha;
+    }
+
+    const fm = parseFrontMatter(content);
+    const body = extractBody(content);
+
+    document.getElementById('ed-title').value = fm.title || '';
+    document.getElementById('ed-date').value = fm.date || '';
+    document.getElementById('ed-desc').value = fm.description || '';
+    document.getElementById('ed-cats').value = (fm.categories || []).join(', ');
+    document.getElementById('ed-tags').value = (fm.tags || []).join(', ');
+    document.getElementById('ed-hero-title').value = (fm.hero_title || '').replace(/<br\s*\/?>/gi, '\n');
+    document.getElementById('ed-toc').checked = fm.toc !== false && fm.toc !== 'false';
+    document.getElementById('ed-comments').checked = fm.comments !== false && fm.comments !== 'false';
+    document.getElementById('ed-pin').checked = fm.pin === true || fm.pin === 'true';
+    document.getElementById('ed-hidden').checked = fm.hidden === true || fm.hidden === 'true';
+    document.getElementById('ed-draft').checked = path.startsWith('_drafts/');
+    document.getElementById('ed-mermaid').checked = fm.mermaid === true || fm.mermaid === 'true';
+    document.getElementById('ed-math').checked = fm.math === true || fm.math === 'true';
+    document.getElementById('ed-body').value = body;
+
+    // Cover image
+    const cover = fm.image?.path || (typeof fm.image === 'string' ? fm.image : '') || '';
+    document.getElementById('ed-cover').value = cover;
+    if (cover) {
+      document.getElementById('cover-preview').style.display = 'block';
+      document.getElementById('cover-img').src = `https://raw.githubusercontent.com/${OWNER}/${REPO}/main${cover}`;
+      document.getElementById('cover-upload').style.display = 'none';
+    }
+
+    document.getElementById('ed-delete-btn').style.display = 'inline-flex';
+    S.editing = { path, sha, isNew: false };
+  } catch (e) {
+    toast('불러오기 실패: ' + e.message, 'error');
+  }
+}
+
+async function savePost() {
+  const title = document.getElementById('ed-title').value.trim();
+  if (!title) return toast('제목을 입력하세요', 'error');
+
+  const date = document.getElementById('ed-date').value.trim() || formatNow();
+  const isDraft = document.getElementById('ed-draft').checked;
+  const body = document.getElementById('ed-body').value;
+
+  // Build front matter
+  const fm = {
+    title,
+    date,
+    description: document.getElementById('ed-desc').value.trim(),
+    categories: parseList(document.getElementById('ed-cats').value),
+    tags: parseList(document.getElementById('ed-tags').value),
+    toc: document.getElementById('ed-toc').checked,
+    comments: document.getElementById('ed-comments').checked,
+    pin: document.getElementById('ed-pin').checked,
+    hidden: document.getElementById('ed-hidden').checked,
+    mermaid: document.getElementById('ed-mermaid').checked,
+    math: document.getElementById('ed-math').checked,
+    hero_title: document.getElementById('ed-hero-title').value.trim(),
+    cover: document.getElementById('ed-cover').value.trim()
+  };
+
+  const content = buildFileContent(fm, body);
+
+  // Determine file path
+  const datePrefix = date.slice(0, 10);
+  let slug;
+  if (S.editing && !S.editing.isNew) {
+    // Keep existing slug
+    const match = S.editing.path.match(/\d{4}-\d{2}-\d{2}-(.+)\.md$/);
+    slug = match ? match[1] : title;
+  } else {
+    // New post - use next number
+    const nums = S.posts.map(p => parseInt(p.slug)).filter(n => !isNaN(n));
+    slug = String((nums.length ? Math.max(...nums) : 0) + 1);
+  }
+
+  const dir = isDraft ? '_drafts' : '_posts';
+  const newPath = `${dir}/${datePrefix}-${slug}.md`;
+
+  try {
+    // If path changed (draft→publish or vice versa), delete old file first
+    if (S.editing && !S.editing.isNew && S.editing.path !== newPath && S.editing.sha) {
+      await ghDeleteFile(S.editing.path, S.editing.sha, `move ${S.editing.path} to ${newPath}`);
+      S.editing.sha = null;
+    }
+
+    const result = await ghPutFile(newPath, content, S.editing?.sha || null);
+    S.editing = { path: newPath, sha: result.content.sha, isNew: false };
+    document.getElementById('ed-delete-btn').style.display = 'inline-flex';
+
+    toast('저장 완료', 'success');
+    localStorage.removeItem(AUTOSAVE_KEY);
+    loadPosts(); // refresh list in background
+  } catch (e) {
+    toast('저장 실패: ' + e.message, 'error');
+  }
+}
+
+async function deletePost() {
+  if (!S.editing || S.editing.isNew || !S.editing.sha) return;
+  if (!confirm('이 글을 삭제할까요?')) return;
+
+  try {
+    await ghDeleteFile(S.editing.path, S.editing.sha);
+    toast('삭제 완료', 'success');
+    S.editing = null;
+    showView('list');
+    loadPosts();
+  } catch (e) {
+    toast('삭제 실패: ' + e.message, 'error');
+  }
+}
+
+function clearEditor() {
+  ['ed-title','ed-date','ed-desc','ed-cats','ed-tags','ed-hero-title','ed-body','ed-cover'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('ed-toc').checked = true;
+  document.getElementById('ed-comments').checked = true;
+  document.getElementById('ed-pin').checked = false;
+  document.getElementById('ed-hidden').checked = false;
+  document.getElementById('ed-draft').checked = false;
+  document.getElementById('ed-mermaid').checked = false;
+  document.getElementById('ed-math').checked = false;
+  document.getElementById('cover-preview').style.display = 'none';
+  document.getElementById('cover-upload').style.display = '';
+}
+
+/* ═══════ Image Upload ═══════ */
+async function uploadCover(input) {
+  const file = input.files[0];
+  if (!file) return;
+  await uploadImageFile(file, (path) => {
+    document.getElementById('ed-cover').value = path;
+    document.getElementById('cover-preview').style.display = 'block';
+    document.getElementById('cover-img').src = `https://raw.githubusercontent.com/${OWNER}/${REPO}/main${path}`;
+    document.getElementById('cover-upload').style.display = 'none';
+  });
+}
+
+function removeCover() {
+  document.getElementById('ed-cover').value = '';
+  document.getElementById('cover-preview').style.display = 'none';
+  document.getElementById('cover-upload').style.display = '';
+}
+
+function triggerBodyImage() {
+  if (!S.bodyImageInput) {
+    const inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = 'image/*';
+    inp.onchange = async () => {
+      if (!inp.files[0]) return;
+      await uploadImageFile(inp.files[0], (path) => {
+        insertText(`![image](${path})`);
+      });
+      inp.value = '';
+    };
+    S.bodyImageInput = inp;
+  }
+  S.bodyImageInput.click();
+}
+
+async function uploadImageFile(file, onSuccess) {
+  const slug = document.getElementById('ed-title').value.trim().replace(/[^a-zA-Z0-9가-힣_-]/g, '-').toLowerCase() || 'upload';
+  const folder = `assets/img/posts/${slug}`;
+  const fileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '-');
+  const path = `${folder}/${fileName}`;
+
+  const reader = new FileReader();
+  const base64 = await new Promise((resolve, reject) => {
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
+  try {
+    toast('업로드 중...', 'info');
+    // Check if file exists to get SHA
+    let sha = null;
+    try {
+      const existing = await ghGetFile(path);
+      sha = existing.sha;
+    } catch {}
+
+    await ghApi(`/repos/${OWNER}/${REPO}/contents/${path}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        message: `upload image ${fileName}`,
+        content: base64,
+        ...(sha ? { sha } : {})
+      })
+    });
+
+    const sitePath = `/${path}`;
+    toast('업로드 완료', 'success');
+    onSuccess(sitePath);
+  } catch (e) {
+    toast('업로드 실패: ' + e.message, 'error');
+  }
+}
+
+/* ═══════ Preview ═══════ */
+function togglePreview() {
+  const body = document.getElementById('ed-body').value;
+  const title = document.getElementById('ed-title').value.trim();
+  const desc = document.getElementById('ed-desc').value.trim();
+  const cover = document.getElementById('ed-cover').value.trim();
+
+  let html = '';
+  if (title) html += `<h1>${esc(title)}</h1>`;
+  if (desc) html += `<p style="color:var(--muted);margin-bottom:1em">${esc(desc)}</p>`;
+  if (cover) html += `<img src="https://raw.githubusercontent.com/${OWNER}/${REPO}/main${cover}" style="width:100%;border-radius:8px;margin-bottom:1em">`;
+  html += '<hr style="border:none;border-top:1px solid var(--line);margin:1em 0">';
+  html += marked.parse(body || '');
+
+  document.getElementById('preview-content').innerHTML = html;
+  showView('preview');
+  setTopbar('미리보기', true);
+}
+
+/* ═══════ Markdown Toolbar ═══════ */
+function wrap(before, after) {
+  const area = document.getElementById('ed-body');
+  const start = area.selectionStart;
+  const end = area.selectionEnd;
+  const sel = area.value.slice(start, end) || '텍스트';
+  area.value = area.value.slice(0, start) + before + sel + after + area.value.slice(end);
+  area.focus();
+  area.setSelectionRange(start + before.length, start + before.length + sel.length);
+}
+
+function insert(text) {
+  const area = document.getElementById('ed-body');
+  const start = area.selectionStart;
+  const pre = area.value.slice(0, start);
+  const needNL = pre && !pre.endsWith('\n') ? '\n' : '';
+  area.value = pre + needNL + text + area.value.slice(area.selectionEnd);
+  area.focus();
+}
+
+function insertText(text) {
+  const area = document.getElementById('ed-body');
+  const start = area.selectionStart;
+  area.value = area.value.slice(0, start) + text + area.value.slice(area.selectionEnd);
+  area.focus();
+}
+
+/* ═══════ Auto Save ═══════ */
+let autoSaveTimer = null;
+function autoSave() {
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(() => {
+    const data = {
+      title: document.getElementById('ed-title').value,
+      body: document.getElementById('ed-body').value,
+      path: S.editing?.path,
+      savedAt: new Date().toISOString()
+    };
+    localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(data));
+  }, 2000);
+}
+
+/* ═══════ Front Matter ═══════ */
+function parseFrontMatter(text) {
+  const n = text.replace(/\r\n/g, '\n');
+  if (!n.startsWith('---\n')) return {};
+  const end = n.indexOf('\n---\n', 4);
+  if (end === -1) return {};
+  const head = n.slice(4, end);
+  const result = {};
+
+  // Simple YAML parser for blog front matter
+  const lines = head.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const m = line.match(/^(\w[\w_]*)\s*:\s*(.*)$/);
+    if (!m) continue;
+    const key = m[1];
+    let val = m[2].trim().replace(/^["']|["']$/g, '');
+
+    if (key === 'categories' || key === 'tags') {
+      if (val.startsWith('[')) {
+        result[key] = val.slice(1, -1).split(',').map(s => s.trim().replace(/^["']|["']$/g, '')).filter(Boolean);
+      } else {
+        result[key] = val ? [val] : [];
+      }
+    } else if (key === 'image') {
+      // Check for multi-line image with path
+      if (!val && i + 1 < lines.length) {
+        const next = lines[i + 1];
+        const pm = next.match(/^\s+path:\s*(.+)$/);
+        if (pm) {
+          result.image = { path: pm[1].trim().replace(/^["']|["']$/g, '') };
+          i++;
+          continue;
+        }
+      }
+      result.image = val;
+    } else if (val === 'true') {
+      result[key] = true;
+    } else if (val === 'false') {
+      result[key] = false;
+    } else {
+      result[key] = val;
+    }
+  }
+  return result;
+}
+
+function extractBody(text) {
+  const n = text.replace(/\r\n/g, '\n');
+  if (!n.startsWith('---\n')) return n;
+  const end = n.indexOf('\n---\n', 4);
+  if (end === -1) return n;
+  return n.slice(end + 5).replace(/^\n/, '');
+}
+
+function buildFileContent(fm, body) {
+  let yaml = '---\n';
+  yaml += `title: "${fm.title.replace(/"/g, '\\"')}"\n`;
+  yaml += `date: ${fm.date}\n`;
+  if (fm.description) yaml += `description: "${fm.description.replace(/"/g, '\\"')}"\n`;
+  if (fm.categories.length) yaml += `categories: [${fm.categories.map(c => `"${c}"`).join(', ')}]\n`;
+  if (fm.tags.length) yaml += `tags: [${fm.tags.map(t => `"${t}"`).join(', ')}]\n`;
+  yaml += `toc: ${fm.toc}\n`;
+  yaml += `comments: ${fm.comments}\n`;
+  if (fm.pin) yaml += `pin: true\n`;
+  if (fm.hidden) yaml += `hidden: true\n`;
+  if (fm.mermaid) yaml += `mermaid: true\n`;
+  if (fm.math) yaml += `math: true\n`;
+  if (fm.hero_title) yaml += `hero_title: "${fm.hero_title.replace(/\n/g, '<br>').replace(/"/g, '\\"')}"\n`;
+  if (fm.cover) yaml += `image:\n  path: ${fm.cover}\n`;
+  yaml += '---\n\n';
+  return yaml + (body || '');
+}
+
+/* ═══════ Navigation ═══════ */
+function showView(id) {
+  const views = ['auth', 'list', 'editor', 'preview', 'settings'];
+  views.forEach(v => {
+    document.getElementById(`view-${v}`).classList.toggle('active', v === id);
+  });
+
+  // Bottom bar highlighting
+  document.querySelectorAll('.bottombar button').forEach(b => {
+    b.classList.toggle('active', b.dataset.view === id);
+  });
+
+  // Topbar
+  const backBtn = document.getElementById('topbar-back');
+  const titles = { auth: 'Blog Studio', list: 'Blog Studio', editor: '글 작성', preview: '미리보기', settings: '설정' };
+  document.getElementById('topbar-title').textContent = titles[id] || 'Blog Studio';
+  backBtn.style.display = (id === 'list' || id === 'auth' || id === 'settings') ? 'none' : 'block';
+
+  // Push to stack
+  if (id !== S.viewStack[S.viewStack.length - 1]) {
+    S.viewStack.push(id);
+    if (S.viewStack.length > 10) S.viewStack.shift();
+  }
+
+  // Scroll to top
+  document.getElementById('main-scroll').scrollTop = 0;
+}
+
+function setTopbar(title, showBack = false) {
+  document.getElementById('topbar-title').textContent = title;
+  document.getElementById('topbar-back').style.display = showBack ? 'block' : 'none';
+}
+
+function goBack() {
+  S.viewStack.pop(); // remove current
+  const prev = S.viewStack.pop() || 'list';
+  showView(prev);
+}
+
+/* ═══════ Utilities ═══════ */
+function formatNow() {
+  const d = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:00 +0900`;
+}
+
+function parseList(str) {
+  return str.split(',').map(s => s.trim()).filter(Boolean);
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function toast(msg, type = 'info') {
+  const wrap = document.getElementById('toasts');
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3000);
+}
+</script>
+</body>
+</html>

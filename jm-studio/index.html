@@ -42,6 +42,11 @@ html,body{font-family:'Inter',-apple-system,'Segoe UI','Malgun Gothic',sans-seri
 .auth-view p{color:var(--muted);font-size:.82rem;margin-bottom:20px;max-width:300px;line-height:1.5}
 .auth-input{width:100%;max-width:340px;padding:12px 16px;border:1px solid var(--line);border-radius:var(--radius);font-size:.88rem;background:var(--panel);outline:none;margin-bottom:12px;text-align:center}
 .auth-input:focus{border-color:var(--point);box-shadow:0 0 0 3px rgba(218,119,86,.12)}
+.auth-divider{display:flex;align-items:center;gap:12px;width:100%;max-width:340px;margin:16px 0;color:var(--muted);font-size:.75rem}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--line)}
+.btn-github{background:#24292f;color:#fff;border-color:#24292f;gap:8px}
+.btn-github:hover{background:#1b1f23}
+.btn-github svg{width:18px;height:18px;fill:currentColor}
 
 /* === Buttons === */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 18px;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);color:var(--text);font-size:.85rem;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap}
@@ -153,23 +158,36 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
 
   <!-- Main content area -->
   <div class="main" id="main-scroll">
-    <!-- Auth View: PAT Input (first-time setup) -->
+
+    <!-- Auth View -->
     <div class="view active" id="view-auth">
       <div class="auth-view">
         <div class="auth-logo">J</div>
         <h2>Blog Studio</h2>
-        <p>GitHub Personal Access Token을 입력하고 PIN을 설정하면, 다음부터는 PIN만으로 로그인합니다.</p>
-        <input class="auth-input" id="pat-input" type="password" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off">
-        <input class="auth-input" id="pin-setup" type="password" inputmode="numeric" pattern="[0-9]*" placeholder="PIN 설정 (4~8자리 숫자)" maxlength="8" autocomplete="off" style="margin-top:4px">
-        <button class="btn btn-primary btn-block" style="max-width:340px" onclick="doSetup()">설정 완료</button>
-        <p style="margin-top:16px;font-size:.72rem;color:var(--muted);max-width:340px;line-height:1.5">
-          GitHub &rarr; Settings &rarr; Developer settings &rarr; Personal access tokens &rarr; Fine-grained tokens<br>
-          권한: Contents (Read and write)
-        </p>
+        <p>GitHub 계정으로 로그인하여 모바일에서 블로그를 편집하세요.</p>
+        <button class="btn btn-github btn-block" style="max-width:340px" onclick="oauthLogin()">
+          <svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          GitHub로 로그인
+        </button>
+        <div class="auth-divider">또는</div>
+        <input class="auth-input" id="pat-input" type="password" placeholder="PAT 직접 입력 (ghp_xxxx)" autocomplete="off">
+        <input class="auth-input" id="pin-setup" type="password" inputmode="numeric" pattern="[0-9]*" placeholder="PIN 설정 (4~8자리 숫자)" maxlength="8" autocomplete="off">
+        <button class="btn btn-block" style="max-width:340px" onclick="doSetup()">PAT로 설정</button>
       </div>
     </div>
 
-    <!-- Lock View: PIN unlock (return visits) -->
+    <!-- PIN Setup View (after OAuth) -->
+    <div class="view" id="view-pin-setup">
+      <div class="auth-view">
+        <div class="auth-logo">J</div>
+        <h2>PIN 설정</h2>
+        <p>다음부터 빠르게 잠금 해제할 PIN을 설정하세요.</p>
+        <input class="auth-input" id="oauth-pin-setup" type="password" inputmode="numeric" pattern="[0-9]*" placeholder="PIN (4~8자리 숫자)" maxlength="8" autocomplete="off">
+        <button class="btn btn-primary btn-block" style="max-width:340px" onclick="finishOAuthSetup()">설정 완료</button>
+      </div>
+    </div>
+
+    <!-- Lock View (return visits) -->
     <div class="view" id="view-lock">
       <div class="auth-view">
         <div class="auth-logo" style="background:var(--text)">&#128274;</div>
@@ -305,10 +323,10 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
         </div>
         <div class="setting-item">
           <div>
-            <div class="setting-label">토큰 변경</div>
-            <div class="setting-sub">새 PAT로 교체합니다</div>
+            <div class="setting-label">토큰 / PIN 재설정</div>
+            <div class="setting-sub">새 토큰과 PIN으로 다시 설정합니다</div>
           </div>
-          <button class="btn btn-sm" onclick="changeToken()">변경</button>
+          <button class="btn btn-sm" onclick="changeToken()">재설정</button>
         </div>
         <div class="setting-item">
           <div>
@@ -349,31 +367,34 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
 
 <script>
 /* ═══════ Config ═══════ */
-const OWNER = 'jmchoi4u';
-const REPO = 'jmchoi4u.github.io';
-const CRYPT_KEY = 'jm-studio-enc';
-const AUTOSAVE_KEY = 'jm-studio-autosave';
-const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
-const API = 'https://api.github.com';
+var OWNER = 'jmchoi4u';
+var REPO = 'jmchoi4u.github.io';
+var CLIENT_ID = 'Ov23lixOBhnUUxH7VhoH';
+var WORKER_URL = 'https://jm-studio-auth.jmchoi4u.workers.dev';
+var CRYPT_KEY = 'jm-studio-enc';
+var AUTOSAVE_KEY = 'jm-studio-autosave';
+var SESSION_TIMEOUT = 30 * 60 * 1000; /* 30 minutes */
+var API = 'https://api.github.com';
 
 /* ═══════ State ═══════ */
-const S = {
+var S = {
   token: '',
   user: null,
   posts: [],
-  editing: null,      // { path, sha, isNew }
+  editing: null,
   listTab: 'all',
   viewStack: [],
   bodyImageInput: null,
-  lastActivity: Date.now()
+  lastActivity: Date.now(),
+  pendingOAuthToken: '' /* OAuth 후 PIN 설정 전 임시 보관 */
 };
 
 /* ═══════ Crypto: AES-GCM with PIN ═══════ */
 async function deriveKey(pin, salt) {
-  const enc = new TextEncoder();
-  const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(pin), 'PBKDF2', false, ['deriveKey']);
+  var enc = new TextEncoder();
+  var keyMaterial = await crypto.subtle.importKey('raw', enc.encode(pin), 'PBKDF2', false, ['deriveKey']);
   return crypto.subtle.deriveKey(
-    { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+    { name: 'PBKDF2', salt: salt, iterations: 100000, hash: 'SHA-256' },
     keyMaterial,
     { name: 'AES-GCM', length: 256 },
     false,
@@ -382,93 +403,181 @@ async function deriveKey(pin, salt) {
 }
 
 async function encryptPAT(pat, pin) {
-  const enc = new TextEncoder();
-  const salt = crypto.getRandomValues(new Uint8Array(16));
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const key = await deriveKey(pin, salt);
-  const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(pat));
-  // Store as base64: salt + iv + ciphertext
-  const buf = new Uint8Array(salt.length + iv.length + encrypted.byteLength);
+  var enc = new TextEncoder();
+  var salt = crypto.getRandomValues(new Uint8Array(16));
+  var iv = crypto.getRandomValues(new Uint8Array(12));
+  var key = await deriveKey(pin, salt);
+  var encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, key, enc.encode(pat));
+  var buf = new Uint8Array(salt.length + iv.length + encrypted.byteLength);
   buf.set(salt, 0);
   buf.set(iv, salt.length);
   buf.set(new Uint8Array(encrypted), salt.length + iv.length);
-  return btoa(String.fromCharCode(...buf));
+  return btoa(String.fromCharCode.apply(null, buf));
 }
 
 async function decryptPAT(stored, pin) {
-  const raw = Uint8Array.from(atob(stored), c => c.charCodeAt(0));
-  const salt = raw.slice(0, 16);
-  const iv = raw.slice(16, 28);
-  const data = raw.slice(28);
-  const key = await deriveKey(pin, salt);
-  const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, data);
+  var raw = Uint8Array.from(atob(stored), function(c) { return c.charCodeAt(0); });
+  var salt = raw.slice(0, 16);
+  var iv = raw.slice(16, 28);
+  var data = raw.slice(28);
+  var key = await deriveKey(pin, salt);
+  var decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv }, key, data);
   return new TextDecoder().decode(decrypted);
 }
 
 /* ═══════ Session Timeout ═══════ */
 function resetActivity() { S.lastActivity = Date.now(); }
+
 function checkSession() {
   if (S.token && Date.now() - S.lastActivity > SESSION_TIMEOUT) {
     lockSession();
   }
 }
+
 function lockSession() {
   S.token = '';
   S.user = null;
   document.getElementById('bottombar').style.display = 'none';
-  const hasStored = localStorage.getItem(CRYPT_KEY);
+  var hasStored = localStorage.getItem(CRYPT_KEY);
   showView(hasStored ? 'lock' : 'auth');
   toast('세션 만료 - PIN을 다시 입력하세요', 'info');
 }
 
 /* ═══════ Init ═══════ */
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', function() {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
+    navigator.serviceWorker.register('sw.js').catch(function() {});
   }
   marked.setOptions({ gfm: true, breaks: true });
 
-  // Activity tracking for session timeout
-  ['touchstart', 'click', 'keydown', 'scroll'].forEach(evt =>
-    document.addEventListener(evt, resetActivity, { passive: true })
-  );
-  setInterval(checkSession, 60000); // check every minute
+  /* Activity tracking */
+  ['touchstart', 'click', 'keydown', 'scroll'].forEach(function(evt) {
+    document.addEventListener(evt, resetActivity, { passive: true });
+  });
+  setInterval(checkSession, 60000);
 
-  // Check if encrypted PAT exists
-  const stored = localStorage.getItem(CRYPT_KEY);
+  /* Enter key support */
+  bindEnter('pin-setup', doSetup);
+  bindEnter('pin-unlock', doUnlock);
+  bindEnter('oauth-pin-setup', finishOAuthSetup);
+
+  /* Check for OAuth callback */
+  var params = new URLSearchParams(window.location.search);
+  var code = params.get('code');
+  if (code) {
+    /* OAuth callback - exchange code for token */
+    window.history.replaceState({}, '', window.location.pathname);
+    handleOAuthCallback(code);
+    return;
+  }
+
+  /* Normal init */
+  var stored = localStorage.getItem(CRYPT_KEY);
   if (stored) {
     showView('lock');
   } else {
     showView('auth');
   }
-
-  // Enter key support for PIN inputs
-  document.getElementById('pin-setup').addEventListener('keydown', e => { if (e.key === 'Enter') doSetup(); });
-  document.getElementById('pin-unlock').addEventListener('keydown', e => { if (e.key === 'Enter') doUnlock(); });
 });
 
-/* ═══════ Auth ═══════ */
+function bindEnter(id, fn) {
+  var el = document.getElementById(id);
+  if (el) el.addEventListener('keydown', function(e) { if (e.key === 'Enter') fn(); });
+}
+
+/* ═══════ OAuth Login ═══════ */
+function oauthLogin() {
+  if (!WORKER_URL) {
+    toast('Cloudflare Worker URL이 설정되지 않았습니다. PAT를 사용하세요.', 'error');
+    return;
+  }
+  var redirectUri = window.location.origin + window.location.pathname;
+  var authUrl = 'https://github.com/login/oauth/authorize'
+    + '?client_id=' + CLIENT_ID
+    + '&redirect_uri=' + encodeURIComponent(redirectUri)
+    + '&scope=repo';
+  window.location.href = authUrl;
+}
+
+async function handleOAuthCallback(code) {
+  showView('auth');
+  toast('GitHub 인증 처리 중...', 'info');
+
+  try {
+    var res = await fetch(WORKER_URL + '/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: code })
+    });
+    var data = await res.json();
+
+    if (!res.ok || !data.access_token) {
+      throw new Error(data.error || 'Token exchange failed');
+    }
+
+    /* Verify the token and check owner */
+    S.token = data.access_token;
+    var user = await ghApi('/user');
+
+    if (user.login.toLowerCase() !== OWNER.toLowerCase()) {
+      S.token = '';
+      toast('이 계정은 블로그 소유자가 아닙니다', 'error');
+      showView('auth');
+      return;
+    }
+
+    S.user = user;
+    S.pendingOAuthToken = data.access_token;
+    S.token = ''; /* PIN 설정 전까지 메모리에서 제거 */
+
+    /* PIN 설정 화면으로 이동 */
+    showView('pin-setup');
+  } catch (e) {
+    S.token = '';
+    toast('인증 실패: ' + e.message, 'error');
+    showView('auth');
+  }
+}
+
+async function finishOAuthSetup() {
+  var pin = document.getElementById('oauth-pin-setup').value.trim();
+  if (!pin || pin.length < 4 || !/^\d+$/.test(pin)) {
+    return toast('PIN은 4~8자리 숫자로 입력하세요', 'error');
+  }
+
+  try {
+    var encrypted = await encryptPAT(S.pendingOAuthToken, pin);
+    localStorage.setItem(CRYPT_KEY, encrypted);
+    S.token = S.pendingOAuthToken;
+    S.pendingOAuthToken = '';
+    document.getElementById('oauth-pin-setup').value = '';
+    onLoginSuccess();
+    toast('설정 완료', 'success');
+  } catch (e) {
+    toast('암호화 실패: ' + e.message, 'error');
+  }
+}
+
+/* ═══════ PAT Setup ═══════ */
 async function doSetup() {
-  const pat = document.getElementById('pat-input').value.trim();
-  const pin = document.getElementById('pin-setup').value.trim();
+  var pat = document.getElementById('pat-input').value.trim();
+  var pin = document.getElementById('pin-setup').value.trim();
   if (!pat) return toast('토큰을 입력하세요', 'error');
   if (!pin || pin.length < 4 || !/^\d+$/.test(pin)) return toast('PIN은 4~8자리 숫자로 입력하세요', 'error');
 
   S.token = pat;
   try {
-    // Verify token first
-    const user = await ghApi('/user');
-    // Check if this user owns the repo
+    var user = await ghApi('/user');
     if (user.login.toLowerCase() !== OWNER.toLowerCase()) {
       S.token = '';
-      return toast('이 토큰은 레포지토리 소유자의 것이 아닙니다', 'error');
+      return toast('이 토큰은 블로그 소유자의 것이 아닙니다', 'error');
     }
 
-    // Encrypt and store
-    const encrypted = await encryptPAT(pat, pin);
+    var encrypted = await encryptPAT(pat, pin);
     localStorage.setItem(CRYPT_KEY, encrypted);
-
     S.user = user;
+    document.getElementById('pat-input').value = '';
+    document.getElementById('pin-setup').value = '';
     onLoginSuccess();
     toast('설정 완료', 'success');
   } catch (e) {
@@ -477,17 +586,18 @@ async function doSetup() {
   }
 }
 
+/* ═══════ PIN Unlock ═══════ */
 async function doUnlock() {
-  const pin = document.getElementById('pin-unlock').value.trim();
+  var pin = document.getElementById('pin-unlock').value.trim();
   if (!pin) return toast('PIN을 입력하세요', 'error');
 
-  const stored = localStorage.getItem(CRYPT_KEY);
+  var stored = localStorage.getItem(CRYPT_KEY);
   if (!stored) return toast('저장된 토큰이 없습니다. 초기화해주세요.', 'error');
 
   try {
-    const pat = await decryptPAT(stored, pin);
+    var pat = await decryptPAT(stored, pin);
     S.token = pat;
-    const user = await ghApi('/user');
+    var user = await ghApi('/user');
     S.user = user;
     document.getElementById('pin-unlock').value = '';
     onLoginSuccess();
@@ -510,7 +620,7 @@ function doReset() {
 function onLoginSuccess() {
   resetActivity();
   document.getElementById('settings-user').textContent = S.user.login;
-  document.getElementById('settings-repo').textContent = `${OWNER}/${REPO}`;
+  document.getElementById('settings-repo').textContent = OWNER + '/' + REPO;
   document.getElementById('bottombar').style.display = 'flex';
   showView('list');
   loadPosts();
@@ -527,105 +637,106 @@ function doLogout() {
 }
 
 function changeToken() {
-  // Show PAT setup view
   document.getElementById('pat-input').value = '';
   document.getElementById('pin-setup').value = '';
   showView('auth');
 }
 
 /* ═══════ GitHub API ═══════ */
-async function ghApi(path, opts = {}) {
-  const url = path.startsWith('http') ? path : `${API}${path}`;
-  const res = await fetch(url, {
+async function ghApi(path, opts) {
+  opts = opts || {};
+  var url = path.startsWith('http') ? path : API + path;
+  var res = await fetch(url, {
     headers: {
-      'Authorization': `Bearer ${S.token}`,
-      'Accept': 'application/vnd.github.v3+json',
-      ...(opts.headers || {})
+      'Authorization': 'Bearer ' + S.token,
+      'Accept': 'application/vnd.github.v3+json'
     },
-    ...opts
+    method: opts.method || 'GET',
+    body: opts.body || undefined
   });
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || `HTTP ${res.status}`);
+    var err = await res.json().catch(function() { return {}; });
+    throw new Error(err.message || 'HTTP ' + res.status);
   }
   if (res.status === 204) return {};
   return res.json();
 }
 
 async function ghGetFile(path) {
-  return ghApi(`/repos/${OWNER}/${REPO}/contents/${path}`);
+  return ghApi('/repos/' + OWNER + '/' + REPO + '/contents/' + path);
 }
 
-async function ghPutFile(path, content, sha = null, message = '') {
-  const body = {
-    message: message || `blog update ${new Date().toISOString()}`,
+async function ghPutFile(path, content, sha, message) {
+  var body = {
+    message: message || 'blog update ' + new Date().toISOString(),
     content: btoa(unescape(encodeURIComponent(content)))
   };
   if (sha) body.sha = sha;
-  return ghApi(`/repos/${OWNER}/${REPO}/contents/${path}`, {
+  return ghApi('/repos/' + OWNER + '/' + REPO + '/contents/' + path, {
     method: 'PUT',
     body: JSON.stringify(body)
   });
 }
 
-async function ghDeleteFile(path, sha, message = '') {
-  return ghApi(`/repos/${OWNER}/${REPO}/contents/${path}`, {
+async function ghDeleteFile(path, sha, message) {
+  return ghApi('/repos/' + OWNER + '/' + REPO + '/contents/' + path, {
     method: 'DELETE',
     body: JSON.stringify({
-      message: message || `delete ${path}`,
-      sha
+      message: message || 'delete ' + path,
+      sha: sha
     })
   });
 }
 
 /* ═══════ Posts ═══════ */
 async function loadPosts() {
-  const listEl = document.getElementById('post-list');
+  var listEl = document.getElementById('post-list');
   listEl.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:8px">불러오는 중...</p></div>';
 
   try {
-    // Load _posts
-    const postsData = await ghApi(`/repos/${OWNER}/${REPO}/contents/_posts`).catch(() => []);
-    const draftsData = await ghApi(`/repos/${OWNER}/${REPO}/contents/_drafts`).catch(() => []);
+    var postsData = await ghApi('/repos/' + OWNER + '/' + REPO + '/contents/_posts').catch(function() { return []; });
+    var draftsData = await ghApi('/repos/' + OWNER + '/' + REPO + '/contents/_drafts').catch(function() { return []; });
 
-    const posts = [];
+    var posts = [];
 
-    for (const f of (Array.isArray(postsData) ? postsData : [])) {
-      if (!f.name.endsWith('.md')) continue;
+    (Array.isArray(postsData) ? postsData : []).forEach(function(f) {
+      if (!f.name.endsWith('.md')) return;
       posts.push({ name: f.name, path: f.path, sha: f.sha, isDraft: false });
-    }
-    for (const f of (Array.isArray(draftsData) ? draftsData : [])) {
-      if (!f.name.endsWith('.md')) continue;
+    });
+    (Array.isArray(draftsData) ? draftsData : []).forEach(function(f) {
+      if (!f.name.endsWith('.md')) return;
       posts.push({ name: f.name, path: f.path, sha: f.sha, isDraft: true });
-    }
+    });
 
-    // Parse front matter from filenames (basic info)
-    S.posts = posts.map(p => {
-      const dateMatch = p.name.match(/^(\d{4}-\d{2}-\d{2})-(.+)\.md$/);
+    S.posts = posts.map(function(p) {
+      var dateMatch = p.name.match(/^(\d{4}-\d{2}-\d{2})-(.+)\.md$/);
       return {
-        ...p,
+        name: p.name,
+        path: p.path,
+        sha: p.sha,
+        isDraft: p.isDraft,
         date: dateMatch ? dateMatch[1] : '',
         slug: dateMatch ? dateMatch[2] : p.name.replace(/\.md$/, ''),
-        title: null, // loaded on demand
+        title: null,
         _loaded: false
       };
-    }).sort((a, b) => (b.date || b.name).localeCompare(a.date || a.name));
+    }).sort(function(a, b) {
+      return (b.date || b.name).localeCompare(a.date || a.name);
+    });
 
-    // Load titles from first few lines of each file
     await loadPostTitles();
     renderPosts();
   } catch (e) {
-    listEl.innerHTML = `<div class="empty">불러오기 실패: ${e.message}</div>`;
+    listEl.innerHTML = '<div class="empty">불러오기 실패: ' + e.message + '</div>';
   }
 }
 
 async function loadPostTitles() {
-  // Batch load - for each post, get content and parse title
-  const promises = S.posts.map(async (p) => {
+  var promises = S.posts.map(async function(p) {
     try {
-      const data = await ghGetFile(p.path);
-      const content = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ''))));
-      const fm = parseFrontMatter(content);
+      var data = await ghGetFile(p.path);
+      var content = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ''))));
+      var fm = parseFrontMatter(content);
       p.title = fm.title || p.slug;
       p.description = fm.description || '';
       p.categories = fm.categories || [];
@@ -635,7 +746,7 @@ async function loadPostTitles() {
       p.sha = data.sha;
       p._content = content;
       p._loaded = true;
-    } catch {
+    } catch (e) {
       p.title = p.slug;
     }
   });
@@ -643,20 +754,20 @@ async function loadPostTitles() {
 }
 
 function renderPosts() {
-  const listEl = document.getElementById('post-list');
-  const query = (document.getElementById('search-input').value || '').toLowerCase();
-  let filtered = S.posts;
+  var listEl = document.getElementById('post-list');
+  var query = (document.getElementById('search-input').value || '').toLowerCase();
+  var filtered = S.posts;
 
-  if (S.listTab === 'published') filtered = filtered.filter(p => !p.isDraft);
-  if (S.listTab === 'drafts') filtered = filtered.filter(p => p.isDraft);
+  if (S.listTab === 'published') filtered = filtered.filter(function(p) { return !p.isDraft; });
+  if (S.listTab === 'drafts') filtered = filtered.filter(function(p) { return p.isDraft; });
 
   if (query) {
-    filtered = filtered.filter(p =>
-      (p.title || '').toLowerCase().includes(query) ||
-      (p.slug || '').toLowerCase().includes(query) ||
-      (p.categories || []).join(' ').toLowerCase().includes(query) ||
-      (p.tags || []).join(' ').toLowerCase().includes(query)
-    );
+    filtered = filtered.filter(function(p) {
+      return (p.title || '').toLowerCase().includes(query) ||
+        (p.slug || '').toLowerCase().includes(query) ||
+        (p.categories || []).join(' ').toLowerCase().includes(query) ||
+        (p.tags || []).join(' ').toLowerCase().includes(query);
+    });
   }
 
   if (!filtered.length) {
@@ -664,32 +775,35 @@ function renderPosts() {
     return;
   }
 
-  listEl.innerHTML = filtered.map(p => {
-    const statusCls = p.isDraft ? 'status-draft' : (p.hidden ? 'status-hidden' : 'status-published');
-    const statusLabel = p.isDraft ? '임시' : (p.hidden ? '숨김' : '발행');
-    const cats = (p.categories || []).join(' / ');
-    const tags = (p.tags || []).slice(0, 3).map(t => `<span class="card-tag">${esc(t)}</span>`).join(' ');
+  listEl.innerHTML = filtered.map(function(p) {
+    var statusCls = p.isDraft ? 'status-draft' : (p.hidden ? 'status-hidden' : 'status-published');
+    var statusLabel = p.isDraft ? '임시' : (p.hidden ? '숨김' : '발행');
+    var cats = (p.categories || []).join(' / ');
+    var tags = (p.tags || []).slice(0, 3).map(function(t) { return '<span class="card-tag">' + esc(t) + '</span>'; }).join(' ');
 
-    return `<div class="card" onclick="editPost('${esc(p.path)}')">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-        <span class="card-status ${statusCls}"></span>
-        <span style="font-size:.68rem;color:var(--muted)">${statusLabel}</span>
-        ${p.pin ? '<span style="font-size:.68rem">&#128204;</span>' : ''}
-      </div>
-      <div class="card-title">${esc(p.title || p.slug)}</div>
-      <div class="card-meta">
-        ${p.date ? `<span>${p.date}</span>` : ''}
-        ${cats ? `<span>${esc(cats)}</span>` : ''}
-      </div>
-      ${tags ? `<div class="card-meta" style="margin-top:3px">${tags}</div>` : ''}
-    </div>`;
+    return '<div class="card" onclick="editPost(\'' + esc(p.path) + '\')">'
+      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
+      + '<span class="card-status ' + statusCls + '"></span>'
+      + '<span style="font-size:.68rem;color:var(--muted)">' + statusLabel + '</span>'
+      + (p.pin ? '<span style="font-size:.68rem">&#128204;</span>' : '')
+      + '</div>'
+      + '<div class="card-title">' + esc(p.title || p.slug) + '</div>'
+      + '<div class="card-meta">'
+      + (p.date ? '<span>' + p.date + '</span>' : '')
+      + (cats ? '<span>' + esc(cats) + '</span>' : '')
+      + '</div>'
+      + (tags ? '<div class="card-meta" style="margin-top:3px">' + tags + '</div>' : '')
+      + '</div>';
   }).join('');
 }
 
 function filterPosts() { renderPosts(); }
+
 function setListTab(tab, btn) {
   S.listTab = tab;
-  document.querySelectorAll('#list-tabs button').forEach(b => b.classList.toggle('active', b === btn));
+  document.querySelectorAll('#list-tabs button').forEach(function(b) {
+    b.classList.toggle('active', b === btn);
+  });
   renderPosts();
 }
 
@@ -707,20 +821,20 @@ async function editPost(path) {
   showView('editor');
   setTopbar('글 수정', true);
 
-  const post = S.posts.find(p => p.path === path);
+  var post = S.posts.find(function(p) { return p.path === path; });
   if (!post) return toast('글을 찾을 수 없습니다', 'error');
 
   try {
-    let content = post._content;
-    let sha = post.sha;
+    var content = post._content;
+    var sha = post.sha;
     if (!content) {
-      const data = await ghGetFile(path);
+      var data = await ghGetFile(path);
       content = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ''))));
       sha = data.sha;
     }
 
-    const fm = parseFrontMatter(content);
-    const body = extractBody(content);
+    var fm = parseFrontMatter(content);
+    var body = extractBody(content);
 
     document.getElementById('ed-title').value = fm.title || '';
     document.getElementById('ed-date').value = fm.date || '';
@@ -737,34 +851,32 @@ async function editPost(path) {
     document.getElementById('ed-math').checked = fm.math === true || fm.math === 'true';
     document.getElementById('ed-body').value = body;
 
-    // Cover image
-    const cover = fm.image?.path || (typeof fm.image === 'string' ? fm.image : '') || '';
+    var cover = (fm.image && fm.image.path) ? fm.image.path : (typeof fm.image === 'string' ? fm.image : '') || '';
     document.getElementById('ed-cover').value = cover;
     if (cover) {
       document.getElementById('cover-preview').style.display = 'block';
-      document.getElementById('cover-img').src = `https://raw.githubusercontent.com/${OWNER}/${REPO}/main${cover}`;
+      document.getElementById('cover-img').src = 'https://raw.githubusercontent.com/' + OWNER + '/' + REPO + '/main' + cover;
       document.getElementById('cover-upload').style.display = 'none';
     }
 
     document.getElementById('ed-delete-btn').style.display = 'inline-flex';
-    S.editing = { path, sha, isNew: false };
+    S.editing = { path: path, sha: sha, isNew: false };
   } catch (e) {
     toast('불러오기 실패: ' + e.message, 'error');
   }
 }
 
 async function savePost() {
-  const title = document.getElementById('ed-title').value.trim();
+  var title = document.getElementById('ed-title').value.trim();
   if (!title) return toast('제목을 입력하세요', 'error');
 
-  const date = document.getElementById('ed-date').value.trim() || formatNow();
-  const isDraft = document.getElementById('ed-draft').checked;
-  const body = document.getElementById('ed-body').value;
+  var date = document.getElementById('ed-date').value.trim() || formatNow();
+  var isDraft = document.getElementById('ed-draft').checked;
+  var body = document.getElementById('ed-body').value;
 
-  // Build front matter
-  const fm = {
-    title,
-    date,
+  var fm = {
+    title: title,
+    date: date,
     description: document.getElementById('ed-desc').value.trim(),
     categories: parseList(document.getElementById('ed-cats').value),
     tags: parseList(document.getElementById('ed-tags').value),
@@ -778,38 +890,34 @@ async function savePost() {
     cover: document.getElementById('ed-cover').value.trim()
   };
 
-  const content = buildFileContent(fm, body);
+  var content = buildFileContent(fm, body);
+  var datePrefix = date.slice(0, 10);
+  var slug;
 
-  // Determine file path
-  const datePrefix = date.slice(0, 10);
-  let slug;
   if (S.editing && !S.editing.isNew) {
-    // Keep existing slug
-    const match = S.editing.path.match(/\d{4}-\d{2}-\d{2}-(.+)\.md$/);
+    var match = S.editing.path.match(/\d{4}-\d{2}-\d{2}-(.+)\.md$/);
     slug = match ? match[1] : title;
   } else {
-    // New post - use next number
-    const nums = S.posts.map(p => parseInt(p.slug)).filter(n => !isNaN(n));
-    slug = String((nums.length ? Math.max(...nums) : 0) + 1);
+    var nums = S.posts.map(function(p) { return parseInt(p.slug); }).filter(function(n) { return !isNaN(n); });
+    slug = String((nums.length ? Math.max.apply(null, nums) : 0) + 1);
   }
 
-  const dir = isDraft ? '_drafts' : '_posts';
-  const newPath = `${dir}/${datePrefix}-${slug}.md`;
+  var dir = isDraft ? '_drafts' : '_posts';
+  var newPath = dir + '/' + datePrefix + '-' + slug + '.md';
 
   try {
-    // If path changed (draft→publish or vice versa), delete old file first
     if (S.editing && !S.editing.isNew && S.editing.path !== newPath && S.editing.sha) {
-      await ghDeleteFile(S.editing.path, S.editing.sha, `move ${S.editing.path} to ${newPath}`);
+      await ghDeleteFile(S.editing.path, S.editing.sha, 'move ' + S.editing.path + ' to ' + newPath);
       S.editing.sha = null;
     }
 
-    const result = await ghPutFile(newPath, content, S.editing?.sha || null);
+    var result = await ghPutFile(newPath, content, (S.editing && S.editing.sha) || null);
     S.editing = { path: newPath, sha: result.content.sha, isNew: false };
     document.getElementById('ed-delete-btn').style.display = 'inline-flex';
 
     toast('저장 완료', 'success');
     localStorage.removeItem(AUTOSAVE_KEY);
-    loadPosts(); // refresh list in background
+    loadPosts();
   } catch (e) {
     toast('저장 실패: ' + e.message, 'error');
   }
@@ -831,7 +939,7 @@ async function deletePost() {
 }
 
 function clearEditor() {
-  ['ed-title','ed-date','ed-desc','ed-cats','ed-tags','ed-hero-title','ed-body','ed-cover'].forEach(id => {
+  ['ed-title','ed-date','ed-desc','ed-cats','ed-tags','ed-hero-title','ed-body','ed-cover'].forEach(function(id) {
     document.getElementById(id).value = '';
   });
   document.getElementById('ed-toc').checked = true;
@@ -847,12 +955,12 @@ function clearEditor() {
 
 /* ═══════ Image Upload ═══════ */
 async function uploadCover(input) {
-  const file = input.files[0];
+  var file = input.files[0];
   if (!file) return;
-  await uploadImageFile(file, (path) => {
+  await uploadImageFile(file, function(path) {
     document.getElementById('ed-cover').value = path;
     document.getElementById('cover-preview').style.display = 'block';
-    document.getElementById('cover-img').src = `https://raw.githubusercontent.com/${OWNER}/${REPO}/main${path}`;
+    document.getElementById('cover-img').src = 'https://raw.githubusercontent.com/' + OWNER + '/' + REPO + '/main' + path;
     document.getElementById('cover-upload').style.display = 'none';
   });
 }
@@ -865,13 +973,13 @@ function removeCover() {
 
 function triggerBodyImage() {
   if (!S.bodyImageInput) {
-    const inp = document.createElement('input');
+    var inp = document.createElement('input');
     inp.type = 'file';
     inp.accept = 'image/*';
-    inp.onchange = async () => {
+    inp.onchange = async function() {
       if (!inp.files[0]) return;
-      await uploadImageFile(inp.files[0], (path) => {
-        insertText(`![image](${path})`);
+      await uploadImageFile(inp.files[0], function(path) {
+        insertText('![image](' + path + ')');
       });
       inp.value = '';
     };
@@ -881,37 +989,38 @@ function triggerBodyImage() {
 }
 
 async function uploadImageFile(file, onSuccess) {
-  const slug = document.getElementById('ed-title').value.trim().replace(/[^a-zA-Z0-9가-힣_-]/g, '-').toLowerCase() || 'upload';
-  const folder = `assets/img/posts/${slug}`;
-  const fileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '-');
-  const path = `${folder}/${fileName}`;
+  var titleSlug = document.getElementById('ed-title').value.trim().replace(/[^a-zA-Z0-9가-힣_-]/g, '-').toLowerCase() || 'upload';
+  var folder = 'assets/img/posts/' + titleSlug;
+  var fileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '-');
+  var path = folder + '/' + fileName;
 
-  const reader = new FileReader();
-  const base64 = await new Promise((resolve, reject) => {
-    reader.onload = () => resolve(reader.result.split(',')[1]);
+  var reader = new FileReader();
+  var base64 = await new Promise(function(resolve, reject) {
+    reader.onload = function() { resolve(reader.result.split(',')[1]); };
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
 
   try {
     toast('업로드 중...', 'info');
-    // Check if file exists to get SHA
-    let sha = null;
+    var sha = null;
     try {
-      const existing = await ghGetFile(path);
+      var existing = await ghGetFile(path);
       sha = existing.sha;
-    } catch {}
+    } catch (e) { /* file does not exist yet */ }
 
-    await ghApi(`/repos/${OWNER}/${REPO}/contents/${path}`, {
+    var putBody = {
+      message: 'upload image ' + fileName,
+      content: base64
+    };
+    if (sha) putBody.sha = sha;
+
+    await ghApi('/repos/' + OWNER + '/' + REPO + '/contents/' + path, {
       method: 'PUT',
-      body: JSON.stringify({
-        message: `upload image ${fileName}`,
-        content: base64,
-        ...(sha ? { sha } : {})
-      })
+      body: JSON.stringify(putBody)
     });
 
-    const sitePath = `/${path}`;
+    var sitePath = '/' + path;
     toast('업로드 완료', 'success');
     onSuccess(sitePath);
   } catch (e) {
@@ -921,15 +1030,15 @@ async function uploadImageFile(file, onSuccess) {
 
 /* ═══════ Preview ═══════ */
 function togglePreview() {
-  const body = document.getElementById('ed-body').value;
-  const title = document.getElementById('ed-title').value.trim();
-  const desc = document.getElementById('ed-desc').value.trim();
-  const cover = document.getElementById('ed-cover').value.trim();
+  var body = document.getElementById('ed-body').value;
+  var title = document.getElementById('ed-title').value.trim();
+  var desc = document.getElementById('ed-desc').value.trim();
+  var cover = document.getElementById('ed-cover').value.trim();
 
-  let html = '';
-  if (title) html += `<h1>${esc(title)}</h1>`;
-  if (desc) html += `<p style="color:var(--muted);margin-bottom:1em">${esc(desc)}</p>`;
-  if (cover) html += `<img src="https://raw.githubusercontent.com/${OWNER}/${REPO}/main${cover}" style="width:100%;border-radius:8px;margin-bottom:1em">`;
+  var html = '';
+  if (title) html += '<h1>' + esc(title) + '</h1>';
+  if (desc) html += '<p style="color:var(--muted);margin-bottom:1em">' + esc(desc) + '</p>';
+  if (cover) html += '<img src="https://raw.githubusercontent.com/' + OWNER + '/' + REPO + '/main' + cover + '" style="width:100%;border-radius:8px;margin-bottom:1em">';
   html += '<hr style="border:none;border-top:1px solid var(--line);margin:1em 0">';
   html += marked.parse(body || '');
 
@@ -940,40 +1049,40 @@ function togglePreview() {
 
 /* ═══════ Markdown Toolbar ═══════ */
 function wrap(before, after) {
-  const area = document.getElementById('ed-body');
-  const start = area.selectionStart;
-  const end = area.selectionEnd;
-  const sel = area.value.slice(start, end) || '텍스트';
+  var area = document.getElementById('ed-body');
+  var start = area.selectionStart;
+  var end = area.selectionEnd;
+  var sel = area.value.slice(start, end) || '텍스트';
   area.value = area.value.slice(0, start) + before + sel + after + area.value.slice(end);
   area.focus();
   area.setSelectionRange(start + before.length, start + before.length + sel.length);
 }
 
 function insert(text) {
-  const area = document.getElementById('ed-body');
-  const start = area.selectionStart;
-  const pre = area.value.slice(0, start);
-  const needNL = pre && !pre.endsWith('\n') ? '\n' : '';
+  var area = document.getElementById('ed-body');
+  var start = area.selectionStart;
+  var pre = area.value.slice(0, start);
+  var needNL = pre && !pre.endsWith('\n') ? '\n' : '';
   area.value = pre + needNL + text + area.value.slice(area.selectionEnd);
   area.focus();
 }
 
 function insertText(text) {
-  const area = document.getElementById('ed-body');
-  const start = area.selectionStart;
+  var area = document.getElementById('ed-body');
+  var start = area.selectionStart;
   area.value = area.value.slice(0, start) + text + area.value.slice(area.selectionEnd);
   area.focus();
 }
 
 /* ═══════ Auto Save ═══════ */
-let autoSaveTimer = null;
+var autoSaveTimer = null;
 function autoSave() {
   clearTimeout(autoSaveTimer);
-  autoSaveTimer = setTimeout(() => {
-    const data = {
+  autoSaveTimer = setTimeout(function() {
+    var data = {
       title: document.getElementById('ed-title').value,
       body: document.getElementById('ed-body').value,
-      path: S.editing?.path,
+      path: S.editing ? S.editing.path : null,
       savedAt: new Date().toISOString()
     };
     localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(data));
@@ -982,33 +1091,31 @@ function autoSave() {
 
 /* ═══════ Front Matter ═══════ */
 function parseFrontMatter(text) {
-  const n = text.replace(/\r\n/g, '\n');
+  var n = text.replace(/\r\n/g, '\n');
   if (!n.startsWith('---\n')) return {};
-  const end = n.indexOf('\n---\n', 4);
+  var end = n.indexOf('\n---\n', 4);
   if (end === -1) return {};
-  const head = n.slice(4, end);
-  const result = {};
+  var head = n.slice(4, end);
+  var result = {};
 
-  // Simple YAML parser for blog front matter
-  const lines = head.split('\n');
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    const m = line.match(/^(\w[\w_]*)\s*:\s*(.*)$/);
+  var lines = head.split('\n');
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+    var m = line.match(/^(\w[\w_]*)\s*:\s*(.*)$/);
     if (!m) continue;
-    const key = m[1];
-    let val = m[2].trim().replace(/^["']|["']$/g, '');
+    var key = m[1];
+    var val = m[2].trim().replace(/^["']|["']$/g, '');
 
     if (key === 'categories' || key === 'tags') {
       if (val.startsWith('[')) {
-        result[key] = val.slice(1, -1).split(',').map(s => s.trim().replace(/^["']|["']$/g, '')).filter(Boolean);
+        result[key] = val.slice(1, -1).split(',').map(function(s) { return s.trim().replace(/^["']|["']$/g, ''); }).filter(Boolean);
       } else {
         result[key] = val ? [val] : [];
       }
     } else if (key === 'image') {
-      // Check for multi-line image with path
       if (!val && i + 1 < lines.length) {
-        const next = lines[i + 1];
-        const pm = next.match(/^\s+path:\s*(.+)$/);
+        var next = lines[i + 1];
+        var pm = next.match(/^\s+path:\s*(.+)$/);
         if (pm) {
           result.image = { path: pm[1].trim().replace(/^["']|["']$/g, '') };
           i++;
@@ -1028,93 +1135,91 @@ function parseFrontMatter(text) {
 }
 
 function extractBody(text) {
-  const n = text.replace(/\r\n/g, '\n');
+  var n = text.replace(/\r\n/g, '\n');
   if (!n.startsWith('---\n')) return n;
-  const end = n.indexOf('\n---\n', 4);
+  var end = n.indexOf('\n---\n', 4);
   if (end === -1) return n;
   return n.slice(end + 5).replace(/^\n/, '');
 }
 
 function buildFileContent(fm, body) {
-  let yaml = '---\n';
-  yaml += `title: "${fm.title.replace(/"/g, '\\"')}"\n`;
-  yaml += `date: ${fm.date}\n`;
-  if (fm.description) yaml += `description: "${fm.description.replace(/"/g, '\\"')}"\n`;
-  if (fm.categories.length) yaml += `categories: [${fm.categories.map(c => `"${c}"`).join(', ')}]\n`;
-  if (fm.tags.length) yaml += `tags: [${fm.tags.map(t => `"${t}"`).join(', ')}]\n`;
-  yaml += `toc: ${fm.toc}\n`;
-  yaml += `comments: ${fm.comments}\n`;
-  if (fm.pin) yaml += `pin: true\n`;
-  if (fm.hidden) yaml += `hidden: true\n`;
-  if (fm.mermaid) yaml += `mermaid: true\n`;
-  if (fm.math) yaml += `math: true\n`;
-  if (fm.hero_title) yaml += `hero_title: "${fm.hero_title.replace(/\n/g, '<br>').replace(/"/g, '\\"')}"\n`;
-  if (fm.cover) yaml += `image:\n  path: ${fm.cover}\n`;
+  var yaml = '---\n';
+  yaml += 'title: "' + fm.title.replace(/"/g, '\\"') + '"\n';
+  yaml += 'date: ' + fm.date + '\n';
+  if (fm.description) yaml += 'description: "' + fm.description.replace(/"/g, '\\"') + '"\n';
+  if (fm.categories.length) yaml += 'categories: [' + fm.categories.map(function(c) { return '"' + c + '"'; }).join(', ') + ']\n';
+  if (fm.tags.length) yaml += 'tags: [' + fm.tags.map(function(t) { return '"' + t + '"'; }).join(', ') + ']\n';
+  yaml += 'toc: ' + fm.toc + '\n';
+  yaml += 'comments: ' + fm.comments + '\n';
+  if (fm.pin) yaml += 'pin: true\n';
+  if (fm.hidden) yaml += 'hidden: true\n';
+  if (fm.mermaid) yaml += 'mermaid: true\n';
+  if (fm.math) yaml += 'math: true\n';
+  if (fm.hero_title) yaml += 'hero_title: "' + fm.hero_title.replace(/\n/g, '<br>').replace(/"/g, '\\"') + '"\n';
+  if (fm.cover) yaml += 'image:\n  path: ' + fm.cover + '\n';
   yaml += '---\n\n';
   return yaml + (body || '');
 }
 
 /* ═══════ Navigation ═══════ */
 function showView(id) {
-  const views = ['auth', 'list', 'editor', 'preview', 'settings'];
-  views.forEach(v => {
-    document.getElementById(`view-${v}`).classList.toggle('active', v === id);
+  var views = ['auth', 'pin-setup', 'lock', 'list', 'editor', 'preview', 'settings'];
+  views.forEach(function(v) {
+    var el = document.getElementById('view-' + v);
+    if (el) el.classList.toggle('active', v === id);
   });
 
-  // Bottom bar highlighting
-  document.querySelectorAll('.bottombar button').forEach(b => {
+  document.querySelectorAll('.bottombar button').forEach(function(b) {
     b.classList.toggle('active', b.dataset.view === id);
   });
 
-  // Topbar
-  const backBtn = document.getElementById('topbar-back');
-  const titles = { auth: 'Blog Studio', list: 'Blog Studio', editor: '글 작성', preview: '미리보기', settings: '설정' };
+  var backBtn = document.getElementById('topbar-back');
+  var titles = { auth: 'Blog Studio', 'pin-setup': 'PIN 설정', lock: 'Blog Studio', list: 'Blog Studio', editor: '글 작성', preview: '미리보기', settings: '설정' };
   document.getElementById('topbar-title').textContent = titles[id] || 'Blog Studio';
-  backBtn.style.display = (id === 'list' || id === 'auth' || id === 'settings') ? 'none' : 'block';
+  backBtn.style.display = (id === 'list' || id === 'auth' || id === 'settings' || id === 'lock' || id === 'pin-setup') ? 'none' : 'block';
 
-  // Push to stack
   if (id !== S.viewStack[S.viewStack.length - 1]) {
     S.viewStack.push(id);
     if (S.viewStack.length > 10) S.viewStack.shift();
   }
 
-  // Scroll to top
   document.getElementById('main-scroll').scrollTop = 0;
 }
 
-function setTopbar(title, showBack = false) {
+function setTopbar(title, showBack) {
   document.getElementById('topbar-title').textContent = title;
   document.getElementById('topbar-back').style.display = showBack ? 'block' : 'none';
 }
 
 function goBack() {
-  S.viewStack.pop(); // remove current
-  const prev = S.viewStack.pop() || 'list';
+  S.viewStack.pop();
+  var prev = S.viewStack.pop() || 'list';
   showView(prev);
 }
 
 /* ═══════ Utilities ═══════ */
 function formatNow() {
-  const d = new Date();
-  const pad = n => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:00 +0900`;
+  var d = new Date();
+  var pad = function(n) { return String(n).padStart(2, '0'); };
+  return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':00 +0900';
 }
 
 function parseList(str) {
-  return str.split(',').map(s => s.trim()).filter(Boolean);
+  return str.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
 }
 
 function esc(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function toast(msg, type = 'info') {
-  const wrap = document.getElementById('toasts');
-  const el = document.createElement('div');
-  el.className = `toast toast-${type}`;
+function toast(msg, type) {
+  type = type || 'info';
+  var wrap = document.getElementById('toasts');
+  var el = document.createElement('div');
+  el.className = 'toast toast-' + type;
   el.textContent = msg;
   wrap.appendChild(el);
-  setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3000);
+  setTimeout(function() { el.style.opacity = '0'; setTimeout(function() { el.remove(); }, 300); }, 3000);
 }
 </script>
 </body>

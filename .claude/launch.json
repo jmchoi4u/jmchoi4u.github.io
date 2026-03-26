@@ -6,6 +6,12 @@
       "runtimeExecutable": "node",
       "runtimeArgs": ["app/server.mjs"],
       "port": 4317
+    },
+    {
+      "name": "jekyll",
+      "runtimeExecutable": "bundle",
+      "runtimeArgs": ["exec", "jekyll", "serve", "--port", "4000"],
+      "port": 4000
     }
   ]
 }

@@ -161,6 +161,13 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
   .sidebar-icon{font-size:1.1rem;width:20px;text-align:center}
   .sidebar-footer{padding:12px 18px;border-top:1px solid var(--line);font-size:.72rem;color:var(--muted)}
   .sidebar-user{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .sidebar-toggle{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--muted);cursor:pointer;font-size:.85rem;position:absolute;top:22px;right:-14px;z-index:11;box-shadow:var(--shadow);transition:all .15s}
+  .sidebar-toggle:hover{color:var(--point);border-color:var(--point)}
+  .sidebar{position:relative;transition:width .2s ease,margin .2s ease}
+  .sidebar.collapsed{width:0;overflow:hidden;border-right:none}
+  .sidebar.collapsed .sidebar-toggle{right:-36px;top:12px}
+  .topbar-sidebar-toggle{display:none;border:none;background:none;font-size:1.1rem;cursor:pointer;color:var(--muted);padding:4px 8px}
+  .sidebar.collapsed ~ .content-wrap .topbar-sidebar-toggle{display:block}
   .bottombar{display:none!important}
   .content-wrap{height:100vh;height:100dvh}
   .topbar h1{font-size:1.05rem}
@@ -203,6 +210,7 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
     <div class="sidebar-brand">
       <div class="sidebar-logo">J</div>
       <span class="sidebar-title">Blog Studio</span>
+      <button class="sidebar-toggle" onclick="toggleSidebar()" title="사이드바 숨기기">&laquo;</button>
     </div>
     <nav class="sidebar-nav">
       <button class="sidebar-btn active" data-view="list" onclick="showView('list')">
@@ -224,6 +232,7 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
   <div class="content-wrap">
     <!-- Topbar -->
     <div class="topbar">
+      <button class="topbar-sidebar-toggle" id="topbar-sidebar-toggle" onclick="toggleSidebar()" title="사이드바 열기">&#9776;</button>
       <button class="topbar-back" id="topbar-back" onclick="goBack()">&larr;</button>
       <h1 id="topbar-title">Blog Studio</h1>
       <div id="topbar-actions"></div>
@@ -1275,6 +1284,23 @@ function goBack() {
   var prev = S.viewStack.pop() || 'list';
   showView(prev);
 }
+
+function toggleSidebar() {
+  var sb = document.getElementById('sidebar');
+  var btn = document.getElementById('topbar-sidebar-toggle');
+  sb.classList.toggle('collapsed');
+  var collapsed = sb.classList.contains('collapsed');
+  btn.style.display = collapsed ? 'block' : '';
+  localStorage.setItem('jm-studio-sidebar', collapsed ? 'collapsed' : 'open');
+}
+
+/* restore sidebar state */
+(function() {
+  if (localStorage.getItem('jm-studio-sidebar') === 'collapsed') {
+    var sb = document.getElementById('sidebar');
+    if (sb) sb.classList.add('collapsed');
+  }
+})();
 
 /* ═══════ Utilities ═══════ */
 function formatNow() {

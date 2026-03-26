@@ -26,7 +26,6 @@ const templatesDir = path.join(repoRoot, "src", "templates");
 const assetsDir = path.join(repoRoot, "assets", "img");
 const LOCAL_ONLY_STAGE_EXCLUDES = [
   ".claude",
-  "AGENT_COLLAB_LOG.md",
   "app/logs"
 ];
 const AUTO_RESOLVE_OURS_PREFIXES = [
@@ -1166,11 +1165,48 @@ function openBrowser(url) {
   spawn(`start "" "${url}"`, { shell: true, detached: true, stdio: "ignore", windowsHide: true }).unref();
 }
 
+async function hasHealthyEditorInstance() {
+  return await new Promise((resolve) => {
+    const req = http.get(`${APP_URL}/api/summary`, { timeout: 1500 }, (res) => {
+      let body = "";
+      res.on("data", (chunk) => {
+        body += chunk.toString();
+      });
+      res.on("end", () => {
+        if (res.statusCode !== 200) {
+          resolve(false);
+          return;
+        }
+
+        try {
+          const parsed = JSON.parse(body);
+          resolve(Boolean(parsed && typeof parsed === "object" && ("site" in parsed || "preview" in parsed || "git" in parsed)));
+        } catch {
+          resolve(false);
+        }
+      });
+    });
+
+    req.on("timeout", () => {
+      req.destroy();
+      resolve(false);
+    });
+    req.on("error", () => resolve(false));
+  });
+}
+
 let listenRetries = 0;
 const MAX_LISTEN_RETRIES = 2;
 
 server.on("error", async (err) => {
   if (err.code === "EADDRINUSE" && listenRetries < MAX_LISTEN_RETRIES) {
+    const existingEditor = await hasHealthyEditorInstance();
+    if (existingEditor) {
+      console.log(`Editor already running: ${APP_URL}`);
+      process.exit(0);
+      return;
+    }
+
     listenRetries++;
     console.log(`Port ${APP_PORT} in use, closing old process... (attempt ${listenRetries}/${MAX_LISTEN_RETRIES})`);
     await killPort(APP_PORT);

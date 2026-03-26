@@ -36,8 +36,8 @@ script_includes:
         <a class="hero-action-btn hero-action-link" href="https://ctee.kr/place/jmchoi4u" target="_blank" rel="noopener noreferrer" aria-label="Support">
           <i class="fas fa-dollar-sign"></i>
         </a>
-        <button class="hero-action-btn" id="hero-share" type="button" aria-label="공유"><i class="fas fa-share-alt"></i></button>
         <button class="hero-action-btn" id="hero-comment-btn" type="button" aria-label="댓글"><i class="fas fa-comment-dots"></i></button>
+        <button class="hero-action-btn" id="hero-share" type="button" aria-label="공유"><i class="fas fa-share-alt"></i></button>
       </div>
 
       <!-- 제목+설명: 중앙 -->
@@ -127,7 +127,9 @@ script_includes:
     <div class="post-author-inner">
       <div class="post-author-copy">
         <p class="post-author-eyebrow">About</p>
-        <h2 class="post-author-name">{{ site.social.name }}</h2>
+        <a class="post-author-home-link" href="{{ '/' | relative_url }}" aria-label="홈으로 이동">
+          <h2 class="post-author-name">{{ site.social.name }}</h2>
+        </a>
         <p class="post-author-tagline">{{ site.tagline }}</p>
         <div class="post-author-actions">
           <a class="author-email-link" href="mailto:{{ site.social.email }}">{{ site.social.email }}</a>
@@ -147,7 +149,9 @@ script_includes:
       </div>
       {% if site.avatar and site.avatar != empty %}
         {% assign avatar_thumb = site.avatar | replace: '.png', '_thumb.png' | replace: '.jpg', '_thumb.jpg' %}
-        <img class="post-author-avatar" src="{{ avatar_thumb | relative_url }}" alt="{{ site.social.name }}" loading="lazy" width="80" height="80">
+        <a class="post-author-avatar-link" href="{{ '/' | relative_url }}" aria-label="홈으로 이동">
+          <span class="post-author-avatar" role="img" aria-label="{{ site.social.name }}" style="background-image:url('{{ avatar_thumb | relative_url }}');"></span>
+        </a>
       {% endif %}
     </div>
   </section>

@@ -34,6 +34,7 @@ html,body{font-family:'Inter',-apple-system,'Segoe UI','Malgun Gothic',sans-seri
 /* === Views === */
 .view{display:none;padding:16px;padding-bottom:80px}
 .view.active{display:block}
+#view-editor,#view-preview{padding-bottom:150px}
 
 /* === Auth === */
 .auth-view{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:70vh;text-align:center;padding:24px}
@@ -81,7 +82,17 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
 .editor-checks{display:flex;flex-wrap:wrap;gap:8px 14px;padding:8px 0}
 .editor-check{display:flex;align-items:center;gap:5px;font-size:.8rem;cursor:pointer;color:var(--text)}
 .editor-check input{width:16px;height:16px;accent-color:var(--point)}
-.editor-actions{display:flex;gap:8px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+.editor-meta{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:8px;font-size:.74rem;color:var(--muted)}
+.editor-meta strong{color:var(--text)}
+.editor-inline-banner{display:none;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;margin-bottom:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.editor-inline-banner.show{display:flex}
+.editor-inline-actions{display:flex;gap:6px;flex-shrink:0}
+.editor-actions{display:none;gap:8px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+.editor-dock{display:none;position:fixed;left:12px;right:12px;bottom:68px;z-index:35;padding:10px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);box-shadow:0 8px 24px rgba(26,26,26,.12)}
+.editor-dock.show{display:block}
+.editor-dock-actions{display:flex;gap:8px}
+.editor-dock-actions .btn{flex:1;min-height:42px}
+.editor-dock-status{margin-top:8px;font-size:.72rem;color:var(--muted);text-align:center}
 
 /* === Preview === */
 .preview-content{padding:16px;line-height:1.8;font-size:.92rem;word-break:break-word}
@@ -173,7 +184,9 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
   .topbar h1{font-size:1.05rem}
   .view{padding:24px 32px;padding-bottom:40px;max-width:900px;margin:0 auto}
   .view.active{display:block}
+  #view-editor,#view-preview{padding-bottom:40px}
   textarea.editor-input{min-height:450px}
+  .editor-actions{display:flex}
   .editor-row{grid-template-columns:1fr 1fr 1fr;gap:14px}
   .editor-checks{gap:12px 20px}
   .card{padding:16px 20px;cursor:pointer}
@@ -189,6 +202,7 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
   .md-toolbar button{min-width:36px;height:36px;font-size:14px}
   .md-toolbar button:hover{background:var(--point-s);color:var(--point)}
   .setting-item{padding:16px 0}
+  .editor-dock{display:none!important}
 }
 
 /* === Wide desktop (1200px+) === */
@@ -297,6 +311,17 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
 
     <!-- Editor View -->
     <div class="view" id="view-editor">
+      <div class="editor-inline-banner" id="autosave-banner">
+        <div>
+          <strong>임시저장된 내용이 있습니다.</strong>
+          <div style="margin-top:2px;font-size:.72rem;color:var(--muted)" id="autosave-banner-text">복원할 수 있습니다.</div>
+        </div>
+        <div class="editor-inline-actions">
+          <button class="btn btn-sm" onclick="dismissAutosaveBanner()">닫기</button>
+          <button class="btn btn-primary btn-sm" onclick="restoreAutosave()">복원</button>
+        </div>
+      </div>
+
       <div class="editor-section">
         <label class="editor-label">제목</label>
         <input class="editor-input" id="ed-title" type="text" placeholder="글 제목">
@@ -329,6 +354,17 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
         <input class="editor-input" id="ed-hero-title" type="text" placeholder="비워두면 글 제목 사용">
       </div>
 
+      <div class="editor-row">
+        <div class="editor-section">
+          <label class="editor-label">요약</label>
+          <input class="editor-input" id="ed-summary" type="text" placeholder="목록/미리보기용 요약 (선택)">
+        </div>
+        <div class="editor-section">
+          <label class="editor-label">고정 URL</label>
+          <input class="editor-input" id="ed-permalink" type="text" placeholder="비워두면 기본 규칙 사용 (예: /posts/6/)">
+        </div>
+      </div>
+
       <div class="editor-section">
         <label class="editor-label">표지 이미지</label>
         <div class="img-upload" id="cover-upload" onclick="document.getElementById('cover-file').click()">
@@ -340,6 +376,8 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
           <button class="cover-remove" onclick="removeCover()">&times;</button>
         </div>
         <input type="hidden" id="ed-cover">
+        <input type="hidden" id="ed-hero-image-position">
+        <input type="hidden" id="ed-extra-front-matter">
       </div>
 
       <div class="editor-section">
@@ -374,6 +412,10 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
           <button onclick="triggerBodyImage()" title="이미지">&#128247;</button>
         </div>
         <textarea class="editor-input" id="ed-body" placeholder="마크다운으로 작성하세요..." oninput="autoSave()"></textarea>
+        <div class="editor-meta">
+          <span id="editor-stats">0자 · 0단어</span>
+          <span id="autosave-status">자동저장 대기</span>
+        </div>
       </div>
 
       <div class="editor-actions">
@@ -433,6 +475,17 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
           <a href="https://github.com/jmchoi4u/jmchoi4u.github.io" target="_blank" class="btn btn-sm">열기</a>
         </div>
       </div>
+      <div class="card" style="margin-top:12px">
+        <div class="setting-item" style="align-items:flex-start">
+          <div>
+            <div class="setting-label">권장 작업 방식</div>
+            <div class="setting-sub" style="max-width:560px;line-height:1.6">
+              이제 기본 방향은 <strong>웹 중심 편집</strong>입니다.<br>
+              모바일에서 빠르게 수정·저장·발행하는 흐름을 우선으로 두고, 로컬 앱은 나중에 천천히 정리해도 됩니다.
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -441,6 +494,15 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
       <button onclick="showView('list')" data-view="list"><span class="bar-icon">&#9776;</span>글 목록</button>
       <button onclick="newPost()" data-view="editor"><span class="bar-icon">&#9998;</span>새 글</button>
       <button onclick="showView('settings')" data-view="settings"><span class="bar-icon">&#9881;</span>설정</button>
+    </div>
+
+    <div class="editor-dock" id="editor-dock">
+      <div class="editor-dock-actions">
+        <button class="btn btn-primary" onclick="savePost()">저장</button>
+        <button class="btn" id="editor-dock-toggle" onclick="togglePreviewMode()">미리보기</button>
+        <button class="btn" onclick="leaveEditorToList()">목록</button>
+      </div>
+      <div class="editor-dock-status" id="editor-dock-status">웹 중심 빠른 편집 모드</div>
     </div>
   </div><!-- /content-wrap -->
 </div>
@@ -469,7 +531,8 @@ var S = {
   viewStack: [],
   bodyImageInput: null,
   lastActivity: Date.now(),
-  pendingOAuthToken: '' /* OAuth 후 PIN 설정 전 임시 보관 */
+  pendingOAuthToken: '', /* OAuth 후 PIN 설정 전 임시 보관 */
+  autosaveDismissed: false
 };
 
 /* ═══════ Crypto: AES-GCM with PIN ═══════ */
@@ -544,6 +607,15 @@ window.addEventListener('DOMContentLoaded', function() {
   bindEnter('pin-unlock', doUnlock);
   bindEnter('oauth-pin-setup', finishOAuthSetup);
 
+  ['ed-title','ed-date','ed-desc','ed-cats','ed-tags','ed-hero-title','ed-summary','ed-permalink'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('input', autoSave);
+  });
+  ['ed-toc','ed-comments','ed-pin','ed-hidden','ed-draft','ed-mermaid','ed-math'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('change', autoSave);
+  });
+
   /* Check for OAuth callback */
   var params = new URLSearchParams(window.location.search);
   var code = params.get('code');
@@ -561,6 +633,9 @@ window.addEventListener('DOMContentLoaded', function() {
   } else {
     showView('auth');
   }
+  window.addEventListener('resize', function() {
+    updateEditorDock(S.currentView);
+  });
 });
 
 function bindEnter(id, fn) {
@@ -708,6 +783,7 @@ function onLoginSuccess() {
   document.getElementById('bottombar').style.display = 'flex';
   document.getElementById('sidebar').style.display = '';
   showView('list');
+  refreshAutosaveBanner();
   loadPosts();
 }
 
@@ -725,6 +801,161 @@ function changeToken() {
   document.getElementById('pat-input').value = '';
   document.getElementById('pin-setup').value = '';
   showView('auth');
+}
+
+function currentEditorPath() {
+  return S.editing ? (S.editing.path || '__new__') : '__new__';
+}
+
+function collectEditorState() {
+  return {
+    title: document.getElementById('ed-title').value,
+    date: document.getElementById('ed-date').value,
+    description: document.getElementById('ed-desc').value,
+    categories: document.getElementById('ed-cats').value,
+    tags: document.getElementById('ed-tags').value,
+    heroTitle: document.getElementById('ed-hero-title').value,
+    summary: document.getElementById('ed-summary').value,
+    permalink: document.getElementById('ed-permalink').value,
+    cover: document.getElementById('ed-cover').value,
+    heroImagePosition: document.getElementById('ed-hero-image-position').value,
+    extraFrontMatter: document.getElementById('ed-extra-front-matter').value,
+    toc: document.getElementById('ed-toc').checked,
+    comments: document.getElementById('ed-comments').checked,
+    pin: document.getElementById('ed-pin').checked,
+    hidden: document.getElementById('ed-hidden').checked,
+    draft: document.getElementById('ed-draft').checked,
+    mermaid: document.getElementById('ed-mermaid').checked,
+    math: document.getElementById('ed-math').checked,
+    body: document.getElementById('ed-body').value,
+    path: currentEditorPath(),
+    savedAt: new Date().toISOString()
+  };
+}
+
+function applyEditorState(data) {
+  if (!data) return;
+  document.getElementById('ed-title').value = data.title || '';
+  document.getElementById('ed-date').value = data.date || formatNow();
+  document.getElementById('ed-desc').value = data.description || '';
+  document.getElementById('ed-cats').value = data.categories || '';
+  document.getElementById('ed-tags').value = data.tags || '';
+  document.getElementById('ed-hero-title').value = data.heroTitle || '';
+  document.getElementById('ed-summary').value = data.summary || '';
+  document.getElementById('ed-permalink').value = data.permalink || '';
+  document.getElementById('ed-cover').value = data.cover || '';
+  document.getElementById('ed-hero-image-position').value = data.heroImagePosition || '';
+  document.getElementById('ed-extra-front-matter').value = data.extraFrontMatter || '';
+  document.getElementById('ed-toc').checked = data.toc !== false;
+  document.getElementById('ed-comments').checked = data.comments !== false;
+  document.getElementById('ed-pin').checked = !!data.pin;
+  document.getElementById('ed-hidden').checked = !!data.hidden;
+  document.getElementById('ed-draft').checked = !!data.draft;
+  document.getElementById('ed-mermaid').checked = !!data.mermaid;
+  document.getElementById('ed-math').checked = !!data.math;
+  document.getElementById('ed-body').value = data.body || '';
+
+  if (data.cover) {
+    document.getElementById('cover-preview').style.display = 'block';
+    document.getElementById('cover-img').src = 'https://raw.githubusercontent.com/' + OWNER + '/' + REPO + '/main' + data.cover;
+    document.getElementById('cover-upload').style.display = 'none';
+  } else {
+    document.getElementById('cover-preview').style.display = 'none';
+    document.getElementById('cover-upload').style.display = '';
+  }
+
+  updateEditorStats();
+}
+
+function getAutosave() {
+  try {
+    return JSON.parse(localStorage.getItem(AUTOSAVE_KEY) || 'null');
+  } catch (e) {
+    return null;
+  }
+}
+
+function refreshAutosaveBanner() {
+  var banner = document.getElementById('autosave-banner');
+  var text = document.getElementById('autosave-banner-text');
+  if (!banner || S.autosaveDismissed) return banner && banner.classList.remove('show');
+
+  var data = getAutosave();
+  var currentPath = currentEditorPath();
+  if (!data || !data.savedAt) {
+    return banner.classList.remove('show');
+  }
+
+  if (data.path && currentPath !== '__new__' && data.path !== currentPath) {
+    return banner.classList.remove('show');
+  }
+
+  text.textContent = '마지막 임시저장: ' + new Date(data.savedAt).toLocaleString('ko-KR');
+  banner.classList.add('show');
+}
+
+function dismissAutosaveBanner() {
+  S.autosaveDismissed = true;
+  document.getElementById('autosave-banner').classList.remove('show');
+}
+
+function restoreAutosave() {
+  var data = getAutosave();
+  if (!data) return toast('복원할 임시저장이 없습니다', 'error');
+  applyEditorState(data);
+  S.autosaveDismissed = true;
+  document.getElementById('autosave-banner').classList.remove('show');
+  toast('임시저장 내용을 복원했습니다', 'success');
+}
+
+function updateEditorStats() {
+  var body = document.getElementById('ed-body').value || '';
+  var chars = body.replace(/\s/g, '').length;
+  var words = body.trim() ? body.trim().split(/\s+/).length : 0;
+  document.getElementById('editor-stats').textContent = chars + '자 · ' + words + '단어';
+}
+
+function hasMeaningfulEditorContent() {
+  return !!(
+    document.getElementById('ed-title').value.trim() ||
+    document.getElementById('ed-body').value.trim() ||
+    document.getElementById('ed-desc').value.trim() ||
+    document.getElementById('ed-summary').value.trim()
+  );
+}
+
+function updateEditorDock(viewId) {
+  var dock = document.getElementById('editor-dock');
+  var toggleBtn = document.getElementById('editor-dock-toggle');
+  var statusEl = document.getElementById('editor-dock-status');
+  var isMobile = window.matchMedia('(max-width: 767px)').matches;
+  var activeView = viewId || S.currentView || 'list';
+
+  if (!dock) return;
+  if (!isMobile || (activeView !== 'editor' && activeView !== 'preview')) {
+    dock.classList.remove('show');
+    return;
+  }
+
+  dock.classList.add('show');
+  toggleBtn.textContent = activeView === 'preview' ? '편집' : '미리보기';
+  statusEl.textContent = document.getElementById('autosave-status').textContent || '웹 중심 편집 모드';
+}
+
+function togglePreviewMode() {
+  if (S.currentView === 'preview') {
+    showView('editor');
+    setTopbar(S.editing && !S.editing.isNew ? '글 수정' : '새 글', true);
+    return;
+  }
+  togglePreview();
+}
+
+function leaveEditorToList() {
+  if (hasMeaningfulEditorContent()) {
+    autoSave();
+  }
+  showView('list');
 }
 
 /* ═══════ GitHub API ═══════ */
@@ -958,6 +1189,8 @@ function newPost() {
   document.getElementById('ed-delete-btn').style.display = 'none';
   showView('editor');
   setTopbar('새 글', true);
+  S.autosaveDismissed = false;
+  refreshAutosaveBanner();
 }
 
 async function editPost(path) {
@@ -985,6 +1218,10 @@ async function editPost(path) {
     document.getElementById('ed-cats').value = (fm.categories || []).join(', ');
     document.getElementById('ed-tags').value = (fm.tags || []).join(', ');
     document.getElementById('ed-hero-title').value = (fm.hero_title || '').replace(/<br\s*\/?>/gi, '\n');
+    document.getElementById('ed-summary').value = fm.summary || '';
+    document.getElementById('ed-permalink').value = fm.permalink || '';
+    document.getElementById('ed-hero-image-position').value = fm.hero_image_position || '';
+    document.getElementById('ed-extra-front-matter').value = fm._extra || '';
     document.getElementById('ed-toc').checked = fm.toc !== false && fm.toc !== 'false';
     document.getElementById('ed-comments').checked = fm.comments !== false && fm.comments !== 'false';
     document.getElementById('ed-pin').checked = fm.pin === true || fm.pin === 'true';
@@ -996,6 +1233,8 @@ async function editPost(path) {
 
     var cover = (fm.image && fm.image.path) ? fm.image.path : (typeof fm.image === 'string' ? fm.image : '') || '';
     document.getElementById('ed-cover').value = cover;
+    document.getElementById('cover-preview').style.display = 'none';
+    document.getElementById('cover-upload').style.display = '';
     if (cover) {
       document.getElementById('cover-preview').style.display = 'block';
       document.getElementById('cover-img').src = 'https://raw.githubusercontent.com/' + OWNER + '/' + REPO + '/main' + cover;
@@ -1004,6 +1243,9 @@ async function editPost(path) {
 
     document.getElementById('ed-delete-btn').style.display = 'inline-flex';
     S.editing = { path: path, sha: sha, isNew: false };
+    S.autosaveDismissed = false;
+    refreshAutosaveBanner();
+    updateEditorStats();
   } catch (e) {
     toast('불러오기 실패: ' + e.message, 'error');
   }
@@ -1030,6 +1272,10 @@ async function savePost() {
     mermaid: document.getElementById('ed-mermaid').checked,
     math: document.getElementById('ed-math').checked,
     hero_title: document.getElementById('ed-hero-title').value.trim(),
+    summary: document.getElementById('ed-summary').value.trim(),
+    permalink: document.getElementById('ed-permalink').value.trim(),
+    hero_image_position: document.getElementById('ed-hero-image-position').value.trim(),
+    extra_front_matter: document.getElementById('ed-extra-front-matter').value.trim(),
     cover: document.getElementById('ed-cover').value.trim()
   };
 
@@ -1047,6 +1293,9 @@ async function savePost() {
 
   var dir = isDraft ? '_drafts' : '_posts';
   var newPath = dir + '/' + datePrefix + '-' + slug + '.md';
+  if (!fm.permalink && !isDraft && /^\d+$/.test(slug)) {
+    fm.permalink = '/posts/' + slug + '/';
+  }
 
   try {
     if (S.editing && !S.editing.isNew && S.editing.path !== newPath && S.editing.sha) {
@@ -1060,6 +1309,10 @@ async function savePost() {
 
     toast('저장 완료', 'success');
     localStorage.removeItem(AUTOSAVE_KEY);
+    document.getElementById('autosave-status').textContent = '자동저장 없음';
+    S.autosaveDismissed = false;
+    refreshAutosaveBanner();
+    updateEditorDock(S.currentView);
     loadPosts();
   } catch (e) {
     toast('저장 실패: ' + e.message, 'error');
@@ -1082,7 +1335,7 @@ async function deletePost() {
 }
 
 function clearEditor() {
-  ['ed-title','ed-date','ed-desc','ed-cats','ed-tags','ed-hero-title','ed-body','ed-cover'].forEach(function(id) {
+  ['ed-title','ed-date','ed-desc','ed-cats','ed-tags','ed-hero-title','ed-summary','ed-permalink','ed-body','ed-cover','ed-hero-image-position','ed-extra-front-matter'].forEach(function(id) {
     document.getElementById(id).value = '';
   });
   document.getElementById('ed-toc').checked = true;
@@ -1094,6 +1347,9 @@ function clearEditor() {
   document.getElementById('ed-math').checked = false;
   document.getElementById('cover-preview').style.display = 'none';
   document.getElementById('cover-upload').style.display = '';
+  document.getElementById('autosave-status').textContent = '자동저장 대기';
+  updateEditorStats();
+  updateEditorDock(S.currentView);
 }
 
 /* ═══════ Image Upload ═══════ */
@@ -1105,6 +1361,7 @@ async function uploadCover(input) {
     document.getElementById('cover-preview').style.display = 'block';
     document.getElementById('cover-img').src = 'https://raw.githubusercontent.com/' + OWNER + '/' + REPO + '/main' + path;
     document.getElementById('cover-upload').style.display = 'none';
+    autoSave();
   });
 }
 
@@ -1112,6 +1369,7 @@ function removeCover() {
   document.getElementById('ed-cover').value = '';
   document.getElementById('cover-preview').style.display = 'none';
   document.getElementById('cover-upload').style.display = '';
+  autoSave();
 }
 
 function triggerBodyImage() {
@@ -1176,11 +1434,13 @@ function togglePreview() {
   var body = document.getElementById('ed-body').value;
   var title = document.getElementById('ed-title').value.trim();
   var desc = document.getElementById('ed-desc').value.trim();
+  var summary = document.getElementById('ed-summary').value.trim();
   var cover = document.getElementById('ed-cover').value.trim();
 
   var html = '';
   if (title) html += '<h1>' + esc(title) + '</h1>';
   if (desc) html += '<p style="color:var(--muted);margin-bottom:1em">' + esc(desc) + '</p>';
+  if (summary) html += '<p style="background:var(--bg);padding:12px 14px;border-radius:8px;margin-bottom:1em">' + esc(summary) + '</p>';
   if (cover) html += '<img src="https://raw.githubusercontent.com/' + OWNER + '/' + REPO + '/main' + cover + '" style="width:100%;border-radius:8px;margin-bottom:1em">';
   html += '<hr style="border:none;border-top:1px solid var(--line);margin:1em 0">';
   html += marked.parse(body || '');
@@ -1199,6 +1459,7 @@ function wrap(before, after) {
   area.value = area.value.slice(0, start) + before + sel + after + area.value.slice(end);
   area.focus();
   area.setSelectionRange(start + before.length, start + before.length + sel.length);
+  autoSave();
 }
 
 function insert(text) {
@@ -1208,6 +1469,7 @@ function insert(text) {
   var needNL = pre && !pre.endsWith('\n') ? '\n' : '';
   area.value = pre + needNL + text + area.value.slice(area.selectionEnd);
   area.focus();
+  autoSave();
 }
 
 function insertText(text) {
@@ -1215,20 +1477,22 @@ function insertText(text) {
   var start = area.selectionStart;
   area.value = area.value.slice(0, start) + text + area.value.slice(area.selectionEnd);
   area.focus();
+  autoSave();
 }
 
 /* ═══════ Auto Save ═══════ */
 var autoSaveTimer = null;
 function autoSave() {
+  updateEditorStats();
+  document.getElementById('autosave-status').textContent = '자동저장 예정...';
+  updateEditorDock(S.currentView);
   clearTimeout(autoSaveTimer);
   autoSaveTimer = setTimeout(function() {
-    var data = {
-      title: document.getElementById('ed-title').value,
-      body: document.getElementById('ed-body').value,
-      path: S.editing ? S.editing.path : null,
-      savedAt: new Date().toISOString()
-    };
-    localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(data));
+    localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(collectEditorState()));
+    document.getElementById('autosave-status').textContent = '자동저장됨';
+    S.autosaveDismissed = false;
+    refreshAutosaveBanner();
+    updateEditorDock(S.currentView);
   }, 2000);
 }
 
@@ -1274,6 +1538,10 @@ function parseFrontMatter(text) {
       result[key] = val;
     }
   }
+  var knownKeyPattern = /^(title|date|description|categories|tags|toc|comments|pin|hidden|mermaid|math|hero_title|summary|hero_image_position|permalink|image):/;
+  result._extra = lines.filter(function(line) {
+    return line.trim() && !knownKeyPattern.test(line.trim()) && !/^\s+path:/.test(line);
+  }).join('\n');
   return result;
 }
 
@@ -1299,7 +1567,11 @@ function buildFileContent(fm, body) {
   if (fm.mermaid) yaml += 'mermaid: true\n';
   if (fm.math) yaml += 'math: true\n';
   if (fm.hero_title) yaml += 'hero_title: "' + fm.hero_title.replace(/\n/g, '<br>').replace(/"/g, '\\"') + '"\n';
+  if (fm.summary) yaml += 'summary: "' + fm.summary.replace(/"/g, '\\"') + '"\n';
+  if (fm.hero_image_position) yaml += 'hero_image_position: "' + fm.hero_image_position.replace(/"/g, '\\"') + '"\n';
   if (fm.cover) yaml += 'image:\n  path: ' + fm.cover + '\n';
+  if (fm.permalink) yaml += 'permalink: ' + fm.permalink + '\n';
+  if (fm.extra_front_matter) yaml += fm.extra_front_matter.replace(/\n+$/,'') + '\n';
   yaml += '---\n\n';
   return yaml + (body || '');
 }
@@ -1330,6 +1602,8 @@ function showView(id) {
   }
 
   document.getElementById('main-scroll').scrollTop = 0;
+  S.currentView = id;
+  updateEditorDock(id);
 }
 
 function setTopbar(title, showBack) {

@@ -46,3 +46,4 @@ Desktop.ini
 # Generated theme assets
 _sass/vendors/
 assets/js/dist/
+.omx/

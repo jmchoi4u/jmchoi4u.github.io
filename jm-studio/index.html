@@ -70,6 +70,7 @@ html,body{font-family:'Inter',-apple-system,'Segoe UI','Malgun Gothic',sans-seri
 .card-status{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .status-published{background:var(--success)}
 .status-draft{background:var(--purple)}
+.status-pending{background:#7c3aed}
 .status-hidden{background:var(--muted)}
 
 /* === Editor === */
@@ -87,12 +88,20 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
 .editor-inline-banner{display:none;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;margin-bottom:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
 .editor-inline-banner.show{display:flex}
 .editor-inline-actions{display:flex;gap:6px;flex-shrink:0}
+.template-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.template-tools select{flex:1;min-width:180px}
 .editor-actions{display:none;gap:8px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
 .editor-dock{display:none;position:fixed;left:12px;right:12px;bottom:68px;z-index:35;padding:10px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);box-shadow:0 8px 24px rgba(26,26,26,.12)}
 .editor-dock.show{display:block}
 .editor-dock-actions{display:flex;gap:8px}
 .editor-dock-actions .btn{flex:1;min-height:42px}
 .editor-dock-status{margin-top:8px;font-size:.72rem;color:var(--muted);text-align:center}
+.power-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:.72rem;font-weight:700;background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.power-badge.active{background:rgba(27,159,80,.1);color:#1b9f50;border-color:rgba(27,159,80,.22)}
+.power-badge.local{background:rgba(218,119,86,.12);color:var(--point);border-color:rgba(218,119,86,.22)}
+.power-actions{display:flex;flex-wrap:wrap;gap:8px}
+.power-actions .btn{flex:1 1 140px}
+.power-note{font-size:.76rem;color:var(--muted);line-height:1.6}
 
 /* === Preview === */
 .preview-content{padding:16px;line-height:1.8;font-size:.92rem;word-break:break-word}
@@ -394,6 +403,20 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
       </div>
 
       <div class="editor-section">
+        <label class="editor-label">로컬 파워 모드</label>
+        <div class="template-tools">
+          <select class="editor-input" id="template-select">
+            <option value="">템플릿 선택 (로컬 파워 모드 필요)</option>
+          </select>
+          <button class="btn btn-sm" type="button" onclick="applySelectedTemplate()">템플릿 적용</button>
+          <button class="btn btn-sm" type="button" onclick="refreshLocalRuntime(true)">새로고침</button>
+        </div>
+        <div class="editor-meta">
+          <span id="power-mode-editor-status">원격 GitHub 편집 모드</span>
+        </div>
+      </div>
+
+      <div class="editor-section">
         <label class="editor-label">본문</label>
         <div class="md-toolbar" id="md-toolbar">
           <button onclick="wrap('**','**')" title="굵게"><b>B</b></button>
@@ -445,6 +468,13 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
             <div class="setting-sub" id="settings-repo">-</div>
           </div>
         </div>
+        <div class="setting-item" style="align-items:flex-start">
+          <div>
+            <div class="setting-label">실행 모드</div>
+            <div class="setting-sub" id="settings-mode-desc">원격 GitHub 편집 모드</div>
+          </div>
+          <span class="power-badge" id="settings-mode-badge">원격</span>
+        </div>
         <div class="setting-item">
           <div>
             <div class="setting-label">토큰 / PIN 재설정</div>
@@ -458,6 +488,31 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
             <div class="setting-sub">토큰을 삭제하고 로그아웃합니다</div>
           </div>
           <button class="btn btn-danger btn-sm" onclick="doLogout()">로그아웃</button>
+        </div>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <div class="setting-item" style="align-items:flex-start">
+          <div>
+            <div class="setting-label">로컬 파워 모드</div>
+            <div class="setting-sub" id="settings-power-status">로컬 편집기 연결을 확인하는 중...</div>
+          </div>
+          <span class="power-badge" id="settings-power-badge">확인중</span>
+        </div>
+        <div class="power-actions" style="margin-top:10px">
+          <button class="btn btn-sm" type="button" onclick="setRuntimeMode('remote')">원격 모드</button>
+          <button class="btn btn-primary btn-sm" type="button" onclick="setRuntimeMode('local')">로컬 모드</button>
+          <button class="btn btn-sm" type="button" onclick="refreshLocalRuntime(true)">상태 새로고침</button>
+          <button class="btn btn-sm" type="button" onclick="openLocalEditor()">로컬 편집기 열기</button>
+        </div>
+        <div class="power-actions" style="margin-top:8px">
+          <button class="btn btn-sm" type="button" onclick="startLocalPreview()">미리보기 시작</button>
+          <button class="btn btn-sm" type="button" onclick="stopLocalPreview()">미리보기 중지</button>
+          <button class="btn btn-sm" type="button" onclick="openLocalPreview()">미리보기 열기</button>
+          <button class="btn btn-sm" type="button" onclick="buildLocalSite()">로컬 빌드</button>
+          <button class="btn btn-primary btn-sm" type="button" onclick="publishLocalSite()">로컬 발행</button>
+        </div>
+        <div class="power-note" id="settings-power-note" style="margin-top:10px">
+          로컬 파워 모드를 켜면 posts / templates / preview / publish 기능을 localhost 편집기와 연동합니다.
         </div>
       </div>
       <div class="card" style="margin-top:12px">
@@ -518,8 +573,10 @@ var CLIENT_ID = 'Ov23lixOBhnUUxH7VhoH';
 var WORKER_URL = 'https://jm-studio-auth.jmchoi4u.workers.dev';
 var CRYPT_KEY = 'jm-studio-enc';
 var AUTOSAVE_KEY = 'jm-studio-autosave';
+var RUNTIME_MODE_KEY = 'jm-studio-runtime-mode';
 var SESSION_TIMEOUT = 30 * 60 * 1000; /* 30 minutes */
 var API = 'https://api.github.com';
+var LOCAL_APP_ORIGIN = 'http://127.0.0.1:4317';
 
 /* ═══════ State ═══════ */
 var S = {
@@ -532,7 +589,15 @@ var S = {
   bodyImageInput: null,
   lastActivity: Date.now(),
   pendingOAuthToken: '', /* OAuth 후 PIN 설정 전 임시 보관 */
-  autosaveDismissed: false
+  autosaveDismissed: false,
+  runtime: {
+    mode: localStorage.getItem(RUNTIME_MODE_KEY) === 'local' ? 'local' : 'remote',
+    localAvailable: false,
+    summary: null,
+    templates: [],
+    preview: null,
+    lastCheckedAt: null
+  }
 };
 
 /* ═══════ Crypto: AES-GCM with PIN ═══════ */
@@ -633,6 +698,8 @@ window.addEventListener('DOMContentLoaded', function() {
   } else {
     showView('auth');
   }
+  syncRuntimeModeUI();
+  refreshLocalRuntime(false);
   window.addEventListener('resize', function() {
     updateEditorDock(S.currentView);
   });
@@ -784,7 +851,9 @@ function onLoginSuccess() {
   document.getElementById('sidebar').style.display = '';
   showView('list');
   refreshAutosaveBanner();
-  loadPosts();
+  Promise.resolve(refreshLocalRuntime(false)).finally(function() {
+    loadPosts();
+  });
 }
 
 function doLogout() {
@@ -958,6 +1027,214 @@ function leaveEditorToList() {
   showView('list');
 }
 
+function canUseLocalPower() {
+  return S.runtime.localAvailable && S.runtime.mode === 'local' && !!S.token;
+}
+
+async function localApi(path, opts) {
+  opts = opts || {};
+  var headers = { 'Content-Type': 'application/json' };
+  if (opts.headers) {
+    Object.keys(opts.headers).forEach(function(key) { headers[key] = opts.headers[key]; });
+  }
+
+  var res = await fetch(LOCAL_APP_ORIGIN + path, {
+    method: opts.method || 'GET',
+    headers: headers,
+    body: opts.body || undefined
+  });
+
+  if (!res.ok) {
+    var err = await res.json().catch(function() { return {}; });
+    throw new Error(err.error || err.message || ('HTTP ' + res.status));
+  }
+
+  if (res.status === 204) return {};
+  return res.json();
+}
+
+function syncRuntimeModeUI() {
+  var modeBadge = document.getElementById('settings-mode-badge');
+  var modeDesc = document.getElementById('settings-mode-desc');
+  var powerBadge = document.getElementById('settings-power-badge');
+  var powerStatus = document.getElementById('settings-power-status');
+  var powerNote = document.getElementById('settings-power-note');
+  var editorStatus = document.getElementById('power-mode-editor-status');
+  var localMode = canUseLocalPower();
+  var localReady = S.runtime.localAvailable;
+  var preview = S.runtime.summary && S.runtime.summary.preview;
+  var templateCount = S.runtime.templates.length;
+
+  if (modeBadge) {
+    modeBadge.textContent = localMode ? '로컬' : '원격';
+    modeBadge.className = 'power-badge' + (localMode ? ' active local' : '');
+  }
+  if (modeDesc) {
+    modeDesc.textContent = localMode
+      ? '로컬 파워 모드 — posts / templates / preview / publish 연동'
+      : '원격 GitHub 편집 모드 — 어디서나 바로 수정 가능';
+  }
+  if (powerBadge) {
+    powerBadge.textContent = localReady ? '연결됨' : '미연결';
+    powerBadge.className = 'power-badge' + (localReady ? ' active' : '');
+  }
+  if (powerStatus) {
+    if (!localReady) {
+      powerStatus.textContent = '로컬 편집기가 실행 중이 아니어서 원격 GitHub 편집만 가능합니다.';
+    } else {
+      powerStatus.textContent = '로컬 편집기 연결됨 · 글 ' + (S.runtime.summary.postsCount || 0) + '개 · 템플릿 ' + templateCount + '개'
+        + (preview && preview.running ? ' · 미리보기 실행 중' : '');
+    }
+  }
+  if (powerNote) {
+    powerNote.textContent = localReady
+      ? '로컬 모드에서는 sync / templates / preview / publish 같은 파워 기능을 localhost 편집기와 연결합니다.'
+      : '로컬 파워 모드를 쓰려면 PC에서 app/start.bat 또는 node app/server.mjs 로 편집기를 먼저 실행하세요.';
+  }
+  if (editorStatus) {
+    editorStatus.textContent = localMode
+      ? '로컬 파워 모드 사용 중 — 템플릿 / 로컬 이미지 / 발행 기능 사용 가능'
+      : '원격 GitHub 편집 모드 — 어디서나 수정 가능';
+  }
+}
+
+async function refreshLocalRuntime(forcePosts) {
+  try {
+    var summary = await localApi('/api/summary');
+    S.runtime.localAvailable = true;
+    S.runtime.summary = summary;
+    S.runtime.lastCheckedAt = new Date().toISOString();
+    var templates = await localApi('/api/templates').catch(function() { return { templates: [] }; });
+    S.runtime.templates = (templates.templates || []).slice();
+    renderTemplateOptions();
+    syncRuntimeModeUI();
+    if (forcePosts && canUseLocalPower() && S.token) {
+      await loadPosts();
+    }
+    return true;
+  } catch (e) {
+    S.runtime.localAvailable = false;
+    S.runtime.summary = null;
+    S.runtime.templates = [];
+    renderTemplateOptions();
+    if (S.runtime.mode === 'local') {
+      S.runtime.mode = 'remote';
+      localStorage.setItem(RUNTIME_MODE_KEY, 'remote');
+      toast('로컬 편집기 연결이 없어 원격 모드로 전환했어요.', 'info');
+    }
+    syncRuntimeModeUI();
+    return false;
+  }
+}
+
+async function setRuntimeMode(mode) {
+  if (mode === 'local') {
+    var ok = await refreshLocalRuntime(false);
+    if (!ok) return toast('로컬 파워 모드에 연결할 수 없습니다.', 'error');
+  }
+  S.runtime.mode = mode === 'local' ? 'local' : 'remote';
+  localStorage.setItem(RUNTIME_MODE_KEY, S.runtime.mode);
+  syncRuntimeModeUI();
+  if (S.token) await loadPosts();
+}
+
+function renderTemplateOptions() {
+  var select = document.getElementById('template-select');
+  if (!select) return;
+  var base = '<option value="">템플릿 선택 ' + (S.runtime.localAvailable ? '' : '(로컬 파워 모드 필요)') + '</option>';
+  select.innerHTML = base + (S.runtime.templates || []).map(function(name) {
+    return '<option value="' + esc(name) + '">' + esc(name.replace(/\.md$/, '')) + '</option>';
+  }).join('');
+}
+
+async function applySelectedTemplate() {
+  var select = document.getElementById('template-select');
+  var name = select && select.value;
+  if (!name) return toast('적용할 템플릿을 선택하세요.', 'info');
+  if (!canUseLocalPower()) return toast('템플릿은 로컬 파워 모드에서만 불러올 수 있습니다.', 'error');
+  try {
+    var tpl = await localApi('/api/template?name=' + encodeURIComponent(name));
+    document.getElementById('ed-title').value = tpl.title || document.getElementById('ed-title').value;
+    document.getElementById('ed-date').value = tpl.date || document.getElementById('ed-date').value || formatNow();
+    document.getElementById('ed-desc').value = tpl.description || '';
+    document.getElementById('ed-cats').value = (tpl.categories || []).join(', ');
+    document.getElementById('ed-tags').value = (tpl.tags || []).join(', ');
+    document.getElementById('ed-hero-title').value = (tpl.heroTitle || '').replace(/<br\s*\/?>/gi, '\n');
+    document.getElementById('ed-summary').value = tpl.summary || '';
+    document.getElementById('ed-permalink').value = tpl.permalink || '';
+    document.getElementById('ed-hero-image-position').value = tpl.heroImagePosition || '';
+    document.getElementById('ed-extra-front-matter').value = tpl.extra || '';
+    document.getElementById('ed-toc').checked = tpl.toc !== false;
+    document.getElementById('ed-comments').checked = tpl.comments !== false;
+    document.getElementById('ed-pin').checked = tpl.pin === true;
+    document.getElementById('ed-hidden').checked = tpl.hidden === true;
+    document.getElementById('ed-mermaid').checked = tpl.mermaid === true;
+    document.getElementById('ed-math').checked = tpl.math === true;
+    if (!document.getElementById('ed-body').value.trim()) {
+      document.getElementById('ed-body').value = tpl.body || '';
+    }
+    autoSave();
+    toast('템플릿을 적용했어요.', 'success');
+  } catch (e) {
+    toast('템플릿 불러오기 실패: ' + e.message, 'error');
+  }
+}
+
+function openLocalEditor() {
+  window.open(LOCAL_APP_ORIGIN, '_blank');
+}
+
+function openLocalPreview() {
+  var previewUrl = (S.runtime.summary && S.runtime.summary.preview && S.runtime.summary.preview.url) || 'http://127.0.0.1:4000';
+  window.open(previewUrl, '_blank');
+}
+
+async function startLocalPreview() {
+  if (!canUseLocalPower()) return toast('로컬 파워 모드에서만 미리보기를 시작할 수 있습니다.', 'error');
+  try {
+    await localApi('/api/start-preview', { method: 'POST', body: '{}' });
+    await refreshLocalRuntime(false);
+    toast('로컬 미리보기를 시작했어요.', 'success');
+  } catch (e) {
+    toast('로컬 미리보기 시작 실패: ' + e.message, 'error');
+  }
+}
+
+async function stopLocalPreview() {
+  if (!canUseLocalPower()) return toast('로컬 파워 모드에서만 미리보기를 중지할 수 있습니다.', 'error');
+  try {
+    await localApi('/api/stop-preview', { method: 'POST', body: '{}' });
+    await refreshLocalRuntime(false);
+    toast('로컬 미리보기를 중지했어요.', 'success');
+  } catch (e) {
+    toast('로컬 미리보기 중지 실패: ' + e.message, 'error');
+  }
+}
+
+async function buildLocalSite() {
+  if (!canUseLocalPower()) return toast('로컬 파워 모드에서만 빌드를 실행할 수 있습니다.', 'error');
+  try {
+    await localApi('/api/build', { method: 'POST', body: '{}' });
+    await refreshLocalRuntime(false);
+    toast('로컬 빌드를 완료했어요.', 'success');
+  } catch (e) {
+    toast('로컬 빌드 실패: ' + e.message, 'error');
+  }
+}
+
+async function publishLocalSite() {
+  if (!canUseLocalPower()) return toast('로컬 파워 모드에서만 발행할 수 있습니다.', 'error');
+  try {
+    var message = prompt('Git commit 메시지', 'jm-studio local publish ' + new Date().toISOString());
+    if (message === null) return;
+    await localApi('/api/publish', { method: 'POST', body: JSON.stringify({ message: message }) });
+    await refreshLocalRuntime(true);
+    toast('로컬 발행을 완료했어요.', 'success');
+  } catch (e) {
+    toast('로컬 발행 실패: ' + e.message, 'error');
+  }
+}
+
 /* ═══════ GitHub API ═══════ */
 async function ghApi(path, opts) {
   opts = opts || {};
@@ -1005,11 +1282,39 @@ async function ghDeleteFile(path, sha, message) {
 }
 
 /* ═══════ Posts ═══════ */
+function mapLocalPost(post) {
+  return {
+    name: post.fileName,
+    path: post.relativePath,
+    sha: null,
+    isDraft: Boolean(post.draft),
+    pendingDeploy: Boolean(post.pendingDeploy),
+    date: post.date || '',
+    slug: (post.fileName || '').replace(/\.md$/, ''),
+    title: post.title || (post.fileName || '').replace(/\.md$/, ''),
+    description: post.description || '',
+    categories: post.categories || [],
+    tags: post.tags || [],
+    hidden: Boolean(post.hidden),
+    pin: Boolean(post.pin),
+    _loaded: true
+  };
+}
+
 async function loadPosts() {
   var listEl = document.getElementById('post-list');
   listEl.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:8px">불러오는 중...</p></div>';
 
   try {
+    if (canUseLocalPower()) {
+      var localPosts = await localApi('/api/posts');
+      S.posts = (localPosts.posts || []).map(mapLocalPost).sort(function(a, b) {
+        return (b.date || b.name).localeCompare(a.date || a.name);
+      });
+      renderPosts();
+      return;
+    }
+
     var postsData = await ghApi('/repos/' + OWNER + '/' + REPO + '/contents/_posts').catch(function() { return []; });
     var draftsData = await ghApi('/repos/' + OWNER + '/' + REPO + '/contents/_drafts').catch(function() { return []; });
 
@@ -1092,20 +1397,22 @@ function renderPosts() {
   }
 
   listEl.innerHTML = filtered.map(function(p) {
-    var statusCls = p.isDraft ? 'status-draft' : (p.hidden ? 'status-hidden' : 'status-published');
-    var statusLabel = p.isDraft ? '임시' : (p.hidden ? '숨김' : '발행');
+    var statusCls = p.isDraft ? 'status-draft' : (p.pendingDeploy ? 'status-pending' : (p.hidden ? 'status-hidden' : 'status-published'));
+    var statusLabel = p.isDraft ? '임시' : (p.pendingDeploy ? '배포대기' : (p.hidden ? '숨김' : '발행'));
     var cats = (p.categories || []).join(' / ');
     var tags = (p.tags || []).slice(0, 3).map(function(t) { return '<span class="card-tag">' + esc(t) + '</span>'; }).join(' ');
 
     var hideBtnLabel = p.hidden ? '보이기' : '숨기기';
     var hideBtnCls = p.hidden ? 'btn-primary' : '';
-    var draftBtnLabel = p.isDraft ? '발행' : '임시저장';
+    var draftBtnLabel = p.isDraft ? '발행' : (canUseLocalPower() ? '편집' : '임시저장');
+    var modeTag = canUseLocalPower() ? '<span class="power-badge active local" style="margin-left:auto">로컬</span>' : '';
 
     return '<div class="card">'
       + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
       + '<span class="card-status ' + statusCls + '"></span>'
       + '<span style="font-size:.68rem;color:var(--muted)">' + statusLabel + '</span>'
       + (p.pin ? '<span style="font-size:.68rem">&#128204;</span>' : '')
+      + modeTag
       + '</div>'
       + '<div class="card-title" style="cursor:pointer" onclick="editPost(\'' + esc(p.path) + '\')">' + esc(p.title || p.slug) + '</div>'
       + '<div class="card-meta">'
@@ -1126,7 +1433,24 @@ function filterPosts() { renderPosts(); }
 
 async function quickToggleHidden(path) {
   var post = S.posts.find(function(p) { return p.path === path; });
-  if (!post || !post._content) return toast('글 데이터를 불러올 수 없습니다', 'error');
+  if (!post) return toast('글 데이터를 불러올 수 없습니다', 'error');
+
+  if (canUseLocalPower()) {
+    try {
+      var hiddenResult = await localApi('/api/toggle-hidden', {
+        method: 'POST',
+        body: JSON.stringify({ relativePath: path })
+      });
+      post.hidden = hiddenResult.hidden;
+      toast(hiddenResult.hidden ? '숨김 처리됨' : '보이기 처리됨', 'success');
+      loadPosts();
+    } catch (e) {
+      toast('실패: ' + e.message, 'error');
+    }
+    return;
+  }
+
+  if (!post._content) return toast('글 데이터를 불러올 수 없습니다', 'error');
 
   var content = post._content;
   var newHidden = !post.hidden;
@@ -1152,7 +1476,26 @@ async function quickToggleHidden(path) {
 
 async function quickToggleDraft(path) {
   var post = S.posts.find(function(p) { return p.path === path; });
-  if (!post || !post._content) return toast('글 데이터를 불러올 수 없습니다', 'error');
+  if (!post) return toast('글 데이터를 불러올 수 없습니다', 'error');
+
+  if (canUseLocalPower()) {
+    if (!post.isDraft) {
+      return editPost(path);
+    }
+    try {
+      await localApi('/api/publish-post', {
+        method: 'POST',
+        body: JSON.stringify({ relativePath: path })
+      });
+      toast('발행 완료', 'success');
+      loadPosts();
+    } catch (e) {
+      toast('실패: ' + e.message, 'error');
+    }
+    return;
+  }
+
+  if (!post._content) return toast('글 데이터를 불러올 수 없습니다', 'error');
 
   var content = post._content;
   var wasDraft = post.isDraft;
@@ -1201,6 +1544,42 @@ async function editPost(path) {
   if (!post) return toast('글을 찾을 수 없습니다', 'error');
 
   try {
+    if (canUseLocalPower()) {
+      var localPost = await localApi('/api/post?path=' + encodeURIComponent(path));
+      document.getElementById('ed-title').value = localPost.title || '';
+      document.getElementById('ed-date').value = localPost.date || '';
+      document.getElementById('ed-desc').value = localPost.description || '';
+      document.getElementById('ed-cats').value = (localPost.categories || []).join(', ');
+      document.getElementById('ed-tags').value = (localPost.tags || []).join(', ');
+      document.getElementById('ed-hero-title').value = (localPost.heroTitle || '').replace(/<br\s*\/?>/gi, '\n');
+      document.getElementById('ed-summary').value = localPost.summary || '';
+      document.getElementById('ed-permalink').value = localPost.permalink || '';
+      document.getElementById('ed-hero-image-position').value = localPost.heroImagePosition || '';
+      document.getElementById('ed-extra-front-matter').value = localPost.extra || '';
+      document.getElementById('ed-toc').checked = localPost.toc !== false;
+      document.getElementById('ed-comments').checked = localPost.comments !== false;
+      document.getElementById('ed-pin').checked = localPost.pin === true;
+      document.getElementById('ed-hidden').checked = localPost.hidden === true;
+      document.getElementById('ed-draft').checked = localPost.draft === true;
+      document.getElementById('ed-mermaid').checked = localPost.mermaid === true;
+      document.getElementById('ed-math').checked = localPost.math === true;
+      document.getElementById('ed-body').value = localPost.body || '';
+      document.getElementById('ed-cover').value = localPost.coverImage || '';
+      document.getElementById('cover-preview').style.display = 'none';
+      document.getElementById('cover-upload').style.display = '';
+      if (localPost.coverImage) {
+        document.getElementById('cover-preview').style.display = 'block';
+        document.getElementById('cover-img').src = localPost.coverImage;
+        document.getElementById('cover-upload').style.display = 'none';
+      }
+      document.getElementById('ed-delete-btn').style.display = 'inline-flex';
+      S.editing = { path: path, sha: null, isNew: false };
+      S.autosaveDismissed = false;
+      refreshAutosaveBanner();
+      updateEditorStats();
+      return;
+    }
+
     var content = post._content;
     var sha = post.sha;
     if (!content) {
@@ -1279,7 +1658,6 @@ async function savePost() {
     cover: document.getElementById('ed-cover').value.trim()
   };
 
-  var content = buildFileContent(fm, body);
   var datePrefix = date.slice(0, 10);
   var slug;
 
@@ -1296,8 +1674,47 @@ async function savePost() {
   if (!fm.permalink && !isDraft && /^\d+$/.test(slug)) {
     fm.permalink = '/posts/' + slug + '/';
   }
+  var content = buildFileContent(fm, body);
 
   try {
+    if (canUseLocalPower()) {
+      var localResult = await localApi('/api/save-post', {
+        method: 'POST',
+        body: JSON.stringify({
+          originalRelativePath: S.editing && !S.editing.isNew ? S.editing.path : '',
+          title: title,
+          date: date,
+          draft: isDraft,
+          heroTitle: fm.hero_title,
+          summary: fm.summary,
+          heroImagePosition: fm.hero_image_position,
+          categories: fm.categories,
+          tags: fm.tags,
+          description: fm.description,
+          toc: fm.toc,
+          comments: fm.comments,
+          pin: fm.pin,
+          hidden: fm.hidden,
+          mermaid: fm.mermaid,
+          math: fm.math,
+          extra: fm.extra_front_matter,
+          body: body,
+          coverImage: fm.cover,
+          permalink: fm.permalink
+        })
+      });
+      S.editing = { path: localResult.relativePath, sha: null, isNew: false };
+      document.getElementById('ed-delete-btn').style.display = 'inline-flex';
+      toast('로컬 저장 완료', 'success');
+      localStorage.removeItem(AUTOSAVE_KEY);
+      document.getElementById('autosave-status').textContent = '자동저장 없음';
+      S.autosaveDismissed = false;
+      refreshAutosaveBanner();
+      updateEditorDock(S.currentView);
+      await refreshLocalRuntime(true);
+      return;
+    }
+
     if (S.editing && !S.editing.isNew && S.editing.path !== newPath && S.editing.sha) {
       await ghDeleteFile(S.editing.path, S.editing.sha, 'move ' + S.editing.path + ' to ' + newPath);
       S.editing.sha = null;
@@ -1320,10 +1737,22 @@ async function savePost() {
 }
 
 async function deletePost() {
-  if (!S.editing || S.editing.isNew || !S.editing.sha) return;
+  if (!S.editing || S.editing.isNew || (!canUseLocalPower() && !S.editing.sha)) return;
   if (!confirm('이 글을 삭제할까요?')) return;
 
   try {
+    if (canUseLocalPower()) {
+      await localApi('/api/delete-post', {
+        method: 'POST',
+        body: JSON.stringify({ relativePath: S.editing.path })
+      });
+      toast('로컬 삭제 완료', 'success');
+      S.editing = null;
+      showView('list');
+      await refreshLocalRuntime(true);
+      return;
+    }
+
     await ghDeleteFile(S.editing.path, S.editing.sha);
     toast('삭제 완료', 'success');
     S.editing = null;
@@ -1404,6 +1833,20 @@ async function uploadImageFile(file, onSuccess) {
 
   try {
     toast('업로드 중...', 'info');
+    if (canUseLocalPower()) {
+      var localUpload = await localApi('/api/upload-image', {
+        method: 'POST',
+        body: JSON.stringify({
+          fileName: fileName,
+          contentBase64: base64,
+          targetDir: folder
+        })
+      });
+      toast('로컬 업로드 완료', 'success');
+      onSuccess(localUpload.sitePath);
+      return;
+    }
+
     var sha = null;
     try {
       var existing = await ghGetFile(path);
@@ -1604,6 +2047,10 @@ function showView(id) {
   document.getElementById('main-scroll').scrollTop = 0;
   S.currentView = id;
   updateEditorDock(id);
+  syncRuntimeModeUI();
+  if (id === 'settings') {
+    refreshLocalRuntime(false);
+  }
 }
 
 function setTopbar(title, showBack) {

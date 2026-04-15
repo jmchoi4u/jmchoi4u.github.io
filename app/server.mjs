@@ -12,6 +12,12 @@ const APP_PORT = 4317;
 const PREVIEW_PORT = 4000;
 const APP_URL = `http://127.0.0.1:${APP_PORT}`;
 const PREVIEW_URL = `http://127.0.0.1:${PREVIEW_PORT}`;
+const ALLOWED_CORS_ORIGINS = new Set([
+  APP_URL,
+  `http://localhost:${APP_PORT}`,
+  "https://jmchoi4u.github.io",
+  "https://www.jmchoi4u.github.io"
+]);
 const LOG_RETENTION_DAYS = 7;
 const LOG_CLEANUP_INTERVAL_MS = 6 * 60 * 60 * 1000;
 
@@ -1136,6 +1142,19 @@ function serveStatic(req, res, url) {
 const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url || "/", APP_URL);
+    const origin = req.headers.origin || "";
+    if (ALLOWED_CORS_ORIGINS.has(origin)) {
+      res.setHeader("Access-Control-Allow-Origin", origin);
+      res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+      res.setHeader("Access-Control-Max-Age", "86400");
+      res.setHeader("Vary", "Origin");
+    }
+    if (req.method === "OPTIONS") {
+      res.writeHead(204);
+      res.end();
+      return;
+    }
     if (url.pathname === "/favicon.ico") return sendText(res, 204, "");
     if (url.pathname.startsWith("/api/")) return await handleApi(req, res, url);
     serveStatic(req, res, url);

@@ -276,7 +276,7 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
         </button>
         <div class="auth-divider">또는</div>
         <input class="auth-input" id="pat-input" type="password" placeholder="PAT 직접 입력 (ghp_xxxx)" autocomplete="off">
-        <input class="auth-input" id="pin-setup" type="password" inputmode="numeric" pattern="[0-9]*" placeholder="PIN 설정 (4~8자리 숫자)" maxlength="8" autocomplete="off">
+        <input class="auth-input" id="pin-setup" type="password" inputmode="numeric" pattern="[0-9]*" placeholder="PIN 설정 (6~12자리 숫자)" maxlength="12" autocomplete="off">
         <button class="btn btn-block" style="max-width:340px" onclick="doSetup()">PAT로 설정</button>
       </div>
     </div>
@@ -287,7 +287,7 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
         <div class="auth-logo">J</div>
         <h2>PIN 설정</h2>
         <p>다음부터 빠르게 잠금 해제할 PIN을 설정하세요.</p>
-        <input class="auth-input" id="oauth-pin-setup" type="password" inputmode="numeric" pattern="[0-9]*" placeholder="PIN (4~8자리 숫자)" maxlength="8" autocomplete="off">
+        <input class="auth-input" id="oauth-pin-setup" type="password" inputmode="numeric" pattern="[0-9]*" placeholder="PIN (6~12자리 숫자)" maxlength="12" autocomplete="off">
         <button class="btn btn-primary btn-block" style="max-width:340px" onclick="finishOAuthSetup()">설정 완료</button>
       </div>
     </div>
@@ -298,7 +298,7 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
         <div class="auth-logo" style="background:var(--text)">&#128274;</div>
         <h2>잠금 해제</h2>
         <p>PIN을 입력하여 잠금을 해제하세요.</p>
-        <input class="auth-input" id="pin-unlock" type="password" inputmode="numeric" pattern="[0-9]*" placeholder="PIN (4~8자리)" maxlength="8" autocomplete="off">
+        <input class="auth-input" id="pin-unlock" type="password" inputmode="numeric" pattern="[0-9]*" placeholder="PIN (6~12자리)" maxlength="12" autocomplete="off">
         <button class="btn btn-primary btn-block" style="max-width:340px" onclick="doUnlock()">잠금 해제</button>
         <button class="btn btn-block" style="max-width:340px;margin-top:8px" onclick="doReset()">초기화 (재설정)</button>
       </div>
@@ -403,16 +403,12 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
       </div>
 
       <div class="editor-section">
-        <label class="editor-label">로컬 파워 모드</label>
+        <label class="editor-label">웹 전용 모드</label>
         <div class="template-tools">
-          <select class="editor-input" id="template-select">
-            <option value="">템플릿 선택 (로컬 파워 모드 필요)</option>
-          </select>
-          <button class="btn btn-sm" type="button" onclick="applySelectedTemplate()">템플릿 적용</button>
-          <button class="btn btn-sm" type="button" onclick="refreshLocalRuntime(true)">새로고침</button>
+          <div class="editor-input" style="display:flex;align-items:center;color:var(--muted)">localhost 템플릿/파워 기능은 비활성화되어 있습니다.</div>
         </div>
         <div class="editor-meta">
-          <span id="power-mode-editor-status">원격 GitHub 편집 모드</span>
+          <span id="power-mode-editor-status">웹 전용 GitHub 편집 모드</span>
         </div>
       </div>
 
@@ -493,26 +489,16 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
       <div class="card" style="margin-top:12px">
         <div class="setting-item" style="align-items:flex-start">
           <div>
-            <div class="setting-label">로컬 파워 모드</div>
-            <div class="setting-sub" id="settings-power-status">로컬 편집기 연결을 확인하는 중...</div>
+            <div class="setting-label">웹 전용 편집 모드</div>
+            <div class="setting-sub" id="settings-power-status">PC/모바일 모두 GitHub 기반 웹 편집만 사용합니다.</div>
           </div>
-          <span class="power-badge" id="settings-power-badge">확인중</span>
+          <span class="power-badge active" id="settings-power-badge">웹 전용</span>
         </div>
         <div class="power-actions" style="margin-top:10px">
-          <button class="btn btn-sm" type="button" onclick="setRuntimeMode('remote')">원격 모드</button>
-          <button class="btn btn-primary btn-sm" type="button" onclick="setRuntimeMode('local')">로컬 모드</button>
-          <button class="btn btn-sm" type="button" onclick="refreshLocalRuntime(true)">상태 새로고침</button>
-          <button class="btn btn-sm" type="button" onclick="openLocalEditor()">로컬 편집기 열기</button>
-        </div>
-        <div class="power-actions" style="margin-top:8px">
-          <button class="btn btn-sm" type="button" onclick="startLocalPreview()">미리보기 시작</button>
-          <button class="btn btn-sm" type="button" onclick="stopLocalPreview()">미리보기 중지</button>
-          <button class="btn btn-sm" type="button" onclick="openLocalPreview()">미리보기 열기</button>
-          <button class="btn btn-sm" type="button" onclick="buildLocalSite()">로컬 빌드</button>
-          <button class="btn btn-primary btn-sm" type="button" onclick="publishLocalSite()">로컬 발행</button>
+          <button class="btn btn-primary btn-sm" type="button" onclick="setRuntimeMode('remote')">웹 편집 유지</button>
         </div>
         <div class="power-note" id="settings-power-note" style="margin-top:10px">
-          로컬 파워 모드를 켜면 posts / templates / preview / publish 기능을 localhost 편집기와 연동합니다.
+          localhost 연결 없이 GitHub API만 사용하도록 고정했습니다.
         </div>
       </div>
       <div class="card" style="margin-top:12px">
@@ -576,7 +562,6 @@ var AUTOSAVE_KEY = 'jm-studio-autosave';
 var RUNTIME_MODE_KEY = 'jm-studio-runtime-mode';
 var SESSION_TIMEOUT = 30 * 60 * 1000; /* 30 minutes */
 var API = 'https://api.github.com';
-var LOCAL_APP_ORIGIN = 'http://127.0.0.1:4317';
 
 /* ═══════ State ═══════ */
 var S = {
@@ -591,7 +576,7 @@ var S = {
   pendingOAuthToken: '', /* OAuth 후 PIN 설정 전 임시 보관 */
   autosaveDismissed: false,
   runtime: {
-    mode: localStorage.getItem(RUNTIME_MODE_KEY) === 'local' ? 'local' : 'remote',
+    mode: 'remote',
     localAvailable: false,
     summary: null,
     templates: [],
@@ -600,12 +585,16 @@ var S = {
   }
 };
 
+function isValidPin(pin) {
+  return /^\d{6,12}$/.test(String(pin || '').trim());
+}
+
 /* ═══════ Crypto: AES-GCM with PIN ═══════ */
 async function deriveKey(pin, salt) {
   var enc = new TextEncoder();
   var keyMaterial = await crypto.subtle.importKey('raw', enc.encode(pin), 'PBKDF2', false, ['deriveKey']);
   return crypto.subtle.deriveKey(
-    { name: 'PBKDF2', salt: salt, iterations: 100000, hash: 'SHA-256' },
+    { name: 'PBKDF2', salt: salt, iterations: 250000, hash: 'SHA-256' },
     keyMaterial,
     { name: 'AES-GCM', length: 256 },
     false,
@@ -766,8 +755,8 @@ async function handleOAuthCallback(code) {
 
 async function finishOAuthSetup() {
   var pin = document.getElementById('oauth-pin-setup').value.trim();
-  if (!pin || pin.length < 4 || !/^\d+$/.test(pin)) {
-    return toast('PIN은 4~8자리 숫자로 입력하세요', 'error');
+  if (!isValidPin(pin)) {
+    return toast('PIN은 6~12자리 숫자로 입력하세요', 'error');
   }
 
   try {
@@ -788,7 +777,7 @@ async function doSetup() {
   var pat = document.getElementById('pat-input').value.trim();
   var pin = document.getElementById('pin-setup').value.trim();
   if (!pat) return toast('토큰을 입력하세요', 'error');
-  if (!pin || pin.length < 4 || !/^\d+$/.test(pin)) return toast('PIN은 4~8자리 숫자로 입력하세요', 'error');
+  if (!isValidPin(pin)) return toast('PIN은 6~12자리 숫자로 입력하세요', 'error');
 
   S.token = pat;
   try {
@@ -1028,29 +1017,11 @@ function leaveEditorToList() {
 }
 
 function canUseLocalPower() {
-  return S.runtime.localAvailable && S.runtime.mode === 'local' && !!S.token;
+  return false;
 }
 
 async function localApi(path, opts) {
-  opts = opts || {};
-  var headers = { 'Content-Type': 'application/json' };
-  if (opts.headers) {
-    Object.keys(opts.headers).forEach(function(key) { headers[key] = opts.headers[key]; });
-  }
-
-  var res = await fetch(LOCAL_APP_ORIGIN + path, {
-    method: opts.method || 'GET',
-    headers: headers,
-    body: opts.body || undefined
-  });
-
-  if (!res.ok) {
-    var err = await res.json().catch(function() { return {}; });
-    throw new Error(err.error || err.message || ('HTTP ' + res.status));
-  }
-
-  if (res.status === 204) return {};
-  return res.json();
+  throw new Error('웹 전용 모드에서는 localhost 편집 기능을 사용하지 않습니다.');
 }
 
 function syncRuntimeModeUI() {
@@ -1060,179 +1031,91 @@ function syncRuntimeModeUI() {
   var powerStatus = document.getElementById('settings-power-status');
   var powerNote = document.getElementById('settings-power-note');
   var editorStatus = document.getElementById('power-mode-editor-status');
-  var localMode = canUseLocalPower();
-  var localReady = S.runtime.localAvailable;
-  var preview = S.runtime.summary && S.runtime.summary.preview;
-  var templateCount = S.runtime.templates.length;
+  var localMode = false;
 
   if (modeBadge) {
-    modeBadge.textContent = localMode ? '로컬' : '원격';
-    modeBadge.className = 'power-badge' + (localMode ? ' active local' : '');
+    modeBadge.textContent = '원격';
+    modeBadge.className = 'power-badge active';
   }
   if (modeDesc) {
-    modeDesc.textContent = localMode
-      ? '로컬 파워 모드 — posts / templates / preview / publish 연동'
-      : '원격 GitHub 편집 모드 — 어디서나 바로 수정 가능';
+    modeDesc.textContent = '원격 GitHub 편집 모드 — PC/모바일 어디서나 바로 수정 가능';
   }
   if (powerBadge) {
-    powerBadge.textContent = localReady ? '연결됨' : '미연결';
-    powerBadge.className = 'power-badge' + (localReady ? ' active' : '');
+    powerBadge.textContent = '웹 전용';
+    powerBadge.className = 'power-badge active';
   }
   if (powerStatus) {
-    if (!localReady) {
-      powerStatus.textContent = '로컬 편집기가 실행 중이 아니어서 원격 GitHub 편집만 가능합니다.';
-    } else {
-      powerStatus.textContent = '로컬 편집기 연결됨 · 글 ' + (S.runtime.summary.postsCount || 0) + '개 · 템플릿 ' + templateCount + '개'
-        + (preview && preview.running ? ' · 미리보기 실행 중' : '');
-    }
+    powerStatus.textContent = 'PC/모바일 모두 GitHub 기반 웹 편집만 사용합니다.';
   }
   if (powerNote) {
-    powerNote.textContent = localReady
-      ? '로컬 모드에서는 sync / templates / preview / publish 같은 파워 기능을 localhost 편집기와 연결합니다.'
-      : '로컬 파워 모드를 쓰려면 PC에서 app/start.bat 또는 node app/server.mjs 로 편집기를 먼저 실행하세요.';
+    powerNote.textContent = 'localhost 연결 없이 GitHub API만 사용하도록 고정했습니다.';
   }
   if (editorStatus) {
-    editorStatus.textContent = localMode
-      ? '로컬 파워 모드 사용 중 — 템플릿 / 로컬 이미지 / 발행 기능 사용 가능'
-      : '원격 GitHub 편집 모드 — 어디서나 수정 가능';
+    editorStatus.textContent = '웹 전용 GitHub 편집 모드';
   }
 }
 
-async function refreshLocalRuntime(forcePosts) {
-  try {
-    var summary = await localApi('/api/summary');
-    S.runtime.localAvailable = true;
-    S.runtime.summary = summary;
-    S.runtime.lastCheckedAt = new Date().toISOString();
-    var templates = await localApi('/api/templates').catch(function() { return { templates: [] }; });
-    S.runtime.templates = (templates.templates || []).slice();
-    renderTemplateOptions();
-    syncRuntimeModeUI();
-    if (forcePosts && canUseLocalPower() && S.token) {
-      await loadPosts();
-    }
-    return true;
-  } catch (e) {
-    S.runtime.localAvailable = false;
-    S.runtime.summary = null;
-    S.runtime.templates = [];
-    renderTemplateOptions();
-    if (S.runtime.mode === 'local') {
-      S.runtime.mode = 'remote';
-      localStorage.setItem(RUNTIME_MODE_KEY, 'remote');
-      toast('로컬 편집기 연결이 없어 원격 모드로 전환했어요.', 'info');
-    }
-    syncRuntimeModeUI();
-    return false;
-  }
+async function refreshLocalRuntime(forcePosts, options) {
+  S.runtime.mode = 'remote';
+  S.runtime.localAvailable = false;
+  S.runtime.summary = null;
+  S.runtime.templates = [];
+  S.runtime.lastCheckedAt = new Date().toISOString();
+  localStorage.setItem(RUNTIME_MODE_KEY, 'remote');
+  renderTemplateOptions();
+  syncRuntimeModeUI();
+  return true;
 }
 
 async function setRuntimeMode(mode) {
-  if (mode === 'local') {
-    var ok = await refreshLocalRuntime(false);
-    if (!ok) return toast('로컬 파워 모드에 연결할 수 없습니다.', 'error');
-  }
-  S.runtime.mode = mode === 'local' ? 'local' : 'remote';
-  localStorage.setItem(RUNTIME_MODE_KEY, S.runtime.mode);
+  S.runtime.mode = 'remote';
+  localStorage.setItem(RUNTIME_MODE_KEY, 'remote');
   syncRuntimeModeUI();
+  if (mode === 'local') {
+    toast('로컬 편집기 모드는 비활성화했고, 웹 편집만 사용하도록 정리했습니다.', 'info');
+  }
   if (S.token) await loadPosts();
+}
+
+async function pairLocalBridge() {
+  toast('로컬 연결 기능은 비활성화했습니다.', 'info');
 }
 
 function renderTemplateOptions() {
   var select = document.getElementById('template-select');
   if (!select) return;
-  var base = '<option value="">템플릿 선택 ' + (S.runtime.localAvailable ? '' : '(로컬 파워 모드 필요)') + '</option>';
+  var base = '<option value="">웹 전용 모드에서는 로컬 템플릿을 사용하지 않습니다.</option>';
   select.innerHTML = base + (S.runtime.templates || []).map(function(name) {
     return '<option value="' + esc(name) + '">' + esc(name.replace(/\.md$/, '')) + '</option>';
   }).join('');
 }
 
 async function applySelectedTemplate() {
-  var select = document.getElementById('template-select');
-  var name = select && select.value;
-  if (!name) return toast('적용할 템플릿을 선택하세요.', 'info');
-  if (!canUseLocalPower()) return toast('템플릿은 로컬 파워 모드에서만 불러올 수 있습니다.', 'error');
-  try {
-    var tpl = await localApi('/api/template?name=' + encodeURIComponent(name));
-    document.getElementById('ed-title').value = tpl.title || document.getElementById('ed-title').value;
-    document.getElementById('ed-date').value = tpl.date || document.getElementById('ed-date').value || formatNow();
-    document.getElementById('ed-desc').value = tpl.description || '';
-    document.getElementById('ed-cats').value = (tpl.categories || []).join(', ');
-    document.getElementById('ed-tags').value = (tpl.tags || []).join(', ');
-    document.getElementById('ed-hero-title').value = (tpl.heroTitle || '').replace(/<br\s*\/?>/gi, '\n');
-    document.getElementById('ed-summary').value = tpl.summary || '';
-    document.getElementById('ed-permalink').value = tpl.permalink || '';
-    document.getElementById('ed-hero-image-position').value = tpl.heroImagePosition || '';
-    document.getElementById('ed-extra-front-matter').value = tpl.extra || '';
-    document.getElementById('ed-toc').checked = tpl.toc !== false;
-    document.getElementById('ed-comments').checked = tpl.comments !== false;
-    document.getElementById('ed-pin').checked = tpl.pin === true;
-    document.getElementById('ed-hidden').checked = tpl.hidden === true;
-    document.getElementById('ed-mermaid').checked = tpl.mermaid === true;
-    document.getElementById('ed-math').checked = tpl.math === true;
-    if (!document.getElementById('ed-body').value.trim()) {
-      document.getElementById('ed-body').value = tpl.body || '';
-    }
-    autoSave();
-    toast('템플릿을 적용했어요.', 'success');
-  } catch (e) {
-    toast('템플릿 불러오기 실패: ' + e.message, 'error');
-  }
+  toast('웹 전용 모드에서는 로컬 템플릿 기능을 사용하지 않습니다.', 'info');
 }
 
 function openLocalEditor() {
-  window.open(LOCAL_APP_ORIGIN, '_blank');
+  toast('로컬 편집기 기능은 비활성화했습니다.', 'info');
 }
 
 function openLocalPreview() {
-  var previewUrl = (S.runtime.summary && S.runtime.summary.preview && S.runtime.summary.preview.url) || 'http://127.0.0.1:4000';
-  window.open(previewUrl, '_blank');
+  toast('로컬 미리보기 기능은 비활성화했습니다.', 'info');
 }
 
 async function startLocalPreview() {
-  if (!canUseLocalPower()) return toast('로컬 파워 모드에서만 미리보기를 시작할 수 있습니다.', 'error');
-  try {
-    await localApi('/api/start-preview', { method: 'POST', body: '{}' });
-    await refreshLocalRuntime(false);
-    toast('로컬 미리보기를 시작했어요.', 'success');
-  } catch (e) {
-    toast('로컬 미리보기 시작 실패: ' + e.message, 'error');
-  }
+  toast('로컬 미리보기 기능은 비활성화했습니다.', 'info');
 }
 
 async function stopLocalPreview() {
-  if (!canUseLocalPower()) return toast('로컬 파워 모드에서만 미리보기를 중지할 수 있습니다.', 'error');
-  try {
-    await localApi('/api/stop-preview', { method: 'POST', body: '{}' });
-    await refreshLocalRuntime(false);
-    toast('로컬 미리보기를 중지했어요.', 'success');
-  } catch (e) {
-    toast('로컬 미리보기 중지 실패: ' + e.message, 'error');
-  }
+  toast('로컬 미리보기 기능은 비활성화했습니다.', 'info');
 }
 
 async function buildLocalSite() {
-  if (!canUseLocalPower()) return toast('로컬 파워 모드에서만 빌드를 실행할 수 있습니다.', 'error');
-  try {
-    await localApi('/api/build', { method: 'POST', body: '{}' });
-    await refreshLocalRuntime(false);
-    toast('로컬 빌드를 완료했어요.', 'success');
-  } catch (e) {
-    toast('로컬 빌드 실패: ' + e.message, 'error');
-  }
+  toast('로컬 빌드 기능은 비활성화했습니다.', 'info');
 }
 
 async function publishLocalSite() {
-  if (!canUseLocalPower()) return toast('로컬 파워 모드에서만 발행할 수 있습니다.', 'error');
-  try {
-    var message = prompt('Git commit 메시지', 'jm-studio local publish ' + new Date().toISOString());
-    if (message === null) return;
-    await localApi('/api/publish', { method: 'POST', body: JSON.stringify({ message: message }) });
-    await refreshLocalRuntime(true);
-    toast('로컬 발행을 완료했어요.', 'success');
-  } catch (e) {
-    toast('로컬 발행 실패: ' + e.message, 'error');
-  }
+  toast('로컬 발행 기능은 비활성화했습니다.', 'info');
 }
 
 /* ═══════ GitHub API ═══════ */
@@ -1348,7 +1231,7 @@ async function loadPosts() {
     await loadPostTitles();
     renderPosts();
   } catch (e) {
-    listEl.innerHTML = '<div class="empty">불러오기 실패: ' + e.message + '</div>';
+    listEl.innerHTML = '<div class="empty">불러오기 실패: ' + esc(e.message) + '</div>';
   }
 }
 
@@ -1879,16 +1762,53 @@ function togglePreview() {
   var desc = document.getElementById('ed-desc').value.trim();
   var summary = document.getElementById('ed-summary').value.trim();
   var cover = document.getElementById('ed-cover').value.trim();
+  var preview = document.getElementById('preview-content');
+  preview.innerHTML = '';
 
-  var html = '';
-  if (title) html += '<h1>' + esc(title) + '</h1>';
-  if (desc) html += '<p style="color:var(--muted);margin-bottom:1em">' + esc(desc) + '</p>';
-  if (summary) html += '<p style="background:var(--bg);padding:12px 14px;border-radius:8px;margin-bottom:1em">' + esc(summary) + '</p>';
-  if (cover) html += '<img src="https://raw.githubusercontent.com/' + OWNER + '/' + REPO + '/main' + cover + '" style="width:100%;border-radius:8px;margin-bottom:1em">';
-  html += '<hr style="border:none;border-top:1px solid var(--line);margin:1em 0">';
-  html += marked.parse(body || '');
+  if (title) {
+    var h1 = document.createElement('h1');
+    h1.textContent = title;
+    preview.appendChild(h1);
+  }
 
-  document.getElementById('preview-content').innerHTML = html;
+  if (desc) {
+    var descEl = document.createElement('p');
+    descEl.textContent = desc;
+    descEl.style.color = 'var(--muted)';
+    descEl.style.marginBottom = '1em';
+    preview.appendChild(descEl);
+  }
+
+  if (summary) {
+    var summaryEl = document.createElement('p');
+    summaryEl.textContent = summary;
+    summaryEl.style.background = 'var(--bg)';
+    summaryEl.style.padding = '12px 14px';
+    summaryEl.style.borderRadius = '8px';
+    summaryEl.style.marginBottom = '1em';
+    preview.appendChild(summaryEl);
+  }
+
+  if (cover) {
+    var img = document.createElement('img');
+    img.src = 'https://raw.githubusercontent.com/' + OWNER + '/' + REPO + '/main' + (cover.charAt(0) === '/' ? cover : ('/' + cover));
+    img.alt = '표지';
+    img.style.width = '100%';
+    img.style.borderRadius = '8px';
+    img.style.marginBottom = '1em';
+    preview.appendChild(img);
+  }
+
+  var hr = document.createElement('hr');
+  hr.style.border = 'none';
+  hr.style.borderTop = '1px solid var(--line)';
+  hr.style.margin = '1em 0';
+  preview.appendChild(hr);
+
+  var bodyWrap = document.createElement('div');
+  bodyWrap.innerHTML = sanitizePreviewHtml(marked.parse(body || ''));
+  preview.appendChild(bodyWrap);
+
   showView('preview');
   setTopbar('미리보기', true);
 }
@@ -2090,6 +2010,79 @@ function formatNow() {
 
 function parseList(str) {
   return str.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+}
+
+function isSafePreviewUrl(url) {
+  var value = String(url || '').trim();
+  if (!value) return true;
+  if (value[0] === '#' || value.startsWith('/') || value.startsWith('./') || value.startsWith('../')) {
+    return true;
+  }
+
+  var lowered = value.toLowerCase();
+  return lowered.startsWith('https://')
+    || lowered.startsWith('http://')
+    || lowered.startsWith('mailto:')
+    || lowered.startsWith('tel:')
+    || lowered.startsWith('data:image/')
+    || lowered.startsWith('blob:');
+}
+
+function sanitizePreviewHtml(html) {
+  var template = document.createElement('template');
+  template.innerHTML = String(html || '');
+
+  var blockedTags = {
+    script: true,
+    iframe: true,
+    object: true,
+    embed: true,
+    form: true,
+    input: true,
+    button: true,
+    textarea: true,
+    select: true,
+    option: true,
+    style: true,
+    link: true,
+    meta: true,
+    base: true
+  };
+
+  var nodes = Array.prototype.slice.call(template.content.querySelectorAll('*'));
+  nodes.forEach(function(node) {
+    var tag = node.tagName.toLowerCase();
+    if (blockedTags[tag]) {
+      node.remove();
+      return;
+    }
+
+    Array.prototype.slice.call(node.attributes).forEach(function(attr) {
+      var name = attr.name.toLowerCase();
+      var value = attr.value || '';
+
+      if (name.indexOf('on') === 0 || name === 'srcset') {
+        node.removeAttribute(attr.name);
+        return;
+      }
+
+      if ((name === 'href' || name === 'src' || name === 'xlink:href') && !isSafePreviewUrl(value)) {
+        node.removeAttribute(attr.name);
+        return;
+      }
+
+      if (name === 'style') {
+        node.removeAttribute(attr.name);
+      }
+    });
+
+    if (tag === 'a') {
+      node.setAttribute('target', '_blank');
+      node.setAttribute('rel', 'noopener noreferrer');
+    }
+  });
+
+  return template.innerHTML;
 }
 
 function esc(s) {

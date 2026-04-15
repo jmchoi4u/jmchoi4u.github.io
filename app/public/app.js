@@ -536,6 +536,17 @@ function sortPosts(posts, sortBy) {
   return sorted;
 }
 
+function groupPostsByLaneState(posts) {
+  const sorted = Array.isArray(posts) ? posts : [];
+  return {
+    all: sorted,
+    drafts: sorted.filter((post) => post.draft),
+    hidden: sorted.filter((post) => !post.draft && post.hidden),
+    pending: sorted.filter((post) => !post.draft && !post.hidden && post.pendingDeploy),
+    published: sorted.filter((post) => !post.draft && !post.hidden && !post.pendingDeploy)
+  };
+}
+
 function renderPosts(posts) {
   const query = state.searchQuery.trim().toLowerCase();
   let filtered = query
@@ -558,11 +569,8 @@ function renderPosts(posts) {
   }
 
   const sorted = sortPosts(filtered, state.sortBy || "newest");
-
-  const drafts = sorted.filter((post) => post.draft);
-  const hidden = sorted.filter((post) => !post.draft && post.hidden);
-  const pending = sorted.filter((post) => !post.draft && !post.hidden && post.pendingDeploy);
-  const published = sorted.filter((post) => !post.draft && !post.hidden && !post.pendingDeploy);
+  const groups = groupPostsByLaneState(sorted);
+  const { drafts, hidden, pending, published } = groups;
 
   // Update counts
   const countAll = document.getElementById("pm-count-all");
@@ -579,12 +587,13 @@ function renderPosts(posts) {
   // Stats bar
   const statsEl = document.getElementById("pm-stats");
   if (statsEl) {
+    const allGroups = groupPostsByLaneState(posts);
     statsEl.innerHTML = `
       <div class="pm-stat"><span class="pm-stat-num">${posts.length}</span><span class="pm-stat-label">전체 글</span></div>
-      <div class="pm-stat"><span class="pm-stat-num" style="color:#16a34a">${posts.filter(p => !p.draft && !p.hidden && !p.pendingDeploy).length}</span><span class="pm-stat-label">발행됨</span></div>
-      <div class="pm-stat"><span class="pm-stat-num" style="color:#f59e0b">${posts.filter(p => !p.draft && !p.hidden && p.pendingDeploy).length}</span><span class="pm-stat-label">배포 대기</span></div>
-      <div class="pm-stat"><span class="pm-stat-num" style="color:#8b5cf6">${posts.filter(p => p.draft).length}</span><span class="pm-stat-label">임시저장</span></div>
-      <div class="pm-stat"><span class="pm-stat-num" style="color:#6b7280">${posts.filter(p => p.hidden).length}</span><span class="pm-stat-label">숨김</span></div>
+      <div class="pm-stat"><span class="pm-stat-num" style="color:#16a34a">${allGroups.published.length}</span><span class="pm-stat-label">발행됨</span></div>
+      <div class="pm-stat"><span class="pm-stat-num" style="color:#f59e0b">${allGroups.pending.length}</span><span class="pm-stat-label">배포 대기</span></div>
+      <div class="pm-stat"><span class="pm-stat-num" style="color:#8b5cf6">${allGroups.drafts.length}</span><span class="pm-stat-label">임시저장</span></div>
+      <div class="pm-stat"><span class="pm-stat-num" style="color:#6b7280">${allGroups.hidden.length}</span><span class="pm-stat-label">숨김</span></div>
     `;
   }
 
@@ -644,6 +653,102 @@ function renderTemplates(templates) {
       )
       .join("");
   }
+}
+
+function getLane3IntegrationSelectors() {
+  return {
+    surfaces: {
+      postsManager: '[data-integration-surface="posts-manager"]',
+      templateManager: '[data-integration-surface="template-manager"]',
+      deploy: '[data-integration-surface="deploy"]'
+    },
+    actions: {
+      postsRefresh: '[data-integration-action="posts-refresh"]',
+      postsNew: '[data-integration-action="posts-new"]',
+      postsSearch: '[data-integration-action="posts-search"]',
+      postsFilterCategory: '[data-integration-action="posts-filter-category"]',
+      postsFilterTag: '[data-integration-action="posts-filter-tag"]',
+      postsSort: '[data-integration-action="posts-sort"]',
+      postsList: '[data-integration-action="posts-list"]',
+      templateSelect: '[data-integration-action="template-select"]',
+      templateName: '[data-integration-action="template-name"]',
+      templateLoad: '[data-integration-action="template-load"]',
+      templateNew: '[data-integration-action="template-new"]',
+      templateApply: '[data-integration-action="template-apply"]',
+      templateSave: '[data-integration-action="template-save"]',
+      templateEditor: '[data-integration-action="template-editor"]',
+      templatePreview: '[data-integration-action="template-preview"]',
+      deployPreviewStart: '[data-integration-action="deploy-preview-start"]',
+      deployPreviewStop: '[data-integration-action="deploy-preview-stop"]',
+      deployPreviewOpen: '[data-integration-action="deploy-preview-open"]',
+      deployBuild: '[data-integration-action="deploy-build"]',
+      deployMessage: '[data-integration-action="deploy-message"]',
+      deployPublish: '[data-integration-action="deploy-publish"]',
+      deployCommandOutput: '[data-integration-action="deploy-command-output"]',
+      deployPreviewLog: '[data-integration-action="deploy-preview-log"]'
+    }
+  };
+}
+
+function getLane3RegressionSnapshot() {
+  const groupedPosts = groupPostsByLaneState(state.posts);
+  return {
+    activePanel: state.panel,
+    postsManager: {
+      total: state.posts.length,
+      published: groupedPosts.published.length,
+      pending: groupedPosts.pending.length,
+      drafts: groupedPosts.drafts.length,
+      hidden: groupedPosts.hidden.length,
+      searchQuery: state.searchQuery,
+      filterCategory: state.filterCategory,
+      filterTag: state.filterTag,
+      sortBy: state.sortBy,
+      activeTab: state.pmTab
+    },
+    templates: {
+      selectedTemplate: el.templateSelect?.value || "",
+      templateName: el.templateName?.value.trim() || "",
+      bodyLength: el.templateEditor?.value.length || 0,
+      previewReady: Boolean(el.templatePreview?.innerHTML.trim())
+    },
+    deploy: {
+      publishMessage: el.publishMessage?.value.trim() || "",
+      commandOutputPreview: (el.commandOutput?.textContent || "").split("\n").slice(0, 6),
+      previewLogPreview: (el.previewLogOutput?.textContent || "").split("\n").slice(0, 6)
+    }
+  };
+}
+
+function publishLane3DonorContract() {
+  window.__JM_STUDIO_DONOR__ = {
+    version: "lane3-donor-v1",
+    exportedAt: "2026-04-15",
+    apiRoutes: {
+      summary: "/api/summary",
+      posts: "/api/posts",
+      post: "/api/post?path=<relativePath>",
+      templates: "/api/templates",
+      template: "/api/template?name=<fileName>",
+      templateRaw: "/api/template-raw?name=<fileName>",
+      saveTemplate: "/api/save-template",
+      publishPost: "/api/publish-post",
+      toggleHidden: "/api/toggle-hidden",
+      build: "/api/build",
+      previewStatus: "/api/preview-status",
+      startPreview: "/api/start-preview",
+      stopPreview: "/api/stop-preview",
+      publish: "/api/publish"
+    },
+    selectors: getLane3IntegrationSelectors(),
+    snapshot: getLane3RegressionSnapshot,
+    helpers: {
+      sortPosts,
+      groupPostsByLaneState,
+      renderTemplates,
+      renderPosts
+    }
+  };
 }
 
 function renderInfoList(target, rows) {
@@ -1631,6 +1736,7 @@ async function run(task) {
 }
 
 async function init() {
+  publishLane3DonorContract();
   resetEditor();
   bind();
   const savedPanel = (() => { try { return localStorage.getItem("jm-editor-active-panel"); } catch { return null; } })();

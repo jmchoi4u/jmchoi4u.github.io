@@ -32,6 +32,13 @@ app/logs/*.log
 !.vscode/settings.json
 !.vscode/extensions.json
 !.vscode/tasks.json
+.claude/
+
+# App/Local Tools
+app/*.exe
+app/logs/
+app/public/vendor/
+*.exe
 
 # Windows
 Thumbs.db

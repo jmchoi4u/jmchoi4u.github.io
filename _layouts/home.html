@@ -49,8 +49,16 @@ layout: default
 <div id="post-list" class="flex-grow-1 px-xl-1">
   {% for post in posts %}
     {% capture _words %}{{ post.content | number_of_words }}{% endcapture %}
+    {% capture _chars %}{{ post.content | size }}{% endcapture %}
     {% assign _wpm = 200 %}
-    {% assign _reading_time = _words | divided_by: _wpm | at_least: 1 %}
+    {% assign _cpm = 600 %}
+    {% assign _rt_words = _words | divided_by: _wpm %}
+    {% assign _rt_chars = _chars | divided_by: _cpm %}
+    {% if _rt_chars > _rt_words %}
+      {% assign _reading_time = _rt_chars | at_least: 1 %}
+    {% else %}
+      {% assign _reading_time = _rt_words | at_least: 1 %}
+    {% endif %}
 
     <article class="card-wrapper card home-card">
       <a href="{{ post.url | relative_url }}" class="post-preview row g-0 flex-md-row-reverse">

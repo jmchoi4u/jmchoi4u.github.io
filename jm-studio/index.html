@@ -381,10 +381,12 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
         <div class="editor-section">
           <label class="editor-label">카테고리</label>
           <input class="editor-input" id="ed-cats" type="text" placeholder="개발, Jekyll">
+          <div class="editor-meta" id="ed-cats-suggestions" style="margin-top:6px;gap:5px"></div>
         </div>
         <div class="editor-section">
           <label class="editor-label">태그</label>
           <input class="editor-input" id="ed-tags" type="text" placeholder="chirpy, seo">
+          <div class="editor-meta" id="ed-tags-suggestions" style="margin-top:6px;gap:5px"></div>
         </div>
       </div>
 
@@ -439,6 +441,20 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
         </div>
         <div class="editor-meta">
           <span id="power-mode-editor-status">웹 전용 GitHub 편집 모드</span>
+        </div>
+      </div>
+
+      <div class="editor-section">
+        <label class="editor-label">SNS 공유 미리보기</label>
+        <div class="soft-card" id="sns-preview" style="padding:0;overflow:hidden;border-radius:12px;max-width:400px">
+          <div id="sns-preview-img-wrap" style="width:100%;height:200px;background:#eee;display:flex;align-items:center;justify-content:center;overflow:hidden">
+            <img id="sns-preview-img" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" style="width:100%;height:100%;object-fit:cover">
+          </div>
+          <div style="padding:12px;background:#f9f9f9;border-top:1px solid var(--line)">
+            <div id="sns-preview-url" style="font-size:.7rem;color:var(--muted);margin-bottom:2px;text-transform:uppercase">JMCHOI4U.GITHUB.IO</div>
+            <div id="sns-preview-title" style="font-size:.9rem;font-weight:700;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden">글 제목</div>
+            <div id="sns-preview-desc" style="font-size:.75rem;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">SEO 설명이 여기에 표시됩니다.</div>
+          </div>
         </div>
       </div>
 
@@ -832,6 +848,44 @@ window.addEventListener('DOMContentLoaded', function() {
   window.addEventListener('resize', function() {
     updateEditorDock(S.currentView);
   });
+
+  /* Keyboard Shortcuts */
+  window.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && S.currentView === 'editor') {
+      var key = e.key.toLowerCase();
+      if (key === 's') { e.preventDefault(); savePost(); }
+      else if (key === 'p') { e.preventDefault(); togglePreview(); }
+      else if (key === 'b') { e.preventDefault(); wrap('**', '**'); }
+      else if (key === 'i') { e.preventDefault(); wrap('*', '*'); }
+      else if (key === 'k') { e.preventDefault(); wrap('[', '](https://)'); }
+    }
+  });
+
+  /* Drag & Drop for Editor Body */
+  var edBody = document.getElementById('ed-body');
+  if (edBody) {
+    edBody.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      edBody.style.borderColor = 'var(--point)';
+      edBody.style.background = 'var(--point-s)';
+    });
+    edBody.addEventListener('dragleave', function(e) {
+      e.preventDefault();
+      edBody.style.borderColor = '';
+      edBody.style.background = '';
+    });
+    edBody.addEventListener('drop', async function(e) {
+      e.preventDefault();
+      edBody.style.borderColor = '';
+      edBody.style.background = '';
+      var file = e.dataTransfer.files[0];
+      if (file && file.type.startsWith('image/')) {
+        await uploadImageFile(file, function(path) {
+          insertText('![image](' + path + ')');
+        });
+      }
+    });
+  }
 });
 
 function bindEnter(id, fn) {
@@ -1111,9 +1165,30 @@ function restoreAutosave() {
 
 function updateEditorStats() {
   var body = document.getElementById('ed-body').value || '';
+  var title = document.getElementById('ed-title').value || '';
+  var desc = document.getElementById('ed-desc').value || '';
+  var cover = document.getElementById('ed-cover').value || '';
+  
   var chars = body.replace(/\s/g, '').length;
   var words = body.trim() ? body.trim().split(/\s+/).length : 0;
-  document.getElementById('editor-stats').textContent = chars + '자 · ' + words + '단어';
+  
+  /* Reading time: 600 chars/min for Korean, 200 words/min for English */
+  var korMinutes = Math.ceil(chars / 600);
+  var engMinutes = Math.ceil(words / 200);
+  var minutes = Math.max(korMinutes, engMinutes) || 1;
+  
+  document.getElementById('editor-stats').textContent = chars + '자 · ' + words + '단어 · 예상 ' + minutes + '분';
+  
+  /* Update SNS Preview */
+  document.getElementById('sns-preview-title').textContent = title || '글 제목';
+  document.getElementById('sns-preview-desc').textContent = desc || 'SEO 설명이 여기에 표시됩니다.';
+  var snsImg = document.getElementById('sns-preview-img');
+  if (cover) {
+    snsImg.src = 'https://raw.githubusercontent.com/' + OWNER + '/' + REPO + '/main' + (cover.startsWith('/') ? '' : '/') + cover;
+    snsImg.style.display = 'block';
+  } else {
+    snsImg.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
+  }
 }
 
 function hasMeaningfulEditorContent() {
@@ -1872,6 +1947,38 @@ function setListTab(tab, btn) {
 }
 
 /* ═══════ Editor ═══════ */
+function renderSuggestions() {
+  var catsWrap = document.getElementById('ed-cats-suggestions');
+  var tagsWrap = document.getElementById('ed-tags-suggestions');
+  if (!catsWrap || !tagsWrap) return;
+
+  var categories = {};
+  var tags = {};
+  S.posts.forEach(function(p) {
+    (p.categories || []).forEach(function(c) { if (c) categories[c] = true; });
+    (p.tags || []).forEach(function(t) { if (t) tags[t] = true; });
+  });
+
+  function makeChips(wrap, items, inputId) {
+    wrap.innerHTML = Object.keys(items).sort().map(function(item) {
+      return '<span class="card-tag" style="cursor:pointer" onclick="addTagSuggestion(\'' + inputId + '\', \'' + esc(item) + '\')">' + esc(item) + '</span>';
+    }).join('');
+  }
+
+  makeChips(catsWrap, categories, 'ed-cats');
+  makeChips(tagsWrap, tags, 'ed-tags');
+}
+
+function addTagSuggestion(inputId, value) {
+  var el = document.getElementById(inputId);
+  var current = parseList(el.value);
+  if (current.indexOf(value) === -1) {
+    current.push(value);
+    el.value = current.join(', ');
+    autoSave();
+  }
+}
+
 function newPost() {
   if (!requireAuth('새 글 작성')) return;
   S.editing = { path: null, sha: null, isNew: true };
@@ -1882,6 +1989,7 @@ function newPost() {
   setTopbar('새 글', true);
   S.autosaveDismissed = false;
   refreshAutosaveBanner();
+  renderSuggestions();
 }
 
 async function editPost(path) {
@@ -1987,6 +2095,12 @@ async function savePost() {
   var date = document.getElementById('ed-date').value.trim() || formatNow();
   var isDraft = document.getElementById('ed-draft').checked;
   var body = document.getElementById('ed-body').value;
+
+  /* Stability Guard: Prevent build errors from empty attributes */
+  var emptyPropPattern = /(src|href)\s*=\s*["'\'']\s*["'\'']/i;
+  if (emptyPropPattern.test(body)) {
+    return toast('본문에 비어 있는 src나 href 속성이 있습니다. 빌드 오류를 방지하기 위해 수정 후 저장해 주세요.', 'error');
+  }
 
   var fm = {
     title: title,

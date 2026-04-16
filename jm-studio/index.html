@@ -276,18 +276,18 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
         </button>
         <div class="auth-divider">또는</div>
         <input class="auth-input" id="pat-input" type="password" placeholder="PAT 직접 입력 (ghp_xxxx)" autocomplete="off">
-        <input class="auth-input" id="pin-setup" type="password" inputmode="numeric" pattern="[0-9]*" placeholder="PIN 설정 (6~12자리 숫자)" maxlength="12" autocomplete="off">
+        <input class="auth-input" id="pin-setup" type="password" placeholder="비밀번호 설정 (8~64자, 영문/숫자/특수문자 2종 이상)" maxlength="64" autocomplete="off">
         <button class="btn btn-block" style="max-width:340px" onclick="doSetup()">PAT로 설정</button>
       </div>
     </div>
 
-    <!-- PIN Setup View (after OAuth) -->
+    <!-- Password Setup View (after OAuth) -->
     <div class="view" id="view-pin-setup">
       <div class="auth-view">
         <div class="auth-logo">J</div>
-        <h2>PIN 설정</h2>
-        <p>다음부터 빠르게 잠금 해제할 PIN을 설정하세요.</p>
-        <input class="auth-input" id="oauth-pin-setup" type="password" inputmode="numeric" pattern="[0-9]*" placeholder="PIN (6~12자리 숫자)" maxlength="12" autocomplete="off">
+        <h2>비밀번호 설정</h2>
+        <p>다음부터 잠금 해제에 사용할 비밀번호를 설정하세요.</p>
+        <input class="auth-input" id="oauth-pin-setup" type="password" placeholder="비밀번호 (8~64자, 영문/숫자/특수문자 2종 이상)" maxlength="64" autocomplete="off">
         <button class="btn btn-primary btn-block" style="max-width:340px" onclick="finishOAuthSetup()">설정 완료</button>
       </div>
     </div>
@@ -297,8 +297,8 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
       <div class="auth-view">
         <div class="auth-logo" style="background:var(--text)">&#128274;</div>
         <h2>잠금 해제</h2>
-        <p>PIN을 입력하여 잠금을 해제하세요.</p>
-        <input class="auth-input" id="pin-unlock" type="password" inputmode="numeric" pattern="[0-9]*" placeholder="PIN (6~12자리)" maxlength="12" autocomplete="off">
+        <p>비밀번호를 입력하여 잠금을 해제하세요.</p>
+        <input class="auth-input" id="pin-unlock" type="password" placeholder="비밀번호 입력" maxlength="64" autocomplete="off">
         <button class="btn btn-primary btn-block" style="max-width:340px" onclick="doUnlock()">잠금 해제</button>
         <button class="btn btn-block" style="max-width:340px;margin-top:8px" onclick="doReset()">초기화 (재설정)</button>
       </div>
@@ -473,8 +473,8 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
         </div>
         <div class="setting-item">
           <div>
-            <div class="setting-label">토큰 / PIN 재설정</div>
-            <div class="setting-sub">새 토큰과 PIN으로 다시 설정합니다</div>
+            <div class="setting-label">토큰 / 비밀번호 재설정</div>
+            <div class="setting-sub">새 토큰과 비밀번호로 다시 설정합니다</div>
           </div>
           <button class="btn btn-sm" onclick="changeToken()">재설정</button>
         </div>
@@ -573,7 +573,7 @@ var S = {
   viewStack: [],
   bodyImageInput: null,
   lastActivity: Date.now(),
-  pendingOAuthToken: '', /* OAuth 후 PIN 설정 전 임시 보관 */
+  pendingOAuthToken: '', /* OAuth 후 비밀번호 설정 전 임시 보관 */
   autosaveDismissed: false,
   runtime: {
     mode: 'remote',
@@ -586,10 +586,18 @@ var S = {
 };
 
 function isValidPin(pin) {
-  return /^\d{6,12}$/.test(String(pin || '').trim());
+  var value = String(pin || '');
+  if (value.length < 8 || value.length > 64) return false;
+  if (/\s/.test(value)) return false;
+
+  var hasLetters = /[A-Za-z]/.test(value);
+  var hasDigits = /\d/.test(value);
+  var hasSpecials = /[^A-Za-z0-9]/.test(value);
+
+  return [hasLetters, hasDigits, hasSpecials].filter(Boolean).length >= 2;
 }
 
-/* ═══════ Crypto: AES-GCM with PIN ═══════ */
+/* ═══════ Crypto: AES-GCM with password ═══════ */
 async function deriveKey(pin, salt) {
   var enc = new TextEncoder();
   var keyMaterial = await crypto.subtle.importKey('raw', enc.encode(pin), 'PBKDF2', false, ['deriveKey']);
@@ -640,7 +648,25 @@ function lockSession() {
   document.getElementById('bottombar').style.display = 'none';
   var hasStored = localStorage.getItem(CRYPT_KEY);
   showView(hasStored ? 'lock' : 'auth');
-  toast('세션 만료 - PIN을 다시 입력하세요', 'info');
+  toast('세션 만료 - 비밀번호를 다시 입력하세요', 'info');
+}
+
+function isAuthenticated() {
+  return Boolean(S.token && S.user);
+}
+
+function requireAuth(targetView, options) {
+  options = options || {};
+  if (isAuthenticated()) return true;
+  var hasStored = localStorage.getItem(CRYPT_KEY);
+  showView(hasStored ? 'lock' : 'auth');
+  if (options.silent) return false;
+  if (targetView) {
+    toast('잠금 해제 후 ' + targetView + '에 접근할 수 있습니다', 'error');
+  } else {
+    toast('잠금 해제 후 사용할 수 있습니다', 'error');
+  }
+  return false;
 }
 
 /* ═══════ Init ═══════ */
@@ -742,9 +768,9 @@ async function handleOAuthCallback(code) {
 
     S.user = user;
     S.pendingOAuthToken = data.access_token;
-    S.token = ''; /* PIN 설정 전까지 메모리에서 제거 */
+    S.token = ''; /* 비밀번호 설정 전까지 메모리에서 제거 */
 
-    /* PIN 설정 화면으로 이동 */
+    /* 비밀번호 설정 화면으로 이동 */
     showView('pin-setup');
   } catch (e) {
     S.token = '';
@@ -756,7 +782,7 @@ async function handleOAuthCallback(code) {
 async function finishOAuthSetup() {
   var pin = document.getElementById('oauth-pin-setup').value.trim();
   if (!isValidPin(pin)) {
-    return toast('PIN은 6~12자리 숫자로 입력하세요', 'error');
+    return toast('비밀번호는 8~64자이며 영문/숫자/특수문자 중 2종류 이상을 포함해야 합니다', 'error');
   }
 
   try {
@@ -777,7 +803,7 @@ async function doSetup() {
   var pat = document.getElementById('pat-input').value.trim();
   var pin = document.getElementById('pin-setup').value.trim();
   if (!pat) return toast('토큰을 입력하세요', 'error');
-  if (!isValidPin(pin)) return toast('PIN은 6~12자리 숫자로 입력하세요', 'error');
+  if (!isValidPin(pin)) return toast('비밀번호는 8~64자이며 영문/숫자/특수문자 중 2종류 이상을 포함해야 합니다', 'error');
 
   S.token = pat;
   try {
@@ -800,10 +826,10 @@ async function doSetup() {
   }
 }
 
-/* ═══════ PIN Unlock ═══════ */
+/* ═══════ Password Unlock ═══════ */
 async function doUnlock() {
   var pin = document.getElementById('pin-unlock').value.trim();
-  if (!pin) return toast('PIN을 입력하세요', 'error');
+  if (!pin) return toast('비밀번호를 입력하세요', 'error');
 
   var stored = localStorage.getItem(CRYPT_KEY);
   if (!stored) return toast('저장된 토큰이 없습니다. 초기화해주세요.', 'error');
@@ -818,7 +844,7 @@ async function doUnlock() {
   } catch (e) {
     S.token = '';
     document.getElementById('pin-unlock').value = '';
-    toast('PIN이 올바르지 않습니다', 'error');
+    toast('비밀번호가 올바르지 않습니다', 'error');
   }
 }
 
@@ -937,6 +963,7 @@ function refreshAutosaveBanner() {
   var banner = document.getElementById('autosave-banner');
   var text = document.getElementById('autosave-banner-text');
   if (!banner || S.autosaveDismissed) return banner && banner.classList.remove('show');
+  if (!isAuthenticated()) return banner.classList.remove('show');
 
   var data = getAutosave();
   var currentPath = currentEditorPath();
@@ -958,6 +985,7 @@ function dismissAutosaveBanner() {
 }
 
 function restoreAutosave() {
+  if (!requireAuth('임시저장 복원')) return;
   var data = getAutosave();
   if (!data) return toast('복원할 임시저장이 없습니다', 'error');
   applyEditorState(data);
@@ -1185,6 +1213,7 @@ function mapLocalPost(post) {
 }
 
 async function loadPosts() {
+  if (!requireAuth('글 목록', { silent: true })) return;
   var listEl = document.getElementById('post-list');
   listEl.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:8px">불러오는 중...</p></div>';
 
@@ -1315,6 +1344,7 @@ function renderPosts() {
 function filterPosts() { renderPosts(); }
 
 async function quickToggleHidden(path) {
+  if (!requireAuth('글 숨김 설정')) return;
   var post = S.posts.find(function(p) { return p.path === path; });
   if (!post) return toast('글 데이터를 불러올 수 없습니다', 'error');
 
@@ -1358,6 +1388,7 @@ async function quickToggleHidden(path) {
 }
 
 async function quickToggleDraft(path) {
+  if (!requireAuth('발행 상태 변경')) return;
   var post = S.posts.find(function(p) { return p.path === path; });
   if (!post) return toast('글 데이터를 불러올 수 없습니다', 'error');
 
@@ -1409,6 +1440,7 @@ function setListTab(tab, btn) {
 
 /* ═══════ Editor ═══════ */
 function newPost() {
+  if (!requireAuth('새 글 작성')) return;
   S.editing = { path: null, sha: null, isNew: true };
   clearEditor();
   document.getElementById('ed-date').value = formatNow();
@@ -1420,6 +1452,7 @@ function newPost() {
 }
 
 async function editPost(path) {
+  if (!requireAuth('글 수정')) return;
   showView('editor');
   setTopbar('글 수정', true);
 
@@ -1514,6 +1547,7 @@ async function editPost(path) {
 }
 
 async function savePost() {
+  if (!requireAuth('저장')) return;
   var title = document.getElementById('ed-title').value.trim();
   if (!title) return toast('제목을 입력하세요', 'error');
 
@@ -1620,6 +1654,7 @@ async function savePost() {
 }
 
 async function deletePost() {
+  if (!requireAuth('삭제')) return;
   if (!S.editing || S.editing.isNew || (!canUseLocalPower() && !S.editing.sha)) return;
   if (!confirm('이 글을 삭제할까요?')) return;
 
@@ -1941,6 +1976,12 @@ function buildFileContent(fm, body) {
 
 /* ═══════ Navigation ═══════ */
 function showView(id) {
+  var protectedViews = ['list', 'editor', 'preview', 'settings'];
+  if (protectedViews.indexOf(id) !== -1 && !isAuthenticated()) {
+    var hasStored = localStorage.getItem(CRYPT_KEY);
+    id = hasStored ? 'lock' : 'auth';
+  }
+
   var views = ['auth', 'pin-setup', 'lock', 'list', 'editor', 'preview', 'settings'];
   views.forEach(function(v) {
     var el = document.getElementById('view-' + v);
@@ -1955,7 +1996,7 @@ function showView(id) {
   });
 
   var backBtn = document.getElementById('topbar-back');
-  var titles = { auth: 'Blog Studio', 'pin-setup': 'PIN 설정', lock: 'Blog Studio', list: 'Blog Studio', editor: '글 작성', preview: '미리보기', settings: '설정' };
+  var titles = { auth: 'Blog Studio', 'pin-setup': '비밀번호 설정', lock: 'Blog Studio', list: 'Blog Studio', editor: '글 작성', preview: '미리보기', settings: '설정' };
   document.getElementById('topbar-title').textContent = titles[id] || 'Blog Studio';
   backBtn.style.display = (id === 'list' || id === 'auth' || id === 'settings' || id === 'lock' || id === 'pin-setup') ? 'none' : 'block';
 

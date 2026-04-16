@@ -102,6 +102,20 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
 .power-actions{display:flex;flex-wrap:wrap;gap:8px}
 .power-actions .btn{flex:1 1 140px}
 .power-note{font-size:.76rem;color:var(--muted);line-height:1.6}
+.quick-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.quick-stat{padding:12px 14px;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel)}
+.quick-stat-num{font-size:1.05rem;font-weight:700;display:block}
+.quick-stat-label{font-size:.72rem;color:var(--muted)}
+.filter-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.filter-row select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);font-size:.82rem}
+.raw-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.raw-tab{padding:8px 12px;border:1px solid var(--line);border-radius:999px;background:var(--panel);font-size:.78rem;cursor:pointer}
+.raw-tab.active{background:var(--point-s);color:var(--point);border-color:rgba(218,119,86,.22)}
+.helper-grid{display:grid;gap:12px}
+.info-list{display:grid;grid-template-columns:110px 1fr;gap:8px 12px;font-size:.82rem}
+.info-list dt{color:var(--muted)}
+.info-list dd{margin:0;word-break:break-word}
+.soft-card{padding:14px;border:1px solid var(--bg2);border-radius:var(--radius);background:var(--panel)}
 
 /* === Preview === */
 .preview-content{padding:16px;line-height:1.8;font-size:.92rem;word-break:break-word}
@@ -211,6 +225,8 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
   .md-toolbar button{min-width:36px;height:36px;font-size:14px}
   .md-toolbar button:hover{background:var(--point-s);color:var(--point)}
   .setting-item{padding:16px 0}
+  .quick-stats{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .helper-grid.two{grid-template-columns:1fr 1fr}
   .editor-dock{display:none!important}
 }
 
@@ -308,6 +324,20 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
     <div class="view" id="view-list">
       <div class="search-bar">
         <input type="text" id="search-input" placeholder="검색..." oninput="filterPosts()">
+      </div>
+      <div class="quick-stats" id="list-stats">
+        <div class="quick-stat"><span class="quick-stat-num" id="stat-all">0</span><span class="quick-stat-label">전체</span></div>
+        <div class="quick-stat"><span class="quick-stat-num" id="stat-published">0</span><span class="quick-stat-label">발행</span></div>
+        <div class="quick-stat"><span class="quick-stat-num" id="stat-drafts">0</span><span class="quick-stat-label">임시</span></div>
+        <div class="quick-stat"><span class="quick-stat-num" id="stat-hidden">0</span><span class="quick-stat-label">숨김</span></div>
+      </div>
+      <div class="filter-row">
+        <select id="filter-category" onchange="filterPosts()">
+          <option value="">전체 카테고리</option>
+        </select>
+        <select id="filter-tag" onchange="filterPosts()">
+          <option value="">전체 태그</option>
+        </select>
       </div>
       <div class="tab-bar" id="list-tabs">
         <button class="active" data-tab="all" onclick="setListTab('all',this)">전체</button>
@@ -452,6 +482,17 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
     <!-- Settings View -->
     <div class="view" id="view-settings">
       <div class="card">
+        <div class="setting-item" style="align-items:flex-start">
+          <div>
+            <div class="setting-label">사이트 개요</div>
+            <div class="setting-sub">웹 편집기에 필요한 정보만 GitHub 기준으로 요약합니다.</div>
+          </div>
+          <button class="btn btn-sm" onclick="loadSettingsWorkspace()">새로고침</button>
+        </div>
+        <dl class="info-list" id="site-summary" style="margin-top:12px"></dl>
+      </div>
+
+      <div class="card">
         <div class="setting-item">
           <div>
             <div class="setting-label">로그인 상태</div>
@@ -501,6 +542,78 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
           localhost 연결 없이 GitHub API만 사용하도록 고정했습니다.
         </div>
       </div>
+      <div class="card" style="margin-top:12px">
+        <div class="setting-item" style="align-items:flex-start">
+          <div>
+            <div class="setting-label">빠른 설정</div>
+            <div class="setting-sub">블로그 기본 정보만 빠르게 수정합니다.</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="saveQuickSettings()">빠른 설정 저장</button>
+        </div>
+        <div class="helper-grid two" style="margin-top:12px">
+          <label class="editor-label">블로그 이름
+            <input class="editor-input" id="qs-title" type="text" placeholder="Jaemin Choi">
+          </label>
+          <label class="editor-label">블로그 소개
+            <input class="editor-input" id="qs-tagline" type="text" placeholder="개인에게 더 많은 자유를">
+          </label>
+          <label class="editor-label" style="grid-column:1/-1">블로그 설명
+            <input class="editor-input" id="qs-description" type="text" placeholder="문제 해결 과정을 정리하는 개인 블로그입니다.">
+          </label>
+          <label class="editor-label">프로필 이미지 경로
+            <input class="editor-input" id="qs-avatar" type="text" placeholder="/assets/img/profile/ai_profile2.png" oninput="updateAvatarPreview()">
+          </label>
+          <div class="soft-card" style="display:flex;align-items:center;gap:12px">
+            <img id="qs-avatar-preview" src="" alt="아바타 미리보기" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:1px solid var(--line);display:none">
+            <div class="setting-sub">프로필 이미지 미리보기</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <div class="setting-item" style="align-items:flex-start">
+          <div>
+            <div class="setting-label">설정 파일 편집</div>
+            <div class="setting-sub">웹에서 수정 가능한 핵심 파일만 다룹니다.</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="saveRaw()">파일 저장</button>
+        </div>
+        <div class="raw-tabs">
+          <button class="raw-tab active" data-kind="config" onclick="loadRaw('config', this)">_config.yml</button>
+          <button class="raw-tab" data-kind="contact" onclick="loadRaw('contact', this)">_data/contact.yml</button>
+          <button class="raw-tab" data-kind="about" onclick="loadRaw('about', this)">_tabs/about.md</button>
+        </div>
+        <textarea class="editor-input" id="raw-editor" style="min-height:260px" placeholder="설정 파일 내용"></textarea>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <div class="setting-item" style="align-items:flex-start">
+          <div>
+            <div class="setting-label">템플릿 관리</div>
+            <div class="setting-sub">repo의 `src/templates` 아래 템플릿을 직접 관리합니다.</div>
+          </div>
+        </div>
+        <div class="template-tools" style="margin-top:12px">
+          <select id="template-select" onchange="loadTemplateText()">
+            <option value="">템플릿 선택</option>
+          </select>
+          <input class="editor-input" id="template-name" type="text" placeholder="예: post-template-new.md">
+        </div>
+        <div class="template-tools" style="margin-top:8px">
+          <button class="btn btn-sm" onclick="loadTemplateText()">불러오기</button>
+          <button class="btn btn-sm" onclick="newTemplate()">새 템플릿</button>
+          <button class="btn btn-sm" onclick="applyTemplateEditorContent()">에디터에 적용</button>
+          <button class="btn btn-primary btn-sm" onclick="saveTemplateText()">템플릿 저장</button>
+        </div>
+        <div class="helper-grid two" style="margin-top:12px">
+          <textarea class="editor-input" id="template-editor" style="min-height:260px" placeholder="템플릿 내용" oninput="updateTemplatePreview()"></textarea>
+          <div class="soft-card">
+            <div class="setting-sub" style="margin-bottom:8px">미리보기</div>
+            <div class="preview-content" id="template-preview"></div>
+          </div>
+        </div>
+      </div>
+
       <div class="card" style="margin-top:12px">
         <div class="setting-item">
           <div>
@@ -570,6 +683,7 @@ var S = {
   posts: [],
   editing: null,
   listTab: 'all',
+  rawKind: 'config',
   viewStack: [],
   bodyImageInput: null,
   lastActivity: Date.now(),
@@ -868,6 +982,7 @@ function onLoginSuccess() {
   refreshAutosaveBanner();
   Promise.resolve(refreshLocalRuntime(false)).finally(function() {
     loadPosts();
+    loadSettingsWorkspace();
   });
 }
 
@@ -1112,14 +1227,14 @@ async function pairLocalBridge() {
 function renderTemplateOptions() {
   var select = document.getElementById('template-select');
   if (!select) return;
-  var base = '<option value="">웹 전용 모드에서는 로컬 템플릿을 사용하지 않습니다.</option>';
+  var base = '<option value="">템플릿 선택</option>';
   select.innerHTML = base + (S.runtime.templates || []).map(function(name) {
     return '<option value="' + esc(name) + '">' + esc(name.replace(/\.md$/, '')) + '</option>';
   }).join('');
 }
 
 async function applySelectedTemplate() {
-  toast('웹 전용 모드에서는 로컬 템플릿 기능을 사용하지 않습니다.', 'info');
+  return applyTemplateEditorContent();
 }
 
 function openLocalEditor() {
@@ -1146,6 +1261,281 @@ async function publishLocalSite() {
   toast('로컬 발행 기능은 비활성화했습니다.', 'info');
 }
 
+function renderInfoList(id, rows) {
+  var target = typeof id === 'string' ? document.getElementById(id) : id;
+  if (!target) return;
+  target.innerHTML = rows.map(function(row) {
+    return '<dt>' + esc(row[0]) + '</dt><dd>' + esc(row[1] || '-') + '</dd>';
+  }).join('');
+}
+
+function parseTemplateText(text, fileName) {
+  var normalized = String(text || '').replace(/\r\n/g, '\n');
+  var fm = parseFrontMatter(normalized);
+  var body = extractBody(normalized);
+  return {
+    fileName: fileName || '',
+    title: fm.title || '',
+    date: fm.date || formatNow(),
+    heroTitle: (fm.hero_title || '').replace(/<br\s*\/?>/gi, '\n'),
+    summary: fm.summary || '',
+    heroImagePosition: fm.hero_image_position || '',
+    categories: fm.categories || [],
+    tags: fm.tags || [],
+    description: fm.description || '',
+    toc: fm.toc !== false && fm.toc !== 'false',
+    comments: fm.comments !== false && fm.comments !== 'false',
+    pin: fm.pin === true || fm.pin === 'true',
+    hidden: fm.hidden === true || fm.hidden === 'true',
+    mermaid: fm.mermaid === true || fm.mermaid === 'true',
+    math: fm.math === true || fm.math === 'true',
+    extra: fm._extra || '',
+    permalink: fm.permalink || '',
+    coverImage: (fm.image && fm.image.path) ? fm.image.path : (typeof fm.image === 'string' ? fm.image : ''),
+    body: body
+  };
+}
+
+function fillEditorFromData(data) {
+  if (!data) return;
+  document.getElementById('ed-title').value = data.title || '';
+  document.getElementById('ed-date').value = data.date || formatNow();
+  document.getElementById('ed-desc').value = data.description || '';
+  document.getElementById('ed-cats').value = (data.categories || []).join(', ');
+  document.getElementById('ed-tags').value = (data.tags || []).join(', ');
+  document.getElementById('ed-hero-title').value = data.heroTitle || '';
+  document.getElementById('ed-summary').value = data.summary || '';
+  document.getElementById('ed-permalink').value = data.permalink || '';
+  document.getElementById('ed-extra-front-matter').value = data.extra || '';
+  document.getElementById('ed-toc').checked = data.toc !== false;
+  document.getElementById('ed-comments').checked = data.comments !== false;
+  document.getElementById('ed-pin').checked = !!data.pin;
+  document.getElementById('ed-hidden').checked = !!data.hidden;
+  document.getElementById('ed-draft').checked = !!data.draft;
+  document.getElementById('ed-mermaid').checked = !!data.mermaid;
+  document.getElementById('ed-math').checked = !!data.math;
+  document.getElementById('ed-body').value = data.body || '';
+  document.getElementById('ed-cover').value = data.coverImage || '';
+  document.getElementById('ed-hero-image-position').value = data.heroImagePosition || '';
+
+  if (data.coverImage) {
+    document.getElementById('cover-preview').style.display = 'block';
+    document.getElementById('cover-img').src = 'https://raw.githubusercontent.com/' + OWNER + '/' + REPO + '/main' + data.coverImage;
+    document.getElementById('cover-upload').style.display = 'none';
+  } else {
+    document.getElementById('cover-preview').style.display = 'none';
+    document.getElementById('cover-upload').style.display = '';
+  }
+
+  updateEditorStats();
+}
+
+async function loadSummary() {
+  if (!requireAuth('사이트 개요', { silent: true })) return;
+  try {
+    var configFile = await ghReadTextFile('_config.yml');
+    var titleMatch = configFile.content.match(/^title:\s*(.+)$/m);
+    var taglineMatch = configFile.content.match(/^tagline:\s*(.+)$/m);
+    var urlMatch = configFile.content.match(/^url:\s*(.+)$/m);
+    var avatarMatch = configFile.content.match(/^avatar:\s*(.+)$/m);
+    renderInfoList('site-summary', [
+      ['제목', titleMatch ? titleMatch[1].replace(/^["']|["']$/g, '').trim() : '-'],
+      ['소개', taglineMatch ? taglineMatch[1].replace(/^["']|["']$/g, '').trim() : '-'],
+      ['URL', urlMatch ? urlMatch[1].replace(/^["']|["']$/g, '').trim() : '-'],
+      ['프로필', avatarMatch ? avatarMatch[1].replace(/^["']|["']$/g, '').trim() : '-'],
+      ['글 수', String(S.posts.length)],
+      ['발행 글', String(S.posts.filter(function(p) { return !p.isDraft && !p.hidden; }).length)]
+    ]);
+  } catch (e) {
+    renderInfoList('site-summary', [['상태', '불러오기 실패: ' + e.message]]);
+  }
+}
+
+var RAW_FILES = {
+  config: '_config.yml',
+  contact: '_data/contact.yml',
+  about: '_tabs/about.md'
+};
+
+async function loadRaw(kind) {
+  if (!requireAuth('설정 파일', { silent: true })) return;
+  S.rawKind = kind || S.rawKind || 'config';
+  document.querySelectorAll('.raw-tab').forEach(function(tab) {
+    tab.classList.toggle('active', tab.dataset.kind === S.rawKind);
+  });
+  try {
+    var file = await ghReadTextFile(RAW_FILES[S.rawKind]);
+    S.runtime.rawFile = file;
+    document.getElementById('raw-editor').value = file.content;
+    if (S.rawKind === 'config') loadQuickSettings(file.content);
+  } catch (e) {
+    toast('설정 파일 불러오기 실패: ' + e.message, 'error');
+  }
+}
+
+function loadQuickSettings(yaml) {
+  function get(key) {
+    var m = yaml.match(new RegExp('^' + key + ':\\s*(.+)$', 'm'));
+    return m ? m[1].replace(/\s*#.*$/, '').trim().replace(/^["']|["']$/g, '') : '';
+  }
+  document.getElementById('qs-title').value = get('title');
+  document.getElementById('qs-tagline').value = get('tagline');
+  document.getElementById('qs-avatar').value = get('avatar');
+  var descMatch = yaml.match(/^description:\s*>-?\s*(?:#.*)?\n([\s\S]*?)(?=\n\S|\n*$)/m);
+  document.getElementById('qs-description').value = descMatch ? descMatch[1].trim() : get('description');
+  updateAvatarPreview();
+}
+
+function updateAvatarPreview() {
+  var img = document.getElementById('qs-avatar-preview');
+  var val = document.getElementById('qs-avatar').value.trim();
+  if (val) {
+    img.src = val;
+    img.style.display = 'block';
+  } else {
+    img.style.display = 'none';
+  }
+}
+
+async function saveQuickSettings() {
+  if (!requireAuth('빠른 설정 저장')) return;
+  try {
+    var file = await ghReadTextFile('_config.yml');
+    var yaml = file.content;
+    var title = document.getElementById('qs-title').value.trim();
+    var tagline = document.getElementById('qs-tagline').value.trim();
+    var desc = document.getElementById('qs-description').value.trim();
+    var avatar = document.getElementById('qs-avatar').value.trim();
+
+    yaml = yaml.replace(/^(title:\s*)([^#\n]*)(.*)$/m, '$1' + title + ' $3');
+    yaml = yaml.replace(/^(tagline:\s*)([^#\n]*)(.*)$/m, '$1' + tagline + ' $3');
+    if (/^description:\s*>-?\s*(?:#.*)?\n[\s\S]*?(?=\n\S|\n*$)/m.test(yaml)) {
+      yaml = yaml.replace(/^description:\s*>-?\s*(?:#.*)?\n[\s\S]*?(?=\n\S|\n*$)/m, 'description: >-\n  ' + desc);
+    } else if (/^description:\s*.*$/m.test(yaml)) {
+      yaml = yaml.replace(/^description:\s*.*$/m, 'description: "' + desc.replace(/"/g, '\\"') + '"');
+    }
+    yaml = yaml.replace(/^(avatar:\s*).*$/m, '$1' + avatar);
+    if (/^social_preview_image:\s*.*$/m.test(yaml)) {
+      yaml = yaml.replace(/^(social_preview_image:\s*).*$/m, '$1' + avatar);
+    }
+
+    await ghPutFile('_config.yml', yaml, file.sha, 'update blog quick settings');
+    document.getElementById('raw-editor').value = yaml;
+    toast('빠른 설정 저장 완료', 'success');
+    loadSummary();
+  } catch (e) {
+    toast('빠른 설정 저장 실패: ' + e.message, 'error');
+  }
+}
+
+async function saveRaw() {
+  if (!requireAuth('설정 파일 저장')) return;
+  try {
+    var path = RAW_FILES[S.rawKind];
+    var content = document.getElementById('raw-editor').value;
+    var file = await ghReadTextFile(path);
+    await ghPutFile(path, content, file.sha, 'update ' + path);
+    toast(path + ' 저장 완료', 'success');
+    S.runtime.rawFile = { path: path, sha: file.sha, content: content };
+    if (S.rawKind === 'config') loadQuickSettings(content);
+  } catch (e) {
+    toast('설정 파일 저장 실패: ' + e.message, 'error');
+  }
+}
+
+async function loadTemplates() {
+  if (!requireAuth('템플릿 목록', { silent: true })) return;
+  try {
+    var data = await ghApi('/repos/' + OWNER + '/' + REPO + '/contents/src/templates');
+    S.runtime.templates = (Array.isArray(data) ? data : []).filter(function(f) { return /\.md$/i.test(f.name); }).map(function(f) { return f.name; }).sort();
+    renderTemplateOptions();
+  } catch (e) {
+    toast('템플릿 불러오기 실패: ' + e.message, 'error');
+  }
+}
+
+async function loadTemplateText(name) {
+  if (!requireAuth('템플릿 불러오기')) return;
+  var selected = name || document.getElementById('template-select').value;
+  if (!selected) return;
+  try {
+    var file = await ghReadTextFile('src/templates/' + selected);
+    document.getElementById('template-name').value = selected;
+    document.getElementById('template-editor').value = file.content;
+    updateTemplatePreview();
+  } catch (e) {
+    toast('템플릿 불러오기 실패: ' + e.message, 'error');
+  }
+}
+
+function newTemplate() {
+  if (!requireAuth('새 템플릿')) return;
+  document.getElementById('template-name').value = 'post-template-new.md';
+  document.getElementById('template-editor').value =
+    '---\n' +
+    'title: "새 템플릿 제목"\n' +
+    'date: ' + formatNow() + '\n' +
+    'categories: [개발]\n' +
+    'tags: [sample]\n' +
+    'description: "설명"\n' +
+    'toc: true\n' +
+    'comments: true\n' +
+    'pin: false\n' +
+    'mermaid: false\n' +
+    'math: false\n' +
+    '---\n\n' +
+    '## 소개\n\n내용을 작성하세요.\n';
+  updateTemplatePreview();
+}
+
+async function saveTemplateText() {
+  if (!requireAuth('템플릿 저장')) return;
+  var name = document.getElementById('template-name').value.trim();
+  if (!name) return toast('템플릿 파일명을 입력하세요', 'error');
+  var path = 'src/templates/' + name.replace(/[\\/]+/g, '-');
+  var content = document.getElementById('template-editor').value;
+  try {
+    var sha = null;
+    try {
+      sha = (await ghGetFile(path)).sha;
+    } catch (e) {}
+    await ghPutFile(path, content, sha, 'save template ' + path);
+    toast('템플릿 저장 완료', 'success');
+    await loadTemplates();
+    document.getElementById('template-select').value = path.replace(/^src\/templates\//, '');
+  } catch (e) {
+    toast('템플릿 저장 실패: ' + e.message, 'error');
+  }
+}
+
+function updateTemplatePreview() {
+  var preview = document.getElementById('template-preview');
+  if (!preview) return;
+  var parsed = parseTemplateText(document.getElementById('template-editor').value, document.getElementById('template-name').value.trim());
+  preview.innerHTML = '';
+  var bodyWrap = document.createElement('div');
+  bodyWrap.innerHTML = sanitizePreviewHtml(marked.parse(parsed.body || ''));
+  preview.appendChild(bodyWrap);
+}
+
+function applyTemplateEditorContent() {
+  if (!requireAuth('템플릿 적용')) return;
+  var parsed = parseTemplateText(document.getElementById('template-editor').value, document.getElementById('template-name').value.trim());
+  fillEditorFromData(parsed);
+  S.editing = { path: null, sha: null, isNew: true };
+  document.getElementById('ed-delete-btn').style.display = 'none';
+  S.autosaveDismissed = false;
+  refreshAutosaveBanner();
+  showView('editor');
+  setTopbar('새 글', true);
+  toast('템플릿을 에디터에 적용했습니다', 'success');
+}
+
+async function loadSettingsWorkspace() {
+  if (!requireAuth('설정', { silent: true })) return;
+  await Promise.all([loadSummary(), loadTemplates(), loadRaw(S.rawKind || 'config')]);
+}
+
 /* ═══════ GitHub API ═══════ */
 async function ghApi(path, opts) {
   opts = opts || {};
@@ -1168,6 +1558,12 @@ async function ghApi(path, opts) {
 
 async function ghGetFile(path) {
   return ghApi('/repos/' + OWNER + '/' + REPO + '/contents/' + path);
+}
+
+async function ghReadTextFile(path) {
+  var data = await ghGetFile(path);
+  var content = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ''))));
+  return { path: path, sha: data.sha, content: content };
 }
 
 async function ghPutFile(path, content, sha, message) {
@@ -1258,6 +1654,8 @@ async function loadPosts() {
     });
 
     await loadPostTitles();
+    updateListStats();
+    updateFilterOptions();
     renderPosts();
   } catch (e) {
     listEl.innerHTML = '<div class="empty">불러오기 실패: ' + esc(e.message) + '</div>';
@@ -1286,13 +1684,48 @@ async function loadPostTitles() {
   await Promise.all(promises);
 }
 
+function updateListStats() {
+  document.getElementById('stat-all').textContent = String(S.posts.length);
+  document.getElementById('stat-published').textContent = String(S.posts.filter(function(p) { return !p.isDraft && !p.hidden; }).length);
+  document.getElementById('stat-drafts').textContent = String(S.posts.filter(function(p) { return p.isDraft; }).length);
+  document.getElementById('stat-hidden').textContent = String(S.posts.filter(function(p) { return p.hidden; }).length);
+}
+
+function updateFilterOptions() {
+  var catSelect = document.getElementById('filter-category');
+  var tagSelect = document.getElementById('filter-tag');
+  if (!catSelect || !tagSelect) return;
+
+  var categories = {};
+  var tags = {};
+  S.posts.forEach(function(p) {
+    (p.categories || []).forEach(function(c) { if (c) categories[c] = true; });
+    (p.tags || []).forEach(function(t) { if (t) tags[t] = true; });
+  });
+
+  var currentCat = catSelect.value;
+  var currentTag = tagSelect.value;
+  catSelect.innerHTML = '<option value="">전체 카테고리</option>' + Object.keys(categories).sort().map(function(c) {
+    return '<option value="' + esc(c) + '">' + esc(c) + '</option>';
+  }).join('');
+  tagSelect.innerHTML = '<option value="">전체 태그</option>' + Object.keys(tags).sort().map(function(t) {
+    return '<option value="' + esc(t) + '">' + esc(t) + '</option>';
+  }).join('');
+  catSelect.value = currentCat;
+  tagSelect.value = currentTag;
+}
+
 function renderPosts() {
   var listEl = document.getElementById('post-list');
   var query = (document.getElementById('search-input').value || '').toLowerCase();
   var filtered = S.posts;
+  var categoryFilter = document.getElementById('filter-category').value;
+  var tagFilter = document.getElementById('filter-tag').value;
 
   if (S.listTab === 'published') filtered = filtered.filter(function(p) { return !p.isDraft; });
   if (S.listTab === 'drafts') filtered = filtered.filter(function(p) { return p.isDraft; });
+  if (categoryFilter) filtered = filtered.filter(function(p) { return (p.categories || []).indexOf(categoryFilter) !== -1; });
+  if (tagFilter) filtered = filtered.filter(function(p) { return (p.tags || []).indexOf(tagFilter) !== -1; });
 
   if (query) {
     filtered = filtered.filter(function(p) {
@@ -2011,6 +2444,7 @@ function showView(id) {
   syncRuntimeModeUI();
   if (id === 'settings') {
     refreshLocalRuntime(false);
+    loadSettingsWorkspace();
   }
 }
 

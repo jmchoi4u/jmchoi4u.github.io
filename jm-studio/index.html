@@ -292,18 +292,18 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
         </button>
         <div class="auth-divider">또는</div>
         <input class="auth-input" id="pat-input" type="password" placeholder="PAT 직접 입력 (ghp_xxxx)" autocomplete="off">
-        <input class="auth-input" id="pin-setup" type="password" placeholder="비밀번호 설정 (8~64자, 영문/숫자/특수문자 2종 이상)" maxlength="64" autocomplete="off">
+        <input class="auth-input" id="password-setup" name="new-password" type="password" placeholder="비밀번호 설정 (8~64자, 영문/숫자/특수문자 2종 이상)" maxlength="64" autocomplete="new-password" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="text">
         <button class="btn btn-block" style="max-width:340px" onclick="doSetup()">PAT로 설정</button>
       </div>
     </div>
 
     <!-- Password Setup View (after OAuth) -->
-    <div class="view" id="view-pin-setup">
+    <div class="view" id="view-password-setup">
       <div class="auth-view">
         <div class="auth-logo">J</div>
         <h2>비밀번호 설정</h2>
         <p>다음부터 잠금 해제에 사용할 비밀번호를 설정하세요.</p>
-        <input class="auth-input" id="oauth-pin-setup" type="password" placeholder="비밀번호 (8~64자, 영문/숫자/특수문자 2종 이상)" maxlength="64" autocomplete="off">
+        <input class="auth-input" id="oauth-password-setup" name="new-password" type="password" placeholder="비밀번호 (8~64자, 영문/숫자/특수문자 2종 이상)" maxlength="64" autocomplete="new-password" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="text">
         <button class="btn btn-primary btn-block" style="max-width:340px" onclick="finishOAuthSetup()">설정 완료</button>
       </div>
     </div>
@@ -314,7 +314,7 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
         <div class="auth-logo" style="background:var(--text)">&#128274;</div>
         <h2>잠금 해제</h2>
         <p>비밀번호를 입력하여 잠금을 해제하세요.</p>
-        <input class="auth-input" id="pin-unlock" type="password" placeholder="비밀번호 입력" maxlength="64" autocomplete="off">
+        <input class="auth-input" id="password-unlock" name="current-password" type="password" placeholder="비밀번호 입력" maxlength="64" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="text">
         <button class="btn btn-primary btn-block" style="max-width:340px" onclick="doUnlock()">잠금 해제</button>
         <button class="btn btn-block" style="max-width:340px;margin-top:8px" onclick="doReset()">초기화 (재설정)</button>
       </div>
@@ -715,8 +715,8 @@ var S = {
   }
 };
 
-function isValidPin(pin) {
-  var value = String(pin || '');
+function isValidPassword(password) {
+  var value = String(password || '');
   if (value.length < 8 || value.length > 64) return false;
   if (/\s/.test(value)) return false;
 
@@ -728,9 +728,9 @@ function isValidPin(pin) {
 }
 
 /* ═══════ Crypto: AES-GCM with password ═══════ */
-async function deriveKey(pin, salt) {
+async function deriveKey(password, salt) {
   var enc = new TextEncoder();
-  var keyMaterial = await crypto.subtle.importKey('raw', enc.encode(pin), 'PBKDF2', false, ['deriveKey']);
+  var keyMaterial = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
   return crypto.subtle.deriveKey(
     { name: 'PBKDF2', salt: salt, iterations: 250000, hash: 'SHA-256' },
     keyMaterial,
@@ -740,11 +740,11 @@ async function deriveKey(pin, salt) {
   );
 }
 
-async function encryptPAT(pat, pin) {
+async function encryptPAT(pat, password) {
   var enc = new TextEncoder();
   var salt = crypto.getRandomValues(new Uint8Array(16));
   var iv = crypto.getRandomValues(new Uint8Array(12));
-  var key = await deriveKey(pin, salt);
+  var key = await deriveKey(password, salt);
   var encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, key, enc.encode(pat));
   var buf = new Uint8Array(salt.length + iv.length + encrypted.byteLength);
   buf.set(salt, 0);
@@ -753,12 +753,12 @@ async function encryptPAT(pat, pin) {
   return btoa(String.fromCharCode.apply(null, buf));
 }
 
-async function decryptPAT(stored, pin) {
+async function decryptPAT(stored, password) {
   var raw = Uint8Array.from(atob(stored), function(c) { return c.charCodeAt(0); });
   var salt = raw.slice(0, 16);
   var iv = raw.slice(16, 28);
   var data = raw.slice(28);
-  var key = await deriveKey(pin, salt);
+  var key = await deriveKey(password, salt);
   var decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv }, key, data);
   return new TextDecoder().decode(decrypted);
 }
@@ -813,9 +813,9 @@ window.addEventListener('DOMContentLoaded', function() {
   setInterval(checkSession, 60000);
 
   /* Enter key support */
-  bindEnter('pin-setup', doSetup);
-  bindEnter('pin-unlock', doUnlock);
-  bindEnter('oauth-pin-setup', finishOAuthSetup);
+  bindEnter('password-setup', doSetup);
+  bindEnter('password-unlock', doUnlock);
+  bindEnter('oauth-password-setup', finishOAuthSetup);
 
   ['ed-title','ed-date','ed-desc','ed-cats','ed-tags','ed-hero-title','ed-summary','ed-permalink'].forEach(function(id) {
     var el = document.getElementById(id);
@@ -939,7 +939,7 @@ async function handleOAuthCallback(code) {
     S.token = ''; /* 비밀번호 설정 전까지 메모리에서 제거 */
 
     /* 비밀번호 설정 화면으로 이동 */
-    showView('pin-setup');
+    showView('password-setup');
   } catch (e) {
     S.token = '';
     toast('인증 실패: ' + e.message, 'error');
@@ -948,17 +948,17 @@ async function handleOAuthCallback(code) {
 }
 
 async function finishOAuthSetup() {
-  var pin = document.getElementById('oauth-pin-setup').value.trim();
-  if (!isValidPin(pin)) {
+  var password = document.getElementById('oauth-password-setup').value.trim();
+  if (!isValidPassword(password)) {
     return toast('비밀번호는 8~64자이며 영문/숫자/특수문자 중 2종류 이상을 포함해야 합니다', 'error');
   }
 
   try {
-    var encrypted = await encryptPAT(S.pendingOAuthToken, pin);
+    var encrypted = await encryptPAT(S.pendingOAuthToken, password);
     localStorage.setItem(CRYPT_KEY, encrypted);
     S.token = S.pendingOAuthToken;
     S.pendingOAuthToken = '';
-    document.getElementById('oauth-pin-setup').value = '';
+    document.getElementById('oauth-password-setup').value = '';
     onLoginSuccess();
     toast('설정 완료', 'success');
   } catch (e) {
@@ -969,9 +969,9 @@ async function finishOAuthSetup() {
 /* ═══════ PAT Setup ═══════ */
 async function doSetup() {
   var pat = document.getElementById('pat-input').value.trim();
-  var pin = document.getElementById('pin-setup').value.trim();
+  var password = document.getElementById('password-setup').value.trim();
   if (!pat) return toast('토큰을 입력하세요', 'error');
-  if (!isValidPin(pin)) return toast('비밀번호는 8~64자이며 영문/숫자/특수문자 중 2종류 이상을 포함해야 합니다', 'error');
+  if (!isValidPassword(password)) return toast('비밀번호는 8~64자이며 영문/숫자/특수문자 중 2종류 이상을 포함해야 합니다', 'error');
 
   S.token = pat;
   try {
@@ -981,11 +981,11 @@ async function doSetup() {
       return toast('이 토큰은 블로그 소유자의 것이 아닙니다', 'error');
     }
 
-    var encrypted = await encryptPAT(pat, pin);
+    var encrypted = await encryptPAT(pat, password);
     localStorage.setItem(CRYPT_KEY, encrypted);
     S.user = user;
     document.getElementById('pat-input').value = '';
-    document.getElementById('pin-setup').value = '';
+    document.getElementById('password-setup').value = '';
     onLoginSuccess();
     toast('설정 완료', 'success');
   } catch (e) {
@@ -996,22 +996,22 @@ async function doSetup() {
 
 /* ═══════ Password Unlock ═══════ */
 async function doUnlock() {
-  var pin = document.getElementById('pin-unlock').value.trim();
-  if (!pin) return toast('비밀번호를 입력하세요', 'error');
+  var password = document.getElementById('password-unlock').value.trim();
+  if (!password) return toast('비밀번호를 입력하세요', 'error');
 
   var stored = localStorage.getItem(CRYPT_KEY);
   if (!stored) return toast('저장된 토큰이 없습니다. 초기화해주세요.', 'error');
 
   try {
-    var pat = await decryptPAT(stored, pin);
+    var pat = await decryptPAT(stored, password);
     S.token = pat;
     var user = await ghApi('/user');
     S.user = user;
-    document.getElementById('pin-unlock').value = '';
+    document.getElementById('password-unlock').value = '';
     onLoginSuccess();
   } catch (e) {
     S.token = '';
-    document.getElementById('pin-unlock').value = '';
+    document.getElementById('password-unlock').value = '';
     toast('비밀번호가 올바르지 않습니다', 'error');
   }
 }
@@ -1052,7 +1052,7 @@ function doLogout() {
 
 function changeToken() {
   document.getElementById('pat-input').value = '';
-  document.getElementById('pin-setup').value = '';
+  document.getElementById('password-setup').value = '';
   showView('auth');
 }
 
@@ -2529,7 +2529,7 @@ function showView(id) {
     id = hasStored ? 'lock' : 'auth';
   }
 
-  var views = ['auth', 'pin-setup', 'lock', 'list', 'editor', 'preview', 'settings'];
+  var views = ['auth', 'password-setup', 'lock', 'list', 'editor', 'preview', 'settings'];
   views.forEach(function(v) {
     var el = document.getElementById('view-' + v);
     if (el) el.classList.toggle('active', v === id);
@@ -2543,9 +2543,9 @@ function showView(id) {
   });
 
   var backBtn = document.getElementById('topbar-back');
-  var titles = { auth: 'Blog Studio', 'pin-setup': '비밀번호 설정', lock: 'Blog Studio', list: 'Blog Studio', editor: '글 작성', preview: '미리보기', settings: '설정' };
+  var titles = { auth: 'Blog Studio', 'password-setup': '비밀번호 설정', lock: 'Blog Studio', list: 'Blog Studio', editor: '글 작성', preview: '미리보기', settings: '설정' };
   document.getElementById('topbar-title').textContent = titles[id] || 'Blog Studio';
-  backBtn.style.display = (id === 'list' || id === 'auth' || id === 'settings' || id === 'lock' || id === 'pin-setup') ? 'none' : 'block';
+  backBtn.style.display = (id === 'list' || id === 'auth' || id === 'settings' || id === 'lock' || id === 'password-setup') ? 'none' : 'block';
 
   if (id !== S.viewStack[S.viewStack.length - 1]) {
     S.viewStack.push(id);

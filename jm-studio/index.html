@@ -332,7 +332,7 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
         <div class="quick-stat"><span class="quick-stat-num" id="stat-hidden">0</span><span class="quick-stat-label">숨김</span></div>
       </div>
       <div class="filter-row">
-        <select id="filter-category" onchange="filterPosts()">
+        <select id="filter-category" onchange="filterPosts()" hidden>
           <option value="">전체 카테고리</option>
         </select>
         <select id="filter-tag" onchange="filterPosts()">
@@ -378,12 +378,9 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
       </div>
 
       <div class="editor-row">
-        <div class="editor-section">
-          <label class="editor-label">카테고리</label>
-          <input class="editor-input" id="ed-cats" type="text" placeholder="개발, Jekyll">
-          <div class="editor-meta" id="ed-cats-suggestions" style="margin-top:6px;gap:5px"></div>
-        </div>
-        <div class="editor-section">
+        <input id="ed-cats" type="hidden" value="">
+        <div class="editor-meta" id="ed-cats-suggestions" style="display:none"></div>
+        <div class="editor-section" style="grid-column:1 / -1;">
           <label class="editor-label">태그</label>
           <input class="editor-input" id="ed-tags" type="text" placeholder="chirpy, seo">
           <div class="editor-meta" id="ed-tags-suggestions" style="margin-top:6px;gap:5px"></div>
@@ -1065,7 +1062,7 @@ function collectEditorState() {
     title: document.getElementById('ed-title').value,
     date: document.getElementById('ed-date').value,
     description: document.getElementById('ed-desc').value,
-    categories: document.getElementById('ed-cats').value,
+    categories: '',
     tags: document.getElementById('ed-tags').value,
     heroTitle: document.getElementById('ed-hero-title').value,
     summary: document.getElementById('ed-summary').value,
@@ -1091,7 +1088,7 @@ function applyEditorState(data) {
   document.getElementById('ed-title').value = data.title || '';
   document.getElementById('ed-date').value = data.date || formatNow();
   document.getElementById('ed-desc').value = data.description || '';
-  document.getElementById('ed-cats').value = data.categories || '';
+  document.getElementById('ed-cats').value = '';
   document.getElementById('ed-tags').value = data.tags || '';
   document.getElementById('ed-hero-title').value = data.heroTitle || '';
   document.getElementById('ed-summary').value = data.summary || '';
@@ -1355,7 +1352,7 @@ function parseTemplateText(text, fileName) {
     heroTitle: (fm.hero_title || '').replace(/<br\s*\/?>/gi, '\n'),
     summary: fm.summary || '',
     heroImagePosition: fm.hero_image_position || '',
-    categories: fm.categories || [],
+    categories: [],
     tags: fm.tags || [],
     description: fm.description || '',
     toc: fm.toc !== false && fm.toc !== 'false',
@@ -1376,7 +1373,7 @@ function fillEditorFromData(data) {
   document.getElementById('ed-title').value = data.title || '';
   document.getElementById('ed-date').value = data.date || formatNow();
   document.getElementById('ed-desc').value = data.description || '';
-  document.getElementById('ed-cats').value = (data.categories || []).join(', ');
+  document.getElementById('ed-cats').value = '';
   document.getElementById('ed-tags').value = (data.tags || []).join(', ');
   document.getElementById('ed-hero-title').value = data.heroTitle || '';
   document.getElementById('ed-summary').value = data.summary || '';
@@ -1550,7 +1547,6 @@ function newTemplate() {
     '---\n' +
     'title: "새 템플릿 제목"\n' +
     'date: ' + formatNow() + '\n' +
-    'categories: [개발]\n' +
     'tags: [sample]\n' +
     'description: "설명"\n' +
     'toc: true\n' +
@@ -2006,7 +2002,7 @@ async function editPost(path) {
       document.getElementById('ed-title').value = localPost.title || '';
       document.getElementById('ed-date').value = localPost.date || '';
       document.getElementById('ed-desc').value = localPost.description || '';
-      document.getElementById('ed-cats').value = (localPost.categories || []).join(', ');
+  document.getElementById('ed-cats').value = '';
       document.getElementById('ed-tags').value = (localPost.tags || []).join(', ');
       document.getElementById('ed-hero-title').value = (localPost.heroTitle || '').replace(/<br\s*\/?>/gi, '\n');
       document.getElementById('ed-summary').value = localPost.summary || '';
@@ -2051,7 +2047,7 @@ async function editPost(path) {
     document.getElementById('ed-title').value = fm.title || '';
     document.getElementById('ed-date').value = fm.date || '';
     document.getElementById('ed-desc').value = fm.description || '';
-    document.getElementById('ed-cats').value = (fm.categories || []).join(', ');
+    document.getElementById('ed-cats').value = '';
     document.getElementById('ed-tags').value = (fm.tags || []).join(', ');
     document.getElementById('ed-hero-title').value = (fm.hero_title || '').replace(/<br\s*\/?>/gi, '\n');
     document.getElementById('ed-summary').value = fm.summary || '';
@@ -2106,7 +2102,7 @@ async function savePost() {
     title: title,
     date: date,
     description: document.getElementById('ed-desc').value.trim(),
-    categories: parseList(document.getElementById('ed-cats').value),
+    categories: [],
     tags: parseList(document.getElementById('ed-tags').value),
     toc: document.getElementById('ed-toc').checked,
     comments: document.getElementById('ed-comments').checked,

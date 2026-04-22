@@ -203,9 +203,14 @@ compress_html:
 exclude:
   - "*.gem"
   - "*.gemspec"
+  - "*.lnk"
+  - .claude
+  - CHANGELOG.md
   - 설명서
   - app
   - docs
+  - output
+  - snap-after-menu.md
   - src
   - tools
   - _trash
@@ -216,10 +221,8 @@ exclude:
   - "package*.json"
 
 jekyll-archives:
-  enabled: [categories, tags]
+  enabled: [tags]
   layouts:
-    category: category
     tag: tag
   permalinks:
     tag: /tags/:name/
-    category: /categories/:name/

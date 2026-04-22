@@ -4,7 +4,7 @@ layout: default
 
 {% include lang.html %}
 
-{% assign all_pinned = site.posts | where: 'pin', 'true' %}
+{% assign all_pinned = site.posts | where_exp: 'item', 'item.pin == true and item.hidden != true' %}
 {% assign all_normal = site.posts | where_exp: 'item', 'item.pin != true and item.hidden != true' %}
 
 {% assign posts = '' | split: '' %}
@@ -81,22 +81,14 @@ layout: default
           {% assign card_body_col = '7' %}
         {% else %}
           <!-- Auto-generated thumbnail -->
-          {% assign cat_name = post.categories | first | default: 'Blog' %}
-          {% assign cat_hash = cat_name | slugify | size | modulo: 5 %}
+          {% assign thumb_label = post.tags | first | default: '글' %}
+          {% assign thumb_hash = post.title | append: thumb_label | slugify | size | modulo: 5 %}
           <div class="col-md-4">
             <div class="auto-thumb auto-thumb-{{ cat_hash }}">
               <span class="auto-thumb-icon">
-                {% if cat_name == '개발' %}
-                  <i class="fas fa-code"></i>
-                {% elsif cat_name == '철학' %}
-                  <i class="fas fa-lightbulb"></i>
-                {% elsif cat_name == '끄적끄적' %}
-                  <i class="fas fa-pen-fancy"></i>
-                {% else %}
-                  <i class="fas fa-bookmark"></i>
-                {% endif %}
+                <i class="fas fa-bookmark"></i>
               </span>
-              <span class="auto-thumb-cat">{{ cat_name }}</span>
+              <span class="auto-thumb-cat">{{ thumb_label }}</span>
             </div>
           </div>
           {% assign card_body_col = '8' %}
@@ -119,14 +111,6 @@ layout: default
               <div class="me-auto">
                 <i class="far fa-calendar fa-fw me-1"></i>
                 {% include datetime.html date=post.date lang=lang %}
-                {% if post.categories.size > 0 %}
-                  <i class="far fa-folder-open fa-fw me-1"></i>
-                  <span class="categories">
-                    {% for category in post.categories %}
-                      {{ category }}{%- unless forloop.last -%},{%- endunless -%}
-                    {% endfor %}
-                  </span>
-                {% endif %}
                 <i class="far fa-clock fa-fw me-1"></i>
                 <span>{{ _reading_time }}분</span>
               </div>

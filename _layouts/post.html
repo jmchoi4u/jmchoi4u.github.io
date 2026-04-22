@@ -51,29 +51,19 @@ script_includes:
       </div>
 
       <div class="post-hero-footer">
-        {% if page.categories.size > 0 or page.tags.size > 0 %}
+        {% if page.tags.size > 0 %}
           <div class="post-hero-taxonomy">
-            {% if page.categories.size > 0 %}
-              <span class="post-hero-folder">
-                <i class="far fa-folder-open"></i>
-                {% for category in page.categories %}
-                  <a href="{{ site.baseurl }}/categories/{{ category | slugify | url_encode }}/">{{ category }}</a>{% unless forloop.last %}, {% endunless %}
+            <span class="post-hero-tags">
+              <button class="post-hero-tag-toggle" id="tag-toggle" type="button" aria-label="태그 보기">
+                <i class="fa fa-tags"></i>
+                <span class="tag-toggle-count">{{ page.tags.size }}</span>
+              </button>
+              <span class="post-hero-tag-list" id="tag-list">
+                {% for tag in page.tags %}
+                  <a href="{{ site.baseurl }}/tags/{{ tag | slugify | url_encode }}/" class="post-hero-tag-pill">{{ tag }}</a>
                 {% endfor %}
               </span>
-            {% endif %}
-            {% if page.tags.size > 0 %}
-              <span class="post-hero-tags">
-                <button class="post-hero-tag-toggle" id="tag-toggle" type="button" aria-label="태그 보기">
-                  <i class="fa fa-tags"></i>
-                  <span class="tag-toggle-count">{{ page.tags.size }}</span>
-                </button>
-                <span class="post-hero-tag-list" id="tag-list">
-                  {% for tag in page.tags %}
-                    <a href="{{ site.baseurl }}/tags/{{ tag | slugify | url_encode }}/" class="post-hero-tag-pill">{{ tag }}</a>
-                  {% endfor %}
-                </span>
-              </span>
-            {% endif %}
+            </span>
           </div>
         {% endif %}
 

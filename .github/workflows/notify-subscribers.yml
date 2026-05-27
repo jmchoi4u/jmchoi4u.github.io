@@ -33,27 +33,69 @@ jobs:
         if: steps.check.outputs.has_new == 'true'
         id: info
         run: |
-          FILE="${{ steps.check.outputs.file }}"
-          CONTENT=$(cat "$FILE")
+          POST_FILE="${{ steps.check.outputs.file }}" python3 <<'PY' >> "$GITHUB_OUTPUT"
+          import re
+          import os
+          from pathlib import Path
 
-          TITLE=$(echo "$CONTENT" | grep -m1 '^title:' | sed 's/^title:\s*//' | sed 's/^["'"'"']//' | sed 's/["'"'"']$//')
-          DESC=$(echo "$CONTENT" | grep -m1 '^description:' | sed 's/^description:\s*//' | sed 's/^["'"'"']//' | sed 's/["'"'"']$//')
+          file = Path(os.environ["POST_FILE"])
+          content = file.read_text(encoding="utf-8")
+          front_matter = {}
 
-          SLUG=$(basename "$FILE" .md | sed 's/^[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}-//')
-          POST_URL="https://jmchoi4u.github.io/posts/${SLUG}/"
+          if content.startswith("---\n"):
+              end = content.find("\n---\n", 4)
+              if end != -1:
+                  for line in content[4:end].splitlines():
+                      if not line or line[0].isspace() or ":" not in line:
+                          continue
+                      key, value = line.split(":", 1)
+                      front_matter[key.strip()] = value.strip().strip("\"'")
 
-          echo "title=$TITLE" >> "$GITHUB_OUTPUT"
-          echo "desc=$DESC" >> "$GITHUB_OUTPUT"
-          echo "url=$POST_URL" >> "$GITHUB_OUTPUT"
+          title = front_matter.get("title") or file.stem
+          description = front_matter.get("description") or ""
+          permalink = front_matter.get("permalink", "").strip()
+
+          if permalink:
+              path = "/" + permalink.strip("/")
+          else:
+              slug = re.sub(r"^\d{4}-\d{2}-\d{2}-", "", file.stem)
+              path = f"/posts/{slug}"
+
+          post_url = "https://jmchoi4u.github.io" + path.rstrip("/") + "/"
+
+          def emit(name, value):
+              marker = f"EOF_{name}"
+              print(f"{name}<<{marker}")
+              print(value)
+              print(marker)
+
+          emit("title", title)
+          emit("desc", description)
+          emit("url", post_url)
+          PY
 
       - name: Send notifications
         if: steps.check.outputs.has_new == 'true'
+        env:
+          POST_TITLE: ${{ steps.info.outputs.title }}
+          POST_URL: ${{ steps.info.outputs.url }}
+          POST_DESC: ${{ steps.info.outputs.desc }}
         run: |
+          python3 <<'PY'
+          import json
+          import os
+
+          payload = {
+              "title": os.environ["POST_TITLE"],
+              "url": os.environ["POST_URL"],
+              "description": os.environ["POST_DESC"],
+          }
+
+          with open("notify-payload.json", "w", encoding="utf-8") as file:
+              json.dump(payload, file, ensure_ascii=False)
+          PY
+
           curl -s -X POST "https://jm-studio-auth.jmchoi4u.workers.dev/notify" \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer ${{ secrets.GH_PAT }}" \
-            -d '{
-              "title": "'"$(echo '${{ steps.info.outputs.title }}' | sed 's/"/\\"/g')"'",
-              "url": "${{ steps.info.outputs.url }}",
-              "description": "'"$(echo '${{ steps.info.outputs.desc }}' | sed 's/"/\\"/g')"'"
-            }'
+            --data @notify-payload.json

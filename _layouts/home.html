@@ -84,7 +84,7 @@ layout: default
           {% assign thumb_label = post.tags | first | default: '글' %}
           {% assign thumb_hash = post.title | append: thumb_label | slugify | size | modulo: 5 %}
           <div class="col-md-4">
-            <div class="auto-thumb auto-thumb-{{ cat_hash }}">
+            <div class="auto-thumb auto-thumb-{{ thumb_hash }}">
               <span class="auto-thumb-icon">
                 <i class="fas fa-bookmark"></i>
               </span>

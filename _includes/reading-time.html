@@ -1,0 +1,26 @@
+{% comment %}
+  Shared mixed-language reading-time label.
+
+  Usage:
+    {% include reading-time.html content=content %}
+    {% include reading-time.html content=post.content class="post-reading-time" %}
+
+  Jekyll's `number_of_words: "cjk"` counts each Hangul/CJK character and each
+  non-CJK word, which gives a dependable no-JavaScript fallback. When
+  blog-analytics.js is present it refines this to 500 Korean characters/minute
+  plus 220 English words/minute using the rendered article text.
+{% endcomment %}
+
+{% assign reading_source = include.content | default: content | default: page.content %}
+{% assign reading_text = reading_source | strip_html | normalize_whitespace %}
+{% assign reading_units = reading_text | number_of_words: "cjk" %}
+{% assign reading_minutes = reading_units | plus: 349 | divided_by: 350 | at_least: 1 %}
+
+<span
+  class="{{ include.class | default: 'reading-time' }}"
+  data-reading-time
+  {% if include.target %}data-reading-target="{{ include.target | escape }}"{% endif %}
+  aria-label="예상 읽기 시간 {{ reading_minutes }}분"
+>
+  <span data-reading-time-value>{{ reading_minutes }}분 읽기</span>
+</span>

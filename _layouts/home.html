@@ -46,22 +46,49 @@ layout: default
   {% endfor %}
 {% endif %}
 
-<div id="post-list" class="flex-grow-1 px-xl-1">
-  {% for post in posts %}
-    {% capture _words %}{{ post.content | number_of_words }}{% endcapture %}
-    {% capture _chars %}{{ post.content | size }}{% endcapture %}
-    {% assign _wpm = 200 %}
-    {% assign _cpm = 600 %}
-    {% assign _rt_words = _words | divided_by: _wpm %}
-    {% assign _rt_chars = _chars | divided_by: _cpm %}
-    {% if _rt_chars > _rt_words %}
-      {% assign _reading_time = _rt_chars | at_least: 1 %}
-    {% else %}
-      {% assign _reading_time = _rt_words | at_least: 1 %}
-    {% endif %}
+{% assign visible_posts = site.posts | where_exp: 'item', 'item.hidden != true' %}
 
-    <article class="card-wrapper card home-card">
-      <a href="{{ post.url | relative_url }}" class="post-preview row g-0 flex-md-row-reverse">
+<section class="home-intro" aria-labelledby="home-intro-title">
+  <p class="home-eyebrow">{{ site.title }}</p>
+  <h1 id="home-intro-title">{{ site.tagline }}</h1>
+  <p class="home-intro-copy">{{ site.description }}</p>
+  <div class="home-intro-actions">
+    <a class="home-primary-action" href="#latest-posts" data-analytics-event="home_latest">최신 글 보기 <i class="fas fa-arrow-down" aria-hidden="true"></i></a>
+    <a class="home-secondary-action" href="{{ '/browse/' | relative_url }}" data-analytics-event="home_browse">주제별 탐색</a>
+    <button class="home-secondary-action" type="button" data-home-search data-analytics-event="home_search">검색</button>
+  </div>
+  <dl class="home-proof" aria-label="블로그 현황">
+    <div><dt>공개 기록</dt><dd>{{ visible_posts | size }}</dd></div>
+    <div><dt>주제</dt><dd>{{ site.categories | size }}</dd></div>
+    <div><dt>누적 조회</dt><dd data-view-count data-view-path="TOTAL" data-view-format="compact" data-view-error-text="—">—</dd></div>
+  </dl>
+</section>
+
+<section class="home-feed-head" id="latest-posts" aria-labelledby="latest-posts-title">
+  <div>
+    <p class="home-feed-kicker">RECENT NOTES</p>
+    <h2 id="latest-posts-title">최근 기록</h2>
+  </div>
+  <a href="{{ '/archives/' | relative_url }}">전체 아카이브 <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
+</section>
+
+<div class="home-filter" role="toolbar" aria-label="카테고리로 글 필터링">
+  <button class="active" type="button" data-home-filter="all" aria-pressed="true">전체</button>
+  {% for category in site.categories %}
+    {% assign category_on_page = false %}
+    {% for post in posts %}
+      {% if post.categories contains category[0] %}{% assign category_on_page = true %}{% endif %}
+    {% endfor %}
+    {% if category_on_page %}
+      <button type="button" data-home-filter="{{ category[0] | escape }}" aria-pressed="false">{{ category[0] }}</button>
+    {% endif %}
+  {% endfor %}
+</div>
+
+<div id="post-list" class="home-post-list flex-grow-1 px-xl-1" aria-live="polite">
+  {% for post in posts %}
+    <article class="card-wrapper card home-card{% unless post.image %} home-card-text{% endunless %}" data-home-post data-home-categories="{{ post.categories | join: '|' | escape }}">
+      <a href="{{ post.url | relative_url }}" class="post-preview row g-0 flex-md-row-reverse" data-analytics-event="open_post" data-analytics-title="{{ post.title | escape }}">
         {% assign card_body_col = '12' %}
 
         {% if post.image %}
@@ -71,48 +98,35 @@ layout: default
               {% assign src = post.media_subpath | append: '/' | append: src | replace: '///', '/' | replace: '//', '/' %}
             {% endunless %}
           {% endif %}
-          {% assign alt = post.image.alt | xml_escape | default: 'Preview Image' %}
+          {% assign alt = post.image.alt | default: post.title | xml_escape %}
 
           <div class="col-md-5">
-            <div class="preview-img">
-              <img src="{{ src }}" alt="{{ alt }}" style="object-position:{{ post.card_image_position | default: post.image_position | default: '50% 50%' }};">
+            <div class="preview-img home-preview-img">
+              <img src="{{ src }}" alt="{{ alt }}" loading="lazy" style="object-position:{{ post.card_image_position | default: post.image_position | default: '50% 50%' }};">
             </div>
           </div>
           {% assign card_body_col = '7' %}
-        {% else %}
-          <!-- Auto-generated thumbnail -->
-          {% assign thumb_label = post.tags | first | default: '글' %}
-          {% assign thumb_hash = post.title | append: thumb_label | slugify | size | modulo: 5 %}
-          <div class="col-md-4">
-            <div class="auto-thumb auto-thumb-{{ thumb_hash }}">
-              <span class="auto-thumb-icon">
-                <i class="fas fa-bookmark"></i>
-              </span>
-              <span class="auto-thumb-cat">{{ thumb_label }}</span>
-            </div>
-          </div>
-          {% assign card_body_col = '8' %}
         {% endif %}
 
         <div class="col-md-{{ card_body_col }}">
           <div class="card-body d-flex flex-column">
-            <h1 class="card-title my-2 mt-md-0" style="font-size:1.25rem">
-              {{ post.title }}
-              <span class="view-count-title" data-post-url="{{ post.url }}" style="display:none;">
-                <i class="far fa-eye"></i> <span class="view-num-title"></span>
-              </span>
-            </h1>
+            {% if post.categories.size > 0 %}
+              <div class="home-card-category">{{ post.categories | first }}</div>
+            {% endif %}
+            <h3 class="card-title">{{ post.title }}</h3>
 
-            <div class="card-text content mt-0 mb-2" style="font-size:0.85rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">
-              <p style="margin:0">{% include post-summary.html %}</p>
+            <div class="card-text home-card-summary">
+              <p>{% include post-summary.html %}</p>
             </div>
 
-            <div class="post-meta d-flex align-items-end">
-              <div class="me-auto">
+            <div class="post-meta home-card-meta">
+              <div>
                 <i class="far fa-calendar fa-fw me-1"></i>
                 {% include datetime.html date=post.date lang=lang %}
                 <i class="far fa-clock fa-fw me-1"></i>
-                <span>{{ _reading_time }}분</span>
+                {% include reading-time.html content=post.content %}
+                <i class="far fa-eye fa-fw me-1"></i>
+                <span data-view-count data-view-path="{{ post.url }}" data-view-suffix="회" data-view-error-text="—">—</span>
               </div>
               {% if post.pin %}
                 <div class="pin ms-1">
@@ -123,8 +137,8 @@ layout: default
             </div>
 
             {% if post.tags.size > 0 %}
-              <div class="post-tags mt-2">
-                {% for tag in post.tags %}
+              <div class="post-tags home-card-tags">
+                {% for tag in post.tags limit: 3 %}
                   <span class="post-tag-pill">{{ tag }}</span>
                 {% endfor %}
               </div>
@@ -135,6 +149,7 @@ layout: default
       </a>
     </article>
   {% endfor %}
+  <p class="home-filter-empty" data-home-filter-empty hidden>이 카테고리에는 현재 페이지의 글이 없습니다.</p>
 </div>
 <!-- #post-list -->
 
@@ -142,24 +157,4 @@ layout: default
   {% include post-paginator.html %}
 {% endif %}
 
-<script>
-(function() {
-  var gcId = {{ site.analytics.goatcounter.id | jsonify | default: 'null' }};
-  if (!gcId) return;
-  var badges = document.querySelectorAll('.view-count-title');
-  if (!badges.length) return;
-  badges.forEach(function(badge) {
-    var url = badge.getAttribute('data-post-url').replace(/\/$/, '');
-    fetch('https://' + gcId + '.goatcounter.com/counter/' + encodeURIComponent(url) + '.json')
-      .then(function(r) { return r.json(); })
-      .then(function(d) {
-        var views = parseInt((d.count || '0').replace(/\D/g, ''), 10) || 0;
-        if (views >= 3) {
-          badge.querySelector('.view-num-title').textContent = views;
-          badge.style.display = 'inline';
-        }
-      })
-      .catch(function() {});
-  });
-})();
-</script>
+<script defer src="{{ '/assets/js/blog-home.js' | relative_url }}"></script>

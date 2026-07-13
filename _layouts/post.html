@@ -11,10 +11,8 @@ script_includes:
 {% include lang.html %}
 
 {% include toc-status.html %}
-{% capture post_words %}{{ page.content | number_of_words }}{% endcapture %}
-{% assign estimated_read_time = post_words | divided_by: 220 | at_least: 1 %}
 
-<article class="px-1" data-toc="{{ enable_toc }}">
+<article class="px-1" data-toc="{{ enable_toc }}" data-reading-article>
   <header>
     <!-- ═══ Brunch-style Full Hero ═══ -->
     <div id="post-hero-wrapper" class="post-hero{% unless page.image %} post-hero-default{% endunless %}">
@@ -51,19 +49,29 @@ script_includes:
       </div>
 
       <div class="post-hero-footer">
-        {% if page.tags.size > 0 %}
+        {% if page.categories.size > 0 or page.tags.size > 0 %}
           <div class="post-hero-taxonomy">
-            <span class="post-hero-tags">
-              <button class="post-hero-tag-toggle" id="tag-toggle" type="button" aria-label="태그 보기">
-                <i class="fa fa-tags"></i>
-                <span class="tag-toggle-count">{{ page.tags.size }}</span>
-              </button>
-              <span class="post-hero-tag-list" id="tag-list">
-                {% for tag in page.tags %}
-                  <a href="{{ site.baseurl }}/tags/{{ tag | slugify | url_encode }}/" class="post-hero-tag-pill">{{ tag }}</a>
+            {% if page.categories.size > 0 %}
+              <span class="post-hero-folder">
+                <i class="far fa-folder-open" aria-hidden="true"></i>
+                {% for category in page.categories %}
+                  <a href="{{ category | slugify | url_encode | prepend: '/categories/' | append: '/' | relative_url }}" class="post-hero-tag-pill">{{ category }}</a>
                 {% endfor %}
               </span>
-            </span>
+            {% endif %}
+            {% if page.tags.size > 0 %}
+              <span class="post-hero-tags">
+                <button class="post-hero-tag-toggle" id="tag-toggle" type="button" aria-label="태그 {{ page.tags.size }}개 보기" aria-expanded="false" aria-controls="tag-list">
+                  <i class="fa fa-tags" aria-hidden="true"></i>
+                  <span class="tag-toggle-count">{{ page.tags.size }}</span>
+                </button>
+                <span class="post-hero-tag-list" id="tag-list">
+                  {% for tag in page.tags %}
+                    <a href="{{ site.baseurl }}/tags/{{ tag | slugify | url_encode }}/" class="post-hero-tag-pill">{{ tag }}</a>
+                  {% endfor %}
+                </span>
+              </span>
+            {% endif %}
           </div>
         {% endif %}
 
@@ -71,10 +79,10 @@ script_includes:
         <div class="post-hero-bottom">
           <span class="post-hero-meta-pill">by {{ site.social.name }}</span>
           <span class="post-hero-meta-pill">{{ page.date | date: "%Y.%m.%d" }}</span>
-          <span class="post-hero-meta-pill" id="hero-views" style="display:none">
-            <i class="fas fa-eye"></i> <span id="hero-views-num"></span>
+          <span class="post-hero-meta-pill" id="hero-views">
+            <i class="fas fa-eye" aria-hidden="true"></i> <span data-view-count data-view-path="{{ page.url }}" data-view-suffix="회" data-view-error-text="—">—</span>
           </span>
-          <span class="post-hero-meta-pill"><i class="far fa-clock"></i> {{ estimated_read_time }}분 읽기</span>
+          <span class="post-hero-meta-pill"><i class="far fa-clock" aria-hidden="true"></i> {% include reading-time.html content=page.content %}</span>
         </div>
       </div>
 
@@ -131,7 +139,7 @@ script_includes:
             <i class="fas fa-dollar-sign"></i>
             <span>Support</span>
           </a>
-          <button type="button" class="author-subscribe-btn" onclick="openSubscribeModal()">
+          <button type="button" class="author-subscribe-btn" onclick="openSubscribeModal(this)" data-analytics-event="subscribe_open">
             <i class="fas fa-bell"></i>
             <span>새 글 알림</span>
           </button>
@@ -148,31 +156,33 @@ script_includes:
 </article>
 
 <!-- Subscribe Modal -->
-<div class="subscribe-overlay" id="subscribe-overlay" onclick="closeSubscribeModal()">
-  <div class="subscribe-modal" onclick="event.stopPropagation()">
+<div class="subscribe-overlay" id="subscribe-overlay" onclick="closeSubscribeModal()" role="presentation" aria-hidden="true">
+  <div class="subscribe-modal" onclick="event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="subscribe-title" aria-describedby="subscribe-desc">
     <button type="button" class="subscribe-close" onclick="closeSubscribeModal()" aria-label="닫기">&times;</button>
     <div class="subscribe-icon"><i class="fas fa-bell"></i></div>
-    <h3 class="subscribe-title">새 글 알림 받기</h3>
-    <p class="subscribe-desc">새로운 글이 발행되면 이메일로 알려드립니다.</p>
+    <h3 class="subscribe-title" id="subscribe-title">새 글 알림 받기</h3>
+    <p class="subscribe-desc" id="subscribe-desc">새로운 글이 발행되면 이메일로 알려드립니다.</p>
     <form class="subscribe-form" id="subscribe-form" onsubmit="return handleSubscribe(event)">
       <input type="email" class="subscribe-email" id="subscribe-email" placeholder="이메일 주소" required autocomplete="email">
       <button type="submit" class="subscribe-submit" id="subscribe-submit">구독하기</button>
     </form>
+    <p class="subscribe-error" id="subscribe-error" role="alert" aria-live="assertive"></p>
     <p class="subscribe-note">언제든 구독을 취소할 수 있습니다.</p>
-    <div class="subscribe-done" id="subscribe-done" style="display:none">
+    <div class="subscribe-done" id="subscribe-done" style="display:none" tabindex="-1">
       <div class="subscribe-check">&#10003;</div>
-      <p>구독이 완료되었습니다!</p>
+      <p>확인 이메일을 보냈습니다. 이메일의 링크를 누르면 구독이 시작됩니다.</p>
     </div>
   </div>
 </div>
 
-<div id="post-floating-topbar" class="post-floating-topbar" aria-hidden="true">
+<div id="post-floating-topbar" class="post-floating-topbar" aria-hidden="true" inert>
   <div class="post-floating-topbar-inner">
     <div class="post-floating-topbar-left">
       <button class="post-floating-icon-btn" id="floating-menu" type="button" aria-label="메뉴">
         <i class="fas fa-bars"></i>
       </button>
     </div>
+    <div class="post-floating-topbar-title" title="{{ page.title | escape }}">{{ page.title }}</div>
     <div class="post-floating-topbar-actions">
       <button class="post-floating-icon-btn" id="floating-theme-toggle" type="button" aria-label="흑백 모드 전환">
         <i class="fas fa-adjust"></i>
@@ -186,54 +196,83 @@ script_includes:
       <button class="post-floating-icon-btn" id="floating-share" type="button" aria-label="공유">
         <i class="fas fa-share-alt"></i>
       </button>
+      <button class="post-floating-icon-btn" id="floating-top" type="button" aria-label="맨 위로">
+        <i class="fas fa-arrow-up"></i>
+      </button>
     </div>
   </div>
 </div>
 
 <!-- ═══ Floating Action Bar (scrolled) ═══ -->
-<div id="post-fab" class="post-fab">
-  <button class="fab-btn" id="fab-toc" aria-label="바로가기"><i class="fas fa-list-ul"></i></button>
-  <button class="fab-btn" id="fab-share" aria-label="공유"><i class="fas fa-share-alt"></i></button>
-  <button class="fab-btn" id="fab-comment" aria-label="댓글"><i class="fas fa-comment"></i></button>
-  <button class="fab-btn" id="fab-top" aria-label="맨 위로"><i class="fas fa-arrow-up"></i></button>
+<div id="post-fab" class="post-fab" aria-hidden="true" inert>
+  <button class="fab-btn" id="fab-toc" type="button" aria-label="바로가기"><i class="fas fa-list-ul"></i></button>
+  <button class="fab-btn" id="fab-share" type="button" aria-label="공유"><i class="fas fa-share-alt"></i></button>
+  <button class="fab-btn" id="fab-comment" type="button" aria-label="댓글"><i class="fas fa-comment"></i></button>
+  <button class="fab-btn" id="fab-top" type="button" aria-label="맨 위로"><i class="fas fa-arrow-up"></i></button>
 </div>
-<div id="link-copy-toast" class="link-copy-toast" aria-live="polite">Copied</div>
+<div id="link-copy-toast" class="link-copy-toast" aria-live="polite">링크를 복사했습니다</div>
 
 <script>
 /* Subscribe Modal */
-function openSubscribeModal(){
-  document.getElementById('subscribe-overlay').classList.add('open');
+var subscribeReturnFocus=null;
+function openSubscribeModal(trigger){
+  var overlay=document.getElementById('subscribe-overlay');
+  subscribeReturnFocus=trigger||document.activeElement;
+  overlay.classList.add('open');
+  overlay.setAttribute('aria-hidden','false');
+  document.getElementById('subscribe-error').textContent='';
   document.getElementById('subscribe-done').style.display='none';
   document.getElementById('subscribe-form').style.display='';
-  setTimeout(function(){document.getElementById('subscribe-email').focus()},200);
+  setTimeout(function(){document.getElementById('subscribe-email').focus()},100);
 }
 function closeSubscribeModal(){
-  document.getElementById('subscribe-overlay').classList.remove('open');
+  var overlay=document.getElementById('subscribe-overlay');
+  overlay.classList.remove('open');
+  overlay.setAttribute('aria-hidden','true');
+  if(subscribeReturnFocus&&typeof subscribeReturnFocus.focus==='function')subscribeReturnFocus.focus();
 }
-function handleSubscribe(e){
+async function handleSubscribe(e){
   e.preventDefault();
   var email=document.getElementById('subscribe-email').value.trim();
   if(!email)return false;
   var btn=document.getElementById('subscribe-submit');
+  var error=document.getElementById('subscribe-error');
+  error.textContent='';
   btn.disabled=true;btn.textContent='처리 중...';
-  fetch('https://jm-studio-auth.jmchoi4u.workers.dev/subscribe',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({email:email})
-  }).then(function(r){return r.json()}).then(function(d){
+  try{
+    var response=await fetch('https://jm-studio-auth.jmchoi4u.workers.dev/subscribe',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      credentials:'omit',
+      body:JSON.stringify({email:email})
+    });
+    var data={};
+    try{data=await response.json()}catch(parseError){}
+    if(!response.ok||data.ok!==true)throw new Error(data.error||'지금은 구독을 처리할 수 없습니다. 잠시 후 다시 시도해 주세요.');
     document.getElementById('subscribe-form').style.display='none';
     document.getElementById('subscribe-done').style.display='block';
-    btn.disabled=false;btn.textContent='구독하기';
+    document.getElementById('subscribe-done').focus();
     document.getElementById('subscribe-email').value='';
-  }).catch(function(){
+    if(window.JMBlogAnalytics)window.JMBlogAnalytics.trackEvent('subscribe_success',{includePath:false,title:'새 글 알림 구독'});
+  }catch(fetchError){
+    error.textContent=fetchError.message||'구독 처리에 실패했습니다. 네트워크 연결을 확인해 주세요.';
+  }finally{
     btn.disabled=false;btn.textContent='구독하기';
-    document.getElementById('subscribe-form').style.display='none';
-    document.getElementById('subscribe-done').style.display='block';
-  });
+  }
   return false;
 }
 document.addEventListener('keydown',function(e){
-  if(e.key==='Escape'){var o=document.getElementById('subscribe-overlay');if(o)o.classList.remove('open')}
+  var o=document.getElementById('subscribe-overlay');
+  if(!o||!o.classList.contains('open'))return;
+  if(e.key==='Escape'){closeSubscribeModal();return}
+  if(e.key==='Tab'){
+    var focusable=Array.prototype.slice.call(o.querySelectorAll('button:not([disabled]),input:not([disabled]),a[href],[tabindex]:not([tabindex="-1"])'))
+      .filter(function(node){return node.offsetParent!==null});
+    if(!focusable.length){e.preventDefault();return}
+    var first=focusable[0],last=focusable[focusable.length-1];
+    if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}
+    else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}
+  }
 });
 </script>
 
@@ -260,7 +299,6 @@ document.addEventListener('keydown',function(e){
   var fab = document.getElementById('post-fab');
   var floatingTocHeadings = [];
   var tocEndAnchor = document.querySelector('.post-author-card') || document.querySelector('.post-bottom-nav') || document.getElementById('tail-wrapper');
-  var gcId = {{ site.analytics.goatcounter.id | jsonify | default: 'null' }};
 
   function slugifyHeading(text) {
     return (text || '')
@@ -396,14 +434,23 @@ document.addEventListener('keydown',function(e){
       } else {
         document.body.classList.remove('scrolled-past-hero');
       }
+      var floatingTopbar = document.getElementById('post-floating-topbar');
+      if (floatingTopbar) {
+        floatingTopbar.setAttribute('aria-hidden', revealUi ? 'false' : 'true');
+        if (revealUi) floatingTopbar.removeAttribute('inert');
+        else floatingTopbar.setAttribute('inert', '');
+      }
 
       document.body.classList.toggle('post-toc-visible', revealUi && !endToc && floatingTocHeadings.length > 0);
 
       if (arrow) arrow.style.opacity = Math.max(0, 1 - y / (heroH * 0.28));
 
       if (fab) {
-        if (y > heroH * 0.72) fab.classList.add('fab-visible');
-        else fab.classList.remove('fab-visible');
+        var revealFab = y > heroH * 0.72;
+        fab.classList.toggle('fab-visible', revealFab);
+        fab.setAttribute('aria-hidden', revealFab ? 'false' : 'true');
+        if (revealFab) fab.removeAttribute('inert');
+        else fab.setAttribute('inert', '');
       }
 
       updateFloatingTocActive();
@@ -415,6 +462,7 @@ document.addEventListener('keydown',function(e){
 
   /* FAB actions */
   var fabTop = document.getElementById('fab-top');
+  var floatingTop = document.getElementById('floating-top');
   var fabComment = document.getElementById('fab-comment');
   var fabShare = document.getElementById('fab-share');
   var floatingShare = document.getElementById('floating-share');
@@ -422,101 +470,55 @@ document.addEventListener('keydown',function(e){
   var copyToast = document.getElementById('link-copy-toast');
   var copyToastTimer = null;
 
-  if (fabTop) fabTop.addEventListener('click', function() { window.scrollTo({ top: 0, behavior: 'smooth' }); });
-  if (fabComment) fabComment.addEventListener('click', function() {
-    var c = document.getElementById('disqus_thread') || document.getElementById('utterances') || document.getElementById('giscus') || document.querySelector('.comment');
-    if (c) c.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    else { var t = document.getElementById('tail-wrapper'); if (t) t.scrollIntoView({ behavior: 'smooth' }); }
-  });
+  function scrollToComments() {
+    var comments = document.getElementById('comments') || document.getElementById('disqus_thread') || document.getElementById('utterances') || document.getElementById('giscus') || document.querySelector('.comment');
+    if (!comments) {
+      var tail = document.getElementById('tail-wrapper');
+      if (tail) tail.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+    comments.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setTimeout(function() {
+      if (typeof comments.focus === 'function') comments.focus({ preventScroll: true });
+    }, 450);
+  }
 
-  function copyPageLink() {
-    navigator.clipboard.writeText(window.location.href).then(function() {
-      if (!copyToast) return;
-      copyToast.classList.add('show');
-      if (copyToastTimer) clearTimeout(copyToastTimer);
-      copyToastTimer = setTimeout(function() {
-        copyToast.classList.remove('show');
-      }, 1400);
-    }).catch(function() {});
+  if (fabTop) fabTop.addEventListener('click', function() { window.scrollTo({ top: 0, behavior: 'smooth' }); });
+  if (floatingTop) floatingTop.addEventListener('click', function() { window.scrollTo({ top: 0, behavior: 'smooth' }); });
+  if (fabComment) fabComment.addEventListener('click', scrollToComments);
+
+  function showCopyToast() {
+    if (!copyToast) return;
+    copyToast.classList.add('show');
+    if (copyToastTimer) clearTimeout(copyToastTimer);
+    copyToastTimer = setTimeout(function() { copyToast.classList.remove('show'); }, 1400);
+  }
+  async function sharePage() {
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: document.title, text: {{ page.description | default: page.title | jsonify }}, url: window.location.href });
+        if (window.JMBlogAnalytics) window.JMBlogAnalytics.trackEvent('share_native', { title: document.title });
+        return;
+      } catch (error) {
+        if (error && error.name === 'AbortError') return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      showCopyToast();
+      if (window.JMBlogAnalytics) window.JMBlogAnalytics.trackEvent('share_copy', { title: document.title });
+    } catch (error) {
+      window.prompt('아래 링크를 복사해 주세요.', window.location.href);
+    }
   }
   var heroShare = document.getElementById('hero-share');
-  if (heroShare) heroShare.addEventListener('click', copyPageLink);
-  if (fabShare) fabShare.addEventListener('click', copyPageLink);
-  if (floatingShare) floatingShare.addEventListener('click', copyPageLink);
-
-  function requestGoatCounterCount(path, callback) {
-    if (typeof callback !== 'function') return;
-    if (!gcId) {
-      callback(0);
-      return;
-    }
-
-    var hostname = window.location.hostname || '';
-    if (/^(localhost|127\.0\.0\.1)$/i.test(hostname)) {
-      callback(0);
-      return;
-    }
-
-    var normalizedPath = (path || '/').replace(/\/$/, '') || '/';
-    var request = new XMLHttpRequest();
-    request.open('GET', 'https://' + gcId + '.goatcounter.com/counter/' + encodeURIComponent(normalizedPath) + '.json', true);
-    request.onload = function() {
-      if (request.status < 200 || request.status >= 300) {
-        callback(0);
-        return;
-      }
-
-      try {
-        var data = JSON.parse(request.responseText || '{}');
-        var views = parseInt((data.count || '0').replace(/\D/g, ''), 10) || 0;
-        callback(views);
-      } catch (error) {
-        callback(0);
-      }
-    };
-    request.onerror = function() {
-      callback(0);
-    };
-    request.send();
-  }
-  window.requestGoatCounterCount = requestGoatCounterCount;
+  if (heroShare) heroShare.addEventListener('click', sharePage);
+  if (fabShare) fabShare.addEventListener('click', sharePage);
+  if (floatingShare) floatingShare.addEventListener('click', sharePage);
 
   var heroCommentBtn = document.getElementById('hero-comment-btn');
-  if (heroCommentBtn) {
-    heroCommentBtn.addEventListener('click', function() {
-      var c = document.getElementById('disqus_thread') || document.getElementById('utterances') || document.getElementById('giscus') || document.querySelector('.comment');
-      if (c) c.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      else { var t = document.getElementById('tail-wrapper'); if (t) t.scrollIntoView({ behavior: 'smooth' }); }
-    });
-  }
-  if (floatingCommentBtn) {
-    floatingCommentBtn.addEventListener('click', function() {
-      var c = document.getElementById('disqus_thread') || document.getElementById('utterances') || document.getElementById('giscus') || document.querySelector('.comment');
-      if (c) c.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      else { var t = document.getElementById('tail-wrapper'); if (t) t.scrollIntoView({ behavior: 'smooth' }); }
-    });
-  }
-
-  /* View count */
-  if (gcId) {
-    var pUrl = {{ page.url | jsonify }}.replace(/\/$/, '');
-    requestGoatCounterCount(pUrl, function(views) {
-      var heroElViews = document.getElementById('hero-views');
-      var heroNum = document.getElementById('hero-views-num');
-      var contentElViews = document.getElementById('content-views');
-      var contentNum = document.getElementById('content-views-num');
-
-      if (heroElViews && heroNum) {
-        heroNum.textContent = views;
-        heroElViews.style.display = 'inline-flex';
-      }
-
-      if (contentElViews && contentNum) {
-        contentNum.textContent = views;
-        contentElViews.style.display = 'inline-flex';
-      }
-    });
-  }
+  if (heroCommentBtn) heroCommentBtn.addEventListener('click', scrollToComments);
+  if (floatingCommentBtn) floatingCommentBtn.addEventListener('click', scrollToComments);
 
   /* Hide default back-to-top */
   var btt = document.getElementById('back-to-top');
@@ -606,11 +608,13 @@ document.addEventListener('keydown',function(e){
       e.stopPropagation();
       tagList.classList.toggle('open');
       tagToggle.classList.toggle('active');
+      tagToggle.setAttribute('aria-expanded', tagList.classList.contains('open') ? 'true' : 'false');
     });
     document.addEventListener('click', function(e) {
       if (!tagList.contains(e.target) && e.target !== tagToggle) {
         tagList.classList.remove('open');
         tagToggle.classList.remove('active');
+        tagToggle.setAttribute('aria-expanded', 'false');
       }
     });
   }

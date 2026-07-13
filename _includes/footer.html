@@ -4,4 +4,26 @@
     d-flex flex-column justify-content-center text-muted
     flex-lg-row justify-content-lg-between align-items-lg-center pb-lg-3
   "
-></footer>
+>
+  <p class="footer-copyright mb-2 mb-lg-0">
+    &copy; {{ 'now' | date: '%Y' }} {{ site.social.name | default: site.title }}
+  </p>
+
+  <nav class="footer-links" aria-label="하단 링크">
+    <a href="{{ '/feed.xml' | relative_url }}">RSS</a>
+    {% if site.github.username %}
+      <a href="https://github.com/{{ site.github.username }}" target="_blank" rel="noopener noreferrer">GitHub</a>
+    {% endif %}
+    {% if site.social.email %}
+      <a href="mailto:{{ site.social.email }}">이메일</a>
+    {% endif %}
+  </nav>
+</footer>
+
+<style>
+  .footer-copyright{font-size:.78rem}
+  .footer-links{display:flex;align-items:center;justify-content:center;gap:.9rem;font-size:.78rem}
+  .footer-links a{color:var(--text-muted-color);text-decoration:none}
+  .footer-links a:hover{color:var(--link-color);text-decoration:underline;text-underline-offset:.2rem}
+  .footer-links a:focus-visible{outline:2px solid var(--link-color);outline-offset:3px;border-radius:3px}
+</style>

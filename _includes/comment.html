@@ -1,4 +1,12 @@
-<!-- Force Disqus comments on post pages -->
-{% if page.comments %}
-  {% include comments/disqus.html %}
+{% if page.comments and site.comments.provider %}
+  <section id="comments" aria-label="댓글" tabindex="-1">
+    {% case site.comments.provider %}
+      {% when 'giscus' %}
+        {% include comments/giscus.html %}
+      {% when 'utterances' %}
+        {% include comments/utterances.html %}
+      {% when 'disqus' %}
+        {% include comments/disqus.html %}
+    {% endcase %}
+  </section>
 {% endif %}

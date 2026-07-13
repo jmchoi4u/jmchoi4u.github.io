@@ -4,34 +4,123 @@ layout: page
 
 {% include lang.html %}
 
-<div id="tags" class="d-flex flex-wrap mx-xl-2">
-  {% assign tags = '' | split: '' %}
-  {% for t in site.tags %}
+<div class="browse-page mx-xl-2">
+  <p class="browse-intro">주제로 넓게 살펴보거나, 태그로 필요한 기록을 빠르게 찾아보세요.</p>
+
+  {% assign categories = '' | split: '' %}
+  {% for category in site.categories %}
     {% assign visible_count = 0 %}
-    {% for post in t[1] %}
+    {% for post in category[1] %}
       {% unless post.hidden == true %}
         {% assign visible_count = visible_count | plus: 1 %}
       {% endunless %}
     {% endfor %}
     {% if visible_count > 0 %}
-      {% assign tags = tags | push: t[0] %}
+      {% assign categories = categories | push: category[0] %}
+    {% endif %}
+  {% endfor %}
+
+  {% assign sorted_categories = categories | sort_natural %}
+
+  <section class="browse-section" aria-labelledby="browse-categories-title">
+    <div class="browse-heading-row">
+      <h2 id="browse-categories-title">카테고리</h2>
+      <span>{{ sorted_categories | size }}개 주제</span>
+    </div>
+
+    {% if sorted_categories.size > 0 %}
+      <div class="browse-category-grid">
+        {% for category in sorted_categories %}
+          {% assign visible_count = 0 %}
+          {% for post in site.categories[category] %}
+            {% unless post.hidden == true %}
+              {% assign visible_count = visible_count | plus: 1 %}
+            {% endunless %}
+          {% endfor %}
+          {% capture category_url %}/categories/{{ category | slugify | url_encode }}/{% endcapture %}
+          <a class="browse-category-card" href="{{ category_url | relative_url }}">
+            <span class="browse-category-icon" aria-hidden="true"><i class="far fa-folder-open"></i></span>
+            <span class="browse-category-copy">
+              <strong>{{ category }}</strong>
+              <small>{{ visible_count }}개 글</small>
+            </span>
+            <i class="fas fa-angle-right browse-category-arrow" aria-hidden="true"></i>
+          </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="browse-empty">아직 분류된 글이 없습니다.</p>
+    {% endif %}
+  </section>
+
+  {% assign tags = '' | split: '' %}
+  {% for tag in site.tags %}
+    {% assign visible_count = 0 %}
+    {% for post in tag[1] %}
+      {% unless post.hidden == true %}
+        {% assign visible_count = visible_count | plus: 1 %}
+      {% endunless %}
+    {% endfor %}
+    {% if visible_count > 0 %}
+      {% assign tags = tags | push: tag[0] %}
     {% endif %}
   {% endfor %}
 
   {% assign sorted_tags = tags | sort_natural %}
 
-  {% for t in sorted_tags %}
-    {% assign visible_count = 0 %}
-    {% for post in site.tags[t] %}
-      {% unless post.hidden == true %}
-        {% assign visible_count = visible_count | plus: 1 %}
-      {% endunless %}
-    {% endfor %}
-    <div>
-      <a class="tag" href="{{ t | slugify | url_encode | prepend: '/tags/' | append: '/' | relative_url }}">
-        {{ t -}}
-        <span class="text-muted">{{ visible_count }}</span>
-      </a>
+  <section class="browse-section" aria-labelledby="browse-tags-title">
+    <div class="browse-heading-row">
+      <h2 id="browse-tags-title">태그</h2>
+      <span>{{ sorted_tags | size }}개 태그</span>
     </div>
-  {% endfor %}
+
+    {% if sorted_tags.size > 0 %}
+      <div class="browse-tag-list">
+        {% for tag in sorted_tags %}
+          {% assign visible_count = 0 %}
+          {% for post in site.tags[tag] %}
+            {% unless post.hidden == true %}
+              {% assign visible_count = visible_count | plus: 1 %}
+            {% endunless %}
+          {% endfor %}
+          <a class="browse-tag" href="{{ tag | slugify | url_encode | prepend: '/tags/' | append: '/' | relative_url }}">
+            <span>#{{ tag }}</span>
+            <small>{{ visible_count }}</small>
+          </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="browse-empty">아직 등록된 태그가 없습니다.</p>
+    {% endif %}
+  </section>
 </div>
+
+<style>
+  .browse-page{max-width:900px;margin:0 auto}
+  .browse-intro{margin:0 0 2rem;color:var(--text-muted-color);line-height:1.75}
+  .browse-section{margin-bottom:2.6rem}
+  .browse-heading-row{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;margin-bottom:1rem;padding-bottom:.7rem;border-bottom:1px solid var(--main-border-color)}
+  .browse-heading-row h2{margin:0;font-size:1.25rem;color:var(--heading-color)}
+  .browse-heading-row>span{color:var(--text-muted-color);font-size:.78rem;white-space:nowrap}
+  .browse-category-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:.8rem}
+  .browse-category-card{display:flex;align-items:center;gap:.8rem;min-height:76px;padding:1rem;border:1px solid var(--main-border-color);border-radius:14px;background:var(--card-bg);color:var(--text-color);text-decoration:none;box-shadow:var(--card-shadow);transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+  .browse-category-card:hover{transform:translateY(-2px);border-color:var(--link-color);color:var(--text-color);box-shadow:0 10px 24px rgba(0,0,0,.08)}
+  .browse-category-card:focus-visible,.browse-tag:focus-visible{outline:3px solid var(--link-color);outline-color:color-mix(in srgb,var(--link-color) 35%,transparent);outline-offset:3px}
+  .browse-category-icon{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:12px;background:rgba(45,122,90,.1);background:color-mix(in srgb,var(--link-color) 12%,transparent);color:var(--link-color);flex:0 0 auto}
+  .browse-category-copy{display:flex;flex-direction:column;gap:.2rem;min-width:0}
+  .browse-category-copy strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--heading-color);font-size:.94rem}
+  .browse-category-copy small{color:var(--text-muted-color);font-size:.74rem}
+  .browse-category-arrow{margin-left:auto;color:var(--text-muted-color);font-size:.78rem}
+  .browse-tag-list{display:flex;flex-wrap:wrap;gap:.55rem}
+  .browse-tag{display:inline-flex;align-items:center;gap:.55rem;min-height:40px;padding:.48rem .78rem;border:1px solid var(--main-border-color);border-radius:999px;background:var(--card-bg);color:var(--text-color);text-decoration:none;font-size:.82rem;transition:border-color .16s ease,background .16s ease,color .16s ease}
+  .browse-tag small{display:inline-flex;align-items:center;justify-content:center;min-width:1.35rem;height:1.35rem;padding:0 .3rem;border-radius:999px;background:rgba(45,122,90,.08);background:color-mix(in srgb,var(--link-color) 10%,transparent);color:var(--link-color);font-size:.68rem;font-weight:700}
+  .browse-tag:hover{border-color:var(--link-color);background:rgba(45,122,90,.06);background:color-mix(in srgb,var(--link-color) 6%,var(--card-bg));color:var(--link-color)}
+  .browse-empty{padding:1rem;border:1px dashed var(--main-border-color);border-radius:12px;color:var(--text-muted-color);font-size:.85rem}
+  @media(max-width:576px){
+    .browse-intro{margin-bottom:1.6rem;font-size:.92rem}
+    .browse-section{margin-bottom:2.1rem}
+    .browse-category-grid{grid-template-columns:1fr}
+    .browse-category-card{min-height:70px;padding:.85rem}
+    .browse-tag{min-height:44px}
+  }
+</style>

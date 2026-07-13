@@ -6,67 +6,88 @@ sitemap: false
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://raw.githubusercontent.com; connect-src 'self' https://api.github.com https://jm-studio-auth.jmchoi4u.workers.dev https://jmchoi4u.goatcounter.com; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self' https://github.com">
 <title>Blog Studio</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#DA7756">
+<link rel="icon" href="../assets/img/favicons/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../assets/img/favicons/apple-touch-icon.png">
+<meta name="theme-color" content="#B45335">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
-:root{--bg:#F5F0EB;--bg2:#EDE8E2;--panel:#fff;--line:#E5DDD4;--text:#1A1A1A;--muted:#8B7E74;--point:#DA7756;--point-h:#C4684A;--point-s:#FDF0EB;--danger:#C4453A;--success:#3D8C5C;--purple:#8B5CF6;--radius:12px;--shadow:0 2px 12px rgba(26,26,26,.06)}
+:root{--bg:#F5F0EB;--bg2:#EDE8E2;--panel:#fff;--line:#E5DDD4;--text:#1A1A1A;--muted:#756B63;--point:#B45335;--point-h:#9F472E;--point-s:#FDF0EB;--danger:#B83D34;--success:#2F7D4E;--purple:#7C4DDB;--radius:12px;--shadow:0 2px 12px rgba(26,26,26,.06);--safe-top:env(safe-area-inset-top,0px);--safe-right:env(safe-area-inset-right,0px);--safe-bottom:env(safe-area-inset-bottom,0px);--safe-left:env(safe-area-inset-left,0px)}
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{font-family:'Inter',-apple-system,'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;min-height:100dvh;-webkit-font-smoothing:antialiased;overflow:hidden}
+html,body{font-family:'Inter',-apple-system,'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;min-height:100dvh;-webkit-font-smoothing:antialiased;overflow:hidden;-webkit-text-size-adjust:100%}
 ::selection{background:rgba(218,119,86,.2)}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#CCC5BD;border-radius:99px}
 
 /* === Layout === */
-.app{display:flex;flex-direction:column;height:100vh;height:100dvh}
-.topbar{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line);flex-shrink:0;z-index:10}
+.app{display:flex;flex-direction:column;height:100vh;height:100dvh;height:var(--app-height,100dvh)}
+.topbar{display:flex;align-items:center;gap:10px;padding:calc(10px + var(--safe-top)) max(16px,var(--safe-right)) 10px max(16px,var(--safe-left));background:var(--panel);border-bottom:1px solid var(--line);flex-shrink:0;z-index:10}
 .topbar h1{font-size:.95rem;font-weight:700;flex:1;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.topbar-back{display:none;border:none;background:none;font-size:1.1rem;cursor:pointer;color:var(--muted);padding:4px}
-.main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
-.bottombar{display:flex;background:var(--panel);border-top:1px solid var(--line);flex-shrink:0}
-.bottombar button{flex:1;border:none;background:none;padding:10px 0 8px;font-size:.65rem;color:var(--muted);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;transition:color .15s}
+.topbar-back{display:none;border:none;background:none;font-size:1.1rem;cursor:pointer;color:var(--muted);padding:8px;min-width:44px;min-height:44px;border-radius:10px}
+.topbar-sidebar-toggle{display:none}
+.main{flex:1;min-height:0;overflow-y:auto;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;scroll-padding-bottom:calc(150px + var(--safe-bottom))}
+.bottombar{display:flex;background:var(--panel);border-top:1px solid var(--line);flex-shrink:0;padding:0 var(--safe-right) var(--safe-bottom) var(--safe-left)}
+.bottombar button{flex:1;min-height:54px;border:none;background:none;padding:8px 0 7px;font-size:.72rem;color:var(--muted);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;transition:color .15s}
 .bottombar button.active{color:var(--point);font-weight:600}
 .bottombar .bar-icon{font-size:1.15rem}
 
 /* === Views === */
-.view{display:none;padding:16px;padding-bottom:80px}
+.view{display:none;padding:16px max(16px,var(--safe-right)) calc(84px + var(--safe-bottom)) max(16px,var(--safe-left))}
 .view.active{display:block}
 #view-editor,#view-preview{padding-bottom:150px}
 
 /* === Auth === */
-.auth-view{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:70vh;text-align:center;padding:24px}
+.auth-view{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:70vh;text-align:center;padding:24px 0}
 .auth-logo{width:64px;height:64px;background:var(--point);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff;margin-bottom:16px}
 .auth-view h2{font-size:1.2rem;margin-bottom:4px}
 .auth-view p{color:var(--muted);font-size:.82rem;margin-bottom:20px;max-width:300px;line-height:1.5}
-.auth-input{width:100%;max-width:340px;padding:12px 16px;border:1px solid var(--line);border-radius:var(--radius);font-size:.88rem;background:var(--panel);outline:none;margin-bottom:12px;text-align:center}
+.auth-form{width:100%;max-width:360px;display:flex;flex-direction:column;align-items:stretch}
+.auth-field{display:block;text-align:left;font-size:.76rem;font-weight:600;color:var(--muted);margin-bottom:12px}
+.auth-input{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:var(--radius);font-size:16px;background:var(--panel);outline:none;margin-top:6px;text-align:left;color:var(--text)}
 .auth-input:focus{border-color:var(--point);box-shadow:0 0 0 3px rgba(218,119,86,.12)}
+.auth-choice{display:flex;align-items:flex-start;gap:10px;text-align:left;font-size:.8rem;line-height:1.45;color:var(--text);margin:0 0 14px;cursor:pointer}
+.auth-choice input{width:20px;height:20px;flex:0 0 auto;margin-top:1px;accent-color:var(--point)}
+.auth-choice small{display:block;color:var(--muted);font-size:.72rem;margin-top:2px}
 .auth-divider{display:flex;align-items:center;gap:12px;width:100%;max-width:340px;margin:16px 0;color:var(--muted);font-size:.75rem}
 .auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--line)}
 .btn-github{background:#24292f;color:#fff;border-color:#24292f;gap:8px}
 .btn-github:hover{background:#1b1f23}
 .btn-github svg{width:18px;height:18px;fill:currentColor}
+.auth-advanced{width:100%;max-width:360px;margin-top:16px;text-align:left}
+.auth-advanced summary{min-height:44px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.78rem;cursor:pointer;list-style:none}
+.auth-advanced summary::-webkit-details-marker{display:none}
+.auth-advanced[open] summary{margin-bottom:10px}
 
 /* === Buttons === */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 18px;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);color:var(--text);font-size:.85rem;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:10px 18px;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);color:var(--text);font-size:.85rem;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn:focus-visible,.topbar-back:focus-visible,.bottombar button:focus-visible,.md-toolbar button:focus-visible,.sidebar-btn:focus-visible{outline:3px solid rgba(218,119,86,.35);outline-offset:2px}
+.btn:disabled{opacity:.55;cursor:wait;transform:none}
 .btn:active{transform:scale(.97)}
 .btn-primary{background:var(--point);color:#fff;border-color:var(--point)}
 .btn-primary:hover{background:var(--point-h)}
 .btn-danger{background:#FEF0EF;color:var(--danger);border-color:#F0D0CD}
-.btn-sm{padding:6px 12px;font-size:.78rem;border-radius:8px}
+.btn-sm{min-height:40px;padding:7px 12px;font-size:.78rem;border-radius:8px}
 .btn-block{width:100%}
-.btn-fab{position:fixed;bottom:72px;right:16px;width:52px;height:52px;border-radius:50%;background:var(--point);color:#fff;border:none;font-size:1.4rem;box-shadow:0 4px 16px rgba(218,119,86,.3);z-index:20;cursor:pointer}
+.btn.btn-github{background:#24292f;color:#fff;border-color:#24292f}
+.btn.btn-github:hover{background:#1b1f23;color:#fff}
+.btn-fab{position:fixed;bottom:calc(72px + var(--safe-bottom));right:max(16px,var(--safe-right));width:54px;height:54px;border-radius:50%;background:var(--point);color:#fff;border:none;font-size:1.4rem;box-shadow:0 4px 16px rgba(218,119,86,.3);z-index:20;cursor:pointer}
 .btn-fab:active{transform:scale(.92)}
 
 /* === Cards === */
 .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:10px;transition:border-color .15s}
 .card-actions{display:flex;gap:6px;margin-top:10px;padding-top:8px;border-top:1px solid var(--bg2)}
 .card-title{font-weight:600;font-size:.9rem;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-title-button{width:100%;padding:2px 0;border:0;background:transparent;color:inherit;text-align:left;cursor:pointer;line-height:1.45}
+.card-title-button:focus-visible{outline:3px solid rgba(218,119,86,.3);outline-offset:3px;border-radius:4px}
 .card-meta{display:flex;flex-wrap:wrap;gap:6px;font-size:.72rem;color:var(--muted)}
 .card-meta span{display:inline-flex;align-items:center;gap:3px}
 .card-tag{background:var(--point-s);color:var(--point);padding:1px 6px;border-radius:4px;font-size:.65rem;font-weight:600}
+.suggestion-chip{min-height:32px;padding:5px 9px;border:1px solid rgba(218,119,86,.2);font:inherit;cursor:pointer}
 .card-status{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .status-published{background:var(--success)}
 .status-draft{background:var(--purple)}
@@ -76,13 +97,14 @@ html,body{font-family:'Inter',-apple-system,'Segoe UI','Malgun Gothic',sans-seri
 /* === Editor === */
 .editor-section{margin-bottom:16px}
 .editor-label{font-size:.75rem;font-weight:600;color:var(--muted);margin-bottom:5px;display:block}
-.editor-input{width:100%;padding:10px 14px;border:1px solid var(--line);border-radius:10px;font-size:.88rem;background:var(--panel);outline:none;color:var(--text)}
+.editor-input{width:100%;padding:11px 14px;border:1px solid var(--line);border-radius:10px;font-size:16px;background:var(--panel);outline:none;color:var(--text)}
 .editor-input:focus{border-color:var(--point);box-shadow:0 0 0 3px rgba(218,119,86,.12)}
-textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',monospace;font-size:.84rem;line-height:1.7;resize:vertical}
-.editor-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+textarea.editor-input{min-height:42dvh;font-family:'Cascadia Code','D2Coding',monospace;font-size:16px;line-height:1.7;resize:vertical}
+.editor-row{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
 .editor-checks{display:flex;flex-wrap:wrap;gap:8px 14px;padding:8px 0}
 .editor-check{display:flex;align-items:center;gap:5px;font-size:.8rem;cursor:pointer;color:var(--text)}
-.editor-check input{width:16px;height:16px;accent-color:var(--point)}
+.editor-check{min-height:36px;padding:4px 2px}
+.editor-check input{width:20px;height:20px;accent-color:var(--point)}
 .editor-meta{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:8px;font-size:.74rem;color:var(--muted)}
 .editor-meta strong{color:var(--text)}
 .editor-inline-banner{display:none;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;margin-bottom:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
@@ -91,7 +113,7 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
 .template-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .template-tools select{flex:1;min-width:180px}
 .editor-actions{display:none;gap:8px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
-.editor-dock{display:none;position:fixed;left:12px;right:12px;bottom:68px;z-index:35;padding:10px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);box-shadow:0 8px 24px rgba(26,26,26,.12)}
+.editor-dock{display:none;position:fixed;left:max(12px,var(--safe-left));right:max(12px,var(--safe-right));bottom:calc(68px + var(--safe-bottom));z-index:35;padding:10px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);box-shadow:0 8px 24px rgba(26,26,26,.12)}
 .editor-dock.show{display:block}
 .editor-dock-actions{display:flex;gap:8px}
 .editor-dock-actions .btn{flex:1;min-height:42px}
@@ -106,7 +128,18 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
 .quick-stat{padding:12px 14px;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel)}
 .quick-stat-num{font-size:1.05rem;font-weight:700;display:block}
 .quick-stat-label{font-size:.72rem;color:var(--muted)}
-.filter-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.audience-panel{margin-bottom:14px;padding:12px 14px;border:1px solid var(--line);border-radius:var(--radius);background:linear-gradient(135deg,var(--panel),var(--point-s))}
+.audience-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.audience-head strong{font-size:.82rem}.audience-head a{font-size:.72rem;color:var(--point);text-decoration:none;font-weight:600}
+.audience-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.audience-stat{min-width:0}.audience-stat strong{display:block;font-size:1rem}.audience-stat span{font-size:.68rem;color:var(--muted)}
+.publish-checklist{display:grid;gap:6px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--panel);font-size:.76rem}
+.publish-check{display:flex;align-items:center;gap:8px;color:var(--muted)}
+.publish-check::before{content:'○';color:var(--muted);font-weight:700}.publish-check.ok{color:var(--success)}.publish-check.ok::before{content:'✓';color:var(--success)}.publish-check.warn{color:#8A5A12}.publish-check.warn::before{content:'!';color:#8A5A12}
+.publish-status{display:none;align-items:flex-start;justify-content:space-between;gap:12px;margin:0 0 14px;padding:12px 14px;border:1px solid rgba(47,125,78,.25);border-radius:10px;background:rgba(47,125,78,.08)}
+.publish-status.show{display:flex}.publish-status strong{font-size:.82rem}.publish-status p{margin:3px 0 0;color:var(--muted);font-size:.72rem;line-height:1.45}.publish-status-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.view-count-chip{margin-left:auto;font-size:.68rem;color:var(--muted);white-space:nowrap}
+.filter-row{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;margin-bottom:12px}
 .filter-row select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);font-size:.82rem}
 .raw-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
 .raw-tab{padding:8px 12px;border:1px solid var(--line);border-radius:999px;background:var(--panel);font-size:.78rem;cursor:pointer}
@@ -131,25 +164,25 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
 
 /* === Search === */
 .search-bar{position:relative;margin-bottom:14px}
-.search-bar input{width:100%;padding:10px 14px 10px 36px;border:1px solid var(--line);border-radius:var(--radius);font-size:.85rem;background:var(--panel);outline:none}
+.search-bar input{width:100%;padding:11px 14px 11px 38px;border:1px solid var(--line);border-radius:var(--radius);font-size:16px;background:var(--panel);outline:none}
 .search-bar input:focus{border-color:var(--point)}
 .search-bar::before{content:'';position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;border:2px solid var(--muted);border-radius:50%;pointer-events:none}
 
 /* === Toolbar === */
 .md-toolbar{display:flex;flex-wrap:wrap;gap:3px;padding:6px;background:var(--bg);border:1px solid var(--line);border-radius:10px;margin-bottom:8px}
-.md-toolbar button{min-width:32px;height:32px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:var(--text)}
+.md-toolbar button{min-width:40px;height:40px;border:none;background:none;border-radius:8px;font-size:14px;cursor:pointer;color:var(--text)}
 .md-toolbar button:active{background:var(--point-s);color:var(--point)}
 .md-sep{width:1px;height:24px;background:var(--line);margin:4px 3px;flex-shrink:0}
 
 /* === Toast === */
-.toast-wrap{position:fixed;top:12px;left:12px;right:12px;z-index:100;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.toast-wrap{position:fixed;top:calc(12px + var(--safe-top));left:max(12px,var(--safe-left));right:max(12px,var(--safe-right));z-index:100;display:flex;flex-direction:column;gap:6px;pointer-events:none}
 .toast{pointer-events:auto;padding:12px 16px;border-radius:var(--radius);background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow);font-size:.82rem;animation:toast-in .3s ease}
 .toast-success{border-left:3px solid var(--success)}
 .toast-error{border-left:3px solid var(--danger)}
 @keyframes toast-in{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
 
 /* === Settings === */
-.setting-item{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--bg2)}
+.setting-item{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--bg2)}
 .setting-item:last-child{border:none}
 .setting-label{font-size:.88rem;font-weight:500}
 .setting-sub{font-size:.72rem;color:var(--muted);margin-top:2px}
@@ -168,7 +201,7 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* === Image upload === */
-.img-upload{border:2px dashed var(--line);border-radius:var(--radius);padding:24px;text-align:center;color:var(--muted);font-size:.82rem;cursor:pointer;transition:border-color .15s}
+.img-upload{display:block;border:2px dashed var(--line);border-radius:var(--radius);padding:24px;text-align:center;color:var(--muted);font-size:.82rem;cursor:pointer;transition:border-color .15s}
 .img-upload:active{border-color:var(--point);background:var(--point-s)}
 .img-upload input{display:none}
 
@@ -180,6 +213,19 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
 /* === Sidebar (hidden on mobile) === */
 .sidebar{display:none}
 .content-wrap{display:flex;flex-direction:column;flex:1;min-width:0;height:100vh;height:100dvh}
+
+@media(max-width:767px){
+  input,textarea,select{font-size:16px!important}
+  .keyboard-open .bottombar,.keyboard-open .editor-dock{display:none!important}
+  .keyboard-open .view{padding-bottom:24px}
+  .keyboard-open .main{scroll-padding-bottom:24px}
+  .card-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+  .card-actions .btn{padding-left:8px;padding-right:8px}
+  .setting-item{align-items:flex-start;flex-wrap:wrap}
+  .setting-item>div{min-width:0;flex:1 1 190px}
+  .tab-bar{overflow-x:auto;scrollbar-width:none}
+  .tab-bar::-webkit-scrollbar{display:none}
+}
 
 /* === Desktop layout (768px+) === */
 @media(min-width:768px){
@@ -210,7 +256,7 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
   #view-editor,#view-preview{padding-bottom:40px}
   textarea.editor-input{min-height:450px}
   .editor-actions{display:flex}
-  .editor-row{grid-template-columns:1fr 1fr 1fr;gap:14px}
+  .editor-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
   .editor-checks{gap:12px 20px}
   .card{padding:16px 20px;cursor:pointer}
   .card:hover{border-color:var(--point);box-shadow:var(--shadow)}
@@ -222,7 +268,7 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
   .toast-wrap{left:auto;right:24px;top:24px;width:360px}
   .auth-view{min-height:60vh}
   .search-bar input{font-size:.9rem;padding:12px 16px 12px 40px}
-  .md-toolbar button{min-width:36px;height:36px;font-size:14px}
+  .md-toolbar button{min-width:40px;height:40px;font-size:14px}
   .md-toolbar button:hover{background:var(--point-s);color:var(--point)}
   .setting-item{padding:16px 0}
   .quick-stats{grid-template-columns:repeat(4,minmax(0,1fr))}
@@ -235,30 +281,30 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
   .sidebar{width:260px}
   .view{max-width:1000px;padding:32px 48px}
   textarea.editor-input{min-height:550px}
-  .editor-row{grid-template-columns:1fr 1fr 1fr 1fr;gap:16px}
+  .editor-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
 }
 </style>
 </head>
 <body>
 <div class="app" id="app">
   <!-- Toast -->
-  <div class="toast-wrap" id="toasts"></div>
+  <div class="toast-wrap" id="toasts" role="status" aria-live="polite" aria-atomic="true"></div>
 
   <!-- Sidebar (PC only) -->
-  <aside class="sidebar" id="sidebar">
+  <aside class="sidebar" id="sidebar" style="display:none">
     <div class="sidebar-brand">
       <div class="sidebar-logo">J</div>
       <span class="sidebar-title">Blog Studio</span>
-      <button class="sidebar-toggle" onclick="toggleSidebar()" title="사이드바 숨기기">&laquo;</button>
+      <button class="sidebar-toggle" type="button" onclick="toggleSidebar()" title="사이드바 숨기기" aria-label="사이드바 숨기기">&laquo;</button>
     </div>
     <nav class="sidebar-nav">
-      <button class="sidebar-btn active" data-view="list" onclick="showView('list')">
+      <button class="sidebar-btn active" type="button" data-view="list" onclick="showView('list')">
         <span class="sidebar-icon">&#9776;</span>글 목록
       </button>
-      <button class="sidebar-btn" data-view="editor" onclick="newPost()">
+      <button class="sidebar-btn" type="button" data-view="editor" data-new-post-action onclick="newPost()">
         <span class="sidebar-icon">&#9998;</span>새 글
       </button>
-      <button class="sidebar-btn" data-view="settings" onclick="showView('settings')">
+      <button class="sidebar-btn" type="button" data-view="settings" onclick="showView('settings')">
         <span class="sidebar-icon">&#9881;</span>설정
       </button>
     </nav>
@@ -271,8 +317,8 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
   <div class="content-wrap">
     <!-- Topbar -->
     <div class="topbar">
-      <button class="topbar-sidebar-toggle" id="topbar-sidebar-toggle" onclick="toggleSidebar()" title="사이드바 열기">&#9776;</button>
-      <button class="topbar-back" id="topbar-back" onclick="goBack()">&larr;</button>
+      <button class="topbar-sidebar-toggle" id="topbar-sidebar-toggle" type="button" onclick="toggleSidebar()" title="사이드바 열기" aria-label="사이드바 열기">&#9776;</button>
+      <button class="topbar-back" id="topbar-back" type="button" onclick="goBack()" aria-label="이전 화면">&larr;</button>
       <h1 id="topbar-title">Blog Studio</h1>
       <div id="topbar-actions"></div>
     </div>
@@ -280,31 +326,36 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
     <!-- Main content area -->
     <div class="main" id="main-scroll">
 
-    <!-- Auth View -->
-    <div class="view active" id="view-auth">
-      <div class="auth-view">
+    <!-- Boot View -->
+    <div class="view active" id="view-boot">
+      <div class="auth-view" aria-busy="true">
         <div class="auth-logo">J</div>
         <h2>Blog Studio</h2>
-        <p>GitHub 계정으로 로그인하여 모바일에서 블로그를 편집하세요.</p>
-        <button class="btn btn-github btn-block" style="max-width:340px" onclick="oauthLogin()">
-          <svg viewBox="0 0 16 16" aria-hidden="true" role="img"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-          GitHub로 로그인
-        </button>
-        <div class="auth-divider">또는</div>
-        <input class="auth-input" id="pat-input" type="password" placeholder="PAT 직접 입력 (ghp_xxxx)" autocomplete="off">
-        <input class="auth-input" id="password-setup" name="new-password" type="password" placeholder="비밀번호 설정 (8~64자, 영문/숫자/특수문자 2종 이상)" maxlength="64" autocomplete="new-password" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="text">
-        <button class="btn btn-block" style="max-width:340px" onclick="doSetup()">PAT로 설정</button>
+        <p>안전하게 로그인 상태를 확인하고 있습니다.</p>
+        <div class="spinner" aria-label="불러오는 중"></div>
       </div>
     </div>
 
-    <!-- Password Setup View (after OAuth) -->
-    <div class="view" id="view-password-setup">
+    <!-- Auth View -->
+    <div class="view" id="view-auth">
       <div class="auth-view">
         <div class="auth-logo">J</div>
-        <h2>비밀번호 설정</h2>
-        <p>다음부터 잠금 해제에 사용할 비밀번호를 설정하세요.</p>
-        <input class="auth-input" id="oauth-password-setup" name="new-password" type="password" placeholder="비밀번호 (8~64자, 영문/숫자/특수문자 2종 이상)" maxlength="64" autocomplete="new-password" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="text">
-        <button class="btn btn-primary btn-block" style="max-width:340px" onclick="finishOAuthSetup()">설정 완료</button>
+        <h2>Blog Studio</h2>
+        <p>처음 한 번만 연결하면, 이 브라우저 프로필에서는 바로 글을 편집할 수 있습니다.</p>
+        <button class="btn btn-github btn-block" type="button" style="max-width:360px" onclick="oauthLogin()">
+          <svg viewBox="0 0 16 16" aria-hidden="true" role="img"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          GitHub로 로그인
+        </button>
+        <p style="margin:12px 0 0">로그인 후 30일간 이 브라우저 프로필에서 자동으로 연결됩니다. 공용 프로필에서는 사용하지 마세요.</p>
+        <details class="auth-advanced" id="pat-details">
+          <summary>고급 옵션 · PAT로 연결</summary>
+          <form class="auth-form" onsubmit="event.preventDefault();doSetup()">
+            <label class="auth-field" for="pat-input">GitHub 토큰
+              <input class="auth-input" id="pat-input" name="token" type="password" placeholder="ghp_… 또는 github_pat_…" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false">
+            </label>
+            <button class="btn btn-block" type="submit">이 브라우저에 연결</button>
+          </form>
+        </details>
       </div>
     </div>
 
@@ -313,17 +364,21 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
       <div class="auth-view">
         <div class="auth-logo" style="background:var(--text)">&#128274;</div>
         <h2>잠금 해제</h2>
-        <p>비밀번호를 입력하여 잠금을 해제하세요.</p>
-        <input class="auth-input" id="password-unlock" name="current-password" type="password" placeholder="비밀번호 입력" maxlength="64" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="text">
-        <button class="btn btn-primary btn-block" style="max-width:340px" onclick="doUnlock()">잠금 해제</button>
-        <button class="btn btn-block" style="max-width:340px;margin-top:8px" onclick="doReset()">초기화 (재설정)</button>
+        <p>기존 사용자는 이번에 한 번만 입력하면 자동 로그인으로 전환됩니다.</p>
+        <form class="auth-form" onsubmit="event.preventDefault();doUnlock()">
+          <label class="auth-field" for="password-unlock">복구용 비밀번호
+            <input class="auth-input" id="password-unlock" name="current-password" type="password" placeholder="비밀번호 입력" maxlength="64" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false">
+          </label>
+          <button class="btn btn-primary btn-block" type="submit">잠금 해제하고 자동 로그인 전환</button>
+          <button class="btn btn-block" type="button" style="margin-top:8px" onclick="doReset()">초기화 (재설정)</button>
+        </form>
       </div>
     </div>
 
     <!-- Post List View -->
     <div class="view" id="view-list">
       <div class="search-bar">
-        <input type="text" id="search-input" placeholder="검색..." oninput="filterPosts()">
+        <input type="search" id="search-input" placeholder="제목·태그 검색" aria-label="글 검색" oninput="filterPosts()">
       </div>
       <div class="quick-stats" id="list-stats">
         <div class="quick-stat"><span class="quick-stat-num" id="stat-all">0</span><span class="quick-stat-label">전체</span></div>
@@ -331,8 +386,16 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
         <div class="quick-stat"><span class="quick-stat-num" id="stat-drafts">0</span><span class="quick-stat-label">임시</span></div>
         <div class="quick-stat"><span class="quick-stat-num" id="stat-hidden">0</span><span class="quick-stat-label">숨김</span></div>
       </div>
+      <div class="audience-panel" aria-label="조회 통계">
+        <div class="audience-head"><strong>독자 반응</strong><a href="https://jmchoi4u.goatcounter.com" target="_blank" rel="noopener noreferrer">상세 통계</a></div>
+        <div class="audience-stats">
+          <div class="audience-stat"><strong id="views-total">—</strong><span>누적 조회</span></div>
+          <div class="audience-stat"><strong id="views-month">—</strong><span>최근 한 달</span></div>
+          <div class="audience-stat"><strong id="views-week">—</strong><span>최근 일주일</span></div>
+        </div>
+      </div>
       <div class="filter-row">
-        <select id="filter-category" onchange="filterPosts()" hidden>
+        <select id="filter-category" onchange="filterPosts()" aria-label="카테고리 필터">
           <option value="">전체 카테고리</option>
         </select>
         <select id="filter-tag" onchange="filterPosts()">
@@ -340,16 +403,23 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
         </select>
       </div>
       <div class="tab-bar" id="list-tabs">
-        <button class="active" data-tab="all" onclick="setListTab('all',this)">전체</button>
-        <button data-tab="published" onclick="setListTab('published',this)">발행</button>
-        <button data-tab="drafts" onclick="setListTab('drafts',this)">임시</button>
+        <button class="active" type="button" data-tab="all" onclick="setListTab('all',this)">전체</button>
+        <button type="button" data-tab="published" onclick="setListTab('published',this)">발행</button>
+        <button type="button" data-tab="drafts" onclick="setListTab('drafts',this)">임시</button>
       </div>
       <div id="post-list"></div>
-      <button class="btn-fab" onclick="newPost()">+</button>
+      <button class="btn-fab" type="button" data-new-post-action onclick="newPost()" aria-label="새 글 작성">+</button>
     </div>
 
     <!-- Editor View -->
     <div class="view" id="view-editor">
+      <div class="publish-status" id="publish-status" role="status" aria-live="polite">
+        <div><strong id="publish-status-title">저장 완료</strong><p id="publish-status-copy"></p></div>
+        <div class="publish-status-actions">
+          <a class="btn btn-sm" id="publish-live-link" href="https://jmchoi4u.github.io/" target="_blank" rel="noopener noreferrer">라이브 확인</a>
+          <a class="btn btn-sm" href="https://github.com/jmchoi4u/jmchoi4u.github.io/actions" target="_blank" rel="noopener noreferrer">배포 상태</a>
+        </div>
+      </div>
       <div class="editor-inline-banner" id="autosave-banner">
         <div>
           <strong>임시저장된 내용이 있습니다.</strong>
@@ -362,60 +432,66 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
       </div>
 
       <div class="editor-section">
-        <label class="editor-label">제목</label>
+        <label class="editor-label" for="ed-title">제목</label>
         <input class="editor-input" id="ed-title" type="text" placeholder="글 제목">
       </div>
 
       <div class="editor-row">
         <div class="editor-section">
-          <label class="editor-label">날짜</label>
+          <label class="editor-label" for="ed-date">날짜</label>
           <input class="editor-input" id="ed-date" type="text" placeholder="2026-03-26 09:00:00 +0900">
         </div>
         <div class="editor-section">
-          <label class="editor-label">설명</label>
+          <label class="editor-label" for="ed-desc">설명</label>
           <input class="editor-input" id="ed-desc" type="text" placeholder="SEO 설명">
         </div>
       </div>
 
       <div class="editor-row">
-        <input id="ed-cats" type="hidden" value="">
-        <div class="editor-meta" id="ed-cats-suggestions" style="display:none"></div>
-        <div class="editor-section" style="grid-column:1 / -1;">
-          <label class="editor-label">태그</label>
+        <div class="editor-section">
+          <label class="editor-label" for="ed-cats">카테고리</label>
+          <input class="editor-input" id="ed-cats" type="text" placeholder="예: 개발환경">
+          <div class="editor-meta" id="ed-cats-suggestions" style="margin-top:6px;gap:5px"></div>
+        </div>
+        <div class="editor-section">
+          <label class="editor-label" for="ed-tags">태그</label>
           <input class="editor-input" id="ed-tags" type="text" placeholder="chirpy, seo">
           <div class="editor-meta" id="ed-tags-suggestions" style="margin-top:6px;gap:5px"></div>
         </div>
       </div>
 
       <div class="editor-section">
-        <label class="editor-label">표시 제목 (줄바꿈 가능)</label>
+        <label class="editor-label" for="ed-hero-title">표시 제목 (줄바꿈 가능)</label>
         <input class="editor-input" id="ed-hero-title" type="text" placeholder="비워두면 글 제목 사용">
       </div>
 
       <div class="editor-row">
         <div class="editor-section">
-          <label class="editor-label">요약</label>
+          <label class="editor-label" for="ed-summary">요약</label>
           <input class="editor-input" id="ed-summary" type="text" placeholder="목록/미리보기용 요약 (선택)">
         </div>
         <div class="editor-section">
-          <label class="editor-label">고정 URL</label>
+          <label class="editor-label" for="ed-permalink">고정 URL</label>
           <input class="editor-input" id="ed-permalink" type="text" placeholder="비워두면 기본 규칙 사용 (예: /posts/6/)">
         </div>
       </div>
 
       <div class="editor-section">
-        <label class="editor-label">표지 이미지</label>
-        <div class="img-upload" id="cover-upload" onclick="document.getElementById('cover-file').click()">
+        <label class="editor-label" for="cover-file">표지 이미지</label>
+        <label class="img-upload" id="cover-upload" for="cover-file">
           이미지를 선택하세요
           <input type="file" id="cover-file" accept="image/*" onchange="uploadCover(this)">
-        </div>
+        </label>
         <div class="cover-preview" id="cover-preview" style="display:none">
           <img id="cover-img" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="cover">
-          <button class="cover-remove" onclick="removeCover()">&times;</button>
+          <button class="cover-remove" type="button" onclick="removeCover()" aria-label="표지 이미지 제거">&times;</button>
         </div>
         <input type="hidden" id="ed-cover">
         <input type="hidden" id="ed-hero-image-position">
+        <input type="hidden" id="ed-image-extra">
         <input type="hidden" id="ed-extra-front-matter">
+        <label class="editor-label" for="ed-cover-alt" style="margin-top:10px">이미지 설명</label>
+        <input class="editor-input" id="ed-cover-alt" type="text" placeholder="이미지를 보지 못해도 이해할 수 있는 설명">
       </div>
 
       <div class="editor-section">
@@ -428,6 +504,17 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
           <label class="editor-check"><input type="checkbox" id="ed-draft"> 임시저장</label>
           <label class="editor-check"><input type="checkbox" id="ed-mermaid"> Mermaid</label>
           <label class="editor-check"><input type="checkbox" id="ed-math"> Math</label>
+        </div>
+      </div>
+
+      <div class="editor-section">
+        <label class="editor-label">발행 전 점검</label>
+        <div class="publish-checklist" id="publish-checklist" aria-live="polite">
+          <span class="publish-check" data-check="title">제목 입력</span>
+          <span class="publish-check" data-check="description">설명 40~160자 권장</span>
+          <span class="publish-check" data-check="category">카테고리 1개 이상</span>
+          <span class="publish-check" data-check="tags">태그 1~5개 권장</span>
+          <span class="publish-check" data-check="image-alt">표지 이미지 설명</span>
         </div>
       </div>
 
@@ -456,22 +543,22 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
       </div>
 
       <div class="editor-section">
-        <label class="editor-label">본문</label>
+        <label class="editor-label" for="ed-body">본문</label>
         <div class="md-toolbar" id="md-toolbar">
-          <button onclick="wrap('**','**')" title="굵게"><b>B</b></button>
-          <button onclick="wrap('*','*')" title="기울임"><i>I</i></button>
-          <button onclick="wrap('<u>','</u>')" title="밑줄"><u>U</u></button>
-          <button onclick="wrap('~~','~~')" title="취소선"><s>S</s></button>
+          <button type="button" onclick="wrap('**','**')" title="굵게" aria-label="굵게"><b>B</b></button>
+          <button type="button" onclick="wrap('*','*')" title="기울임" aria-label="기울임"><i>I</i></button>
+          <button type="button" onclick="wrap('<u>','</u>')" title="밑줄" aria-label="밑줄"><u>U</u></button>
+          <button type="button" onclick="wrap('~~','~~')" title="취소선" aria-label="취소선"><s>S</s></button>
           <span class="md-sep"></span>
-          <button onclick="insert('## ')" title="H2">H2</button>
-          <button onclick="insert('### ')" title="H3">H3</button>
+          <button type="button" onclick="insert('## ')" title="H2" aria-label="2단계 제목">H2</button>
+          <button type="button" onclick="insert('### ')" title="H3" aria-label="3단계 제목">H3</button>
           <span class="md-sep"></span>
-          <button onclick="insert('- ')" title="목록">&bull;</button>
-          <button onclick="insert('> ')" title="인용">&ldquo;</button>
-          <button onclick="wrap('`','`')" title="코드">&lt;/&gt;</button>
-          <button onclick="insert('```\n\n```')" title="코드블록">{ }</button>
-          <button onclick="wrap('[','](https://)')" title="링크">&#128279;</button>
-          <button onclick="triggerBodyImage()" title="이미지">&#128247;</button>
+          <button type="button" onclick="insert('- ')" title="목록" aria-label="목록">&bull;</button>
+          <button type="button" onclick="insert('> ')" title="인용" aria-label="인용">&ldquo;</button>
+          <button type="button" onclick="wrap('`','`')" title="코드" aria-label="인라인 코드">&lt;/&gt;</button>
+          <button type="button" onclick="insert('```\n\n```')" title="코드블록" aria-label="코드 블록">{ }</button>
+          <button type="button" onclick="wrap('[','](https://)')" title="링크" aria-label="링크 삽입">&#128279;</button>
+          <button type="button" onclick="triggerBodyImage()" title="이미지" aria-label="본문 이미지 삽입">&#128247;</button>
         </div>
         <textarea class="editor-input" id="ed-body" placeholder="마크다운으로 작성하세요..." oninput="autoSave()"></textarea>
         <div class="editor-meta">
@@ -481,7 +568,7 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
       </div>
 
       <div class="editor-actions">
-        <button class="btn btn-primary" style="flex:1" onclick="savePost()">저장</button>
+        <button class="btn btn-primary" style="flex:1" data-save-action type="button" onclick="savePost()">저장</button>
         <button class="btn" onclick="togglePreview()">미리보기</button>
         <button class="btn btn-danger btn-sm" id="ed-delete-btn" style="display:none" onclick="deletePost()">삭제</button>
       </div>
@@ -527,10 +614,17 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
         </div>
         <div class="setting-item">
           <div>
-            <div class="setting-label">토큰 / 비밀번호 재설정</div>
-            <div class="setting-sub">새 토큰과 비밀번호로 다시 설정합니다</div>
+            <div class="setting-label">GitHub 연결 재설정</div>
+            <div class="setting-sub">현재 연결을 지우고 다시 로그인합니다</div>
           </div>
           <button class="btn btn-sm" onclick="changeToken()">재설정</button>
+        </div>
+        <div class="setting-item">
+          <div>
+            <div class="setting-label">이 브라우저 자동 로그인</div>
+            <div class="setting-sub" id="settings-trust-status">확인 중</div>
+          </div>
+          <button class="btn btn-sm" id="settings-trust-clear" type="button" onclick="disableTrustedLogin()">해제</button>
         </div>
         <div class="setting-item">
           <div>
@@ -633,13 +727,13 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
             <div class="setting-label">블로그 열기</div>
             <div class="setting-sub">jmchoi4u.github.io</div>
           </div>
-          <a href="https://jmchoi4u.github.io" target="_blank" class="btn btn-sm">열기</a>
+          <a href="https://jmchoi4u.github.io" target="_blank" rel="noopener noreferrer" class="btn btn-sm">열기</a>
         </div>
         <div class="setting-item">
           <div>
             <div class="setting-label">GitHub 레포</div>
           </div>
-          <a href="https://github.com/jmchoi4u/jmchoi4u.github.io" target="_blank" class="btn btn-sm">열기</a>
+          <a href="https://github.com/jmchoi4u/jmchoi4u.github.io" target="_blank" rel="noopener noreferrer" class="btn btn-sm">열기</a>
         </div>
       </div>
       <div class="card" style="margin-top:12px">
@@ -658,14 +752,14 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
 
     <!-- Bottom bar (mobile only) -->
     <div class="bottombar" id="bottombar" style="display:none">
-      <button onclick="showView('list')" data-view="list"><span class="bar-icon">&#9776;</span>글 목록</button>
-      <button onclick="newPost()" data-view="editor"><span class="bar-icon">&#9998;</span>새 글</button>
-      <button onclick="showView('settings')" data-view="settings"><span class="bar-icon">&#9881;</span>설정</button>
+      <button type="button" onclick="showView('list')" data-view="list"><span class="bar-icon" aria-hidden="true">&#9776;</span>글 목록</button>
+      <button type="button" onclick="newPost()" data-new-post-action data-view="editor"><span class="bar-icon" aria-hidden="true">&#9998;</span>새 글</button>
+      <button type="button" onclick="showView('settings')" data-view="settings"><span class="bar-icon" aria-hidden="true">&#9881;</span>설정</button>
     </div>
 
     <div class="editor-dock" id="editor-dock">
       <div class="editor-dock-actions">
-        <button class="btn btn-primary" onclick="savePost()">저장</button>
+        <button class="btn btn-primary" data-save-action type="button" onclick="savePost()">저장</button>
         <button class="btn" id="editor-dock-toggle" onclick="togglePreviewMode()">미리보기</button>
         <button class="btn" onclick="leaveEditorToList()">목록</button>
       </div>
@@ -675,7 +769,7 @@ textarea.editor-input{min-height:300px;font-family:'Cascadia Code','D2Coding',mo
 </div>
 
 <!-- Markdown parser -->
-<script src="https://cdn.jsdelivr.net/npm/marked@15.0.4/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@15.0.4/marked.min.js" integrity="sha384-2NndlFAl0twi2nmu3w9mixodZFiN2fbxlakcYJF86bn1JeS1VB87/XqA7cqymzS+" crossorigin="anonymous"></script>
 
 <script>
 /* ═══════ Config ═══════ */
@@ -686,21 +780,37 @@ var WORKER_URL = 'https://jm-studio-auth.jmchoi4u.workers.dev';
 var CRYPT_KEY = 'jm-studio-enc';
 var AUTOSAVE_KEY = 'jm-studio-autosave';
 var RUNTIME_MODE_KEY = 'jm-studio-runtime-mode';
+var TRUST_META_KEY = 'jm-studio-trust-meta-v2';
+var TRUST_DB_NAME = 'jm-studio-auth-v2';
+var TRUST_STORE_NAME = 'sessions';
+var TRUST_RECORD_KEY = 'trusted-device';
+var TRUSTED_SESSION_TTL = 30 * 24 * 60 * 60 * 1000; /* 30 days */
 var SESSION_TIMEOUT = 30 * 60 * 1000; /* 30 minutes */
 var API = 'https://api.github.com';
+var GOATCOUNTER_ID = 'jmchoi4u';
+var OAUTH_STATE_KEY = 'jm-studio-oauth-state';
+var OAUTH_VERIFIER_KEY = 'jm-studio-oauth-verifier';
 
 /* ═══════ State ═══════ */
 var S = {
   token: '',
   user: null,
   posts: [],
+  postsLoaded: false,
+  loadingPosts: false,
   editing: null,
   listTab: 'all',
   rawKind: 'config',
   viewStack: [],
   bodyImageInput: null,
   lastActivity: Date.now(),
-  pendingOAuthToken: '', /* OAuth 후 비밀번호 설정 전 임시 보관 */
+  trusted: false,
+  loadingPost: false,
+  restoreBlocked: false,
+  saving: false,
+  pendingAutosave: null,
+  memoryAutosaves: {},
+  viewCounts: {},
   autosaveDismissed: false,
   runtime: {
     mode: 'remote',
@@ -712,19 +822,7 @@ var S = {
   }
 };
 
-function isValidPassword(password) {
-  var value = String(password || '');
-  if (value.length < 8 || value.length > 64) return false;
-  if (/\s/.test(value)) return false;
-
-  var hasLetters = /[A-Za-z]/.test(value);
-  var hasDigits = /\d/.test(value);
-  var hasSpecials = /[^A-Za-z0-9]/.test(value);
-
-  return [hasLetters, hasDigits, hasSpecials].filter(Boolean).length >= 2;
-}
-
-/* ═══════ Crypto: AES-GCM with password ═══════ */
+/* ═══════ Legacy password migration only ═══════ */
 async function deriveKey(password, salt) {
   var enc = new TextEncoder();
   var keyMaterial = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
@@ -737,19 +835,6 @@ async function deriveKey(password, salt) {
   );
 }
 
-async function encryptPAT(pat, password) {
-  var enc = new TextEncoder();
-  var salt = crypto.getRandomValues(new Uint8Array(16));
-  var iv = crypto.getRandomValues(new Uint8Array(12));
-  var key = await deriveKey(password, salt);
-  var encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, key, enc.encode(pat));
-  var buf = new Uint8Array(salt.length + iv.length + encrypted.byteLength);
-  buf.set(salt, 0);
-  buf.set(iv, salt.length);
-  buf.set(new Uint8Array(encrypted), salt.length + iv.length);
-  return btoa(String.fromCharCode.apply(null, buf));
-}
-
 async function decryptPAT(stored, password) {
   var raw = Uint8Array.from(atob(stored), function(c) { return c.charCodeAt(0); });
   var salt = raw.slice(0, 16);
@@ -760,11 +845,186 @@ async function decryptPAT(stored, password) {
   return new TextDecoder().decode(decrypted);
 }
 
+/* ═══════ Trusted device: non-extractable WebCrypto key in IndexedDB ═══════ */
+function openTrustDb() {
+  return new Promise(function(resolve, reject) {
+    if (!window.indexedDB || !window.crypto || !crypto.subtle) {
+      reject(new Error('이 브라우저는 안전한 자동 로그인을 지원하지 않습니다'));
+      return;
+    }
+    var request = indexedDB.open(TRUST_DB_NAME, 1);
+    request.onupgradeneeded = function() {
+      if (!request.result.objectStoreNames.contains(TRUST_STORE_NAME)) {
+        request.result.createObjectStore(TRUST_STORE_NAME, { keyPath: 'id' });
+      }
+    };
+    request.onsuccess = function() { resolve(request.result); };
+    request.onerror = function() { reject(request.error || new Error('자동 로그인 저장소를 열 수 없습니다')); };
+  });
+}
+
+async function trustStoreGet() {
+  var db = await openTrustDb();
+  return new Promise(function(resolve, reject) {
+    var request = db.transaction(TRUST_STORE_NAME, 'readonly').objectStore(TRUST_STORE_NAME).get(TRUST_RECORD_KEY);
+    request.onsuccess = function() { db.close(); resolve(request.result || null); };
+    request.onerror = function() { db.close(); reject(request.error || new Error('자동 로그인 정보를 읽을 수 없습니다')); };
+  });
+}
+
+async function trustStorePut(record) {
+  var db = await openTrustDb();
+  return new Promise(function(resolve, reject) {
+    var transaction = db.transaction(TRUST_STORE_NAME, 'readwrite');
+    var request = transaction.objectStore(TRUST_STORE_NAME).put(record);
+    transaction.oncomplete = function() { db.close(); resolve(); };
+    transaction.onabort = function() { db.close(); reject(transaction.error || request.error || new Error('자동 로그인 정보를 저장할 수 없습니다')); };
+    transaction.onerror = function() {};
+  });
+}
+
+async function trustStoreDelete() {
+  try {
+    var db = await openTrustDb();
+    await new Promise(function(resolve, reject) {
+      var transaction = db.transaction(TRUST_STORE_NAME, 'readwrite');
+      var request = transaction.objectStore(TRUST_STORE_NAME).delete(TRUST_RECORD_KEY);
+      transaction.oncomplete = function() { db.close(); resolve(); };
+      transaction.onabort = function() { db.close(); reject(transaction.error || request.error || new Error('자동 로그인 정보를 삭제할 수 없습니다')); };
+      transaction.onerror = function() {};
+    });
+  } catch (e) {
+    /* IndexedDB is optional; local metadata is still cleared below. */
+  }
+}
+
+async function saveTrustedSession(token) {
+  var key = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+  var iv = crypto.getRandomValues(new Uint8Array(12));
+  var encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, key, new TextEncoder().encode(token));
+  var expiresAt = Date.now() + TRUSTED_SESSION_TTL;
+  await trustStorePut({
+    id: TRUST_RECORD_KEY,
+    key: key,
+    iv: Array.from(iv),
+    ciphertext: Array.from(new Uint8Array(encrypted)),
+    expiresAt: expiresAt
+  });
+  try {
+    localStorage.setItem(TRUST_META_KEY, JSON.stringify({ expiresAt: expiresAt }));
+  } catch (error) {
+    await trustStoreDelete();
+    throw new Error('이 브라우저에서는 30일 자동 로그인을 저장할 수 없습니다');
+  }
+  S.trusted = true;
+  updateTrustedLoginUI();
+}
+
+async function clearTrustedSession() {
+  try { localStorage.removeItem(TRUST_META_KEY); } catch (e) {}
+  S.trusted = false;
+  await trustStoreDelete();
+  updateTrustedLoginUI();
+}
+
+function isInvalidAuthError(error) {
+  return Boolean(error && (error.status === 401 || error.code === 'owner_mismatch'));
+}
+
+async function authenticateToken(token) {
+  S.token = token;
+  try {
+    var user = await ghApi('/user');
+    if (!user.login || user.login.toLowerCase() !== OWNER.toLowerCase()) {
+      var ownerError = new Error('이 계정은 블로그 소유자가 아닙니다');
+      ownerError.code = 'owner_mismatch';
+      throw ownerError;
+    }
+    S.user = user;
+    return user;
+  } catch (error) {
+    S.token = '';
+    S.user = null;
+    throw error;
+  }
+}
+
+function getTrustedMeta() {
+  try { return JSON.parse(localStorage.getItem(TRUST_META_KEY) || 'null'); } catch (e) { return null; }
+}
+
+function isTrustedLoginActive() {
+  var meta = getTrustedMeta();
+  return Boolean(meta && meta.expiresAt > Date.now());
+}
+
+async function restoreTrustedSession() {
+  if (!isTrustedLoginActive()) {
+    await trustStoreDelete();
+    return false;
+  }
+  var record;
+  try {
+    record = await trustStoreGet();
+  } catch (error) {
+    return false;
+  }
+  if (!record) return false;
+  if (!record.expiresAt || record.expiresAt <= Date.now()) {
+    await clearTrustedSession();
+    return false;
+  }
+
+  var token;
+  try {
+    var decrypted = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv: new Uint8Array(record.iv) },
+      record.key,
+      new Uint8Array(record.ciphertext)
+    );
+    token = new TextDecoder().decode(decrypted);
+  } catch (error) {
+    await clearTrustedSession();
+    return false;
+  }
+
+  try {
+    await authenticateToken(token);
+    S.trusted = true;
+    onLoginSuccess({ quiet: true });
+    return true;
+  } catch (error) {
+    if (isInvalidAuthError(error)) await clearTrustedSession();
+    else S.restoreBlocked = true;
+    return false;
+  }
+}
+
+function updateTrustedLoginUI() {
+  var status = document.getElementById('settings-trust-status');
+  var button = document.getElementById('settings-trust-clear');
+  if (!status || !button) return;
+  var meta = getTrustedMeta();
+  var active = Boolean(meta && meta.expiresAt > Date.now());
+  status.textContent = active ? ('사용 중 · ' + new Date(meta.expiresAt).toLocaleDateString('ko-KR') + '까지') : '사용하지 않음';
+  button.disabled = !active;
+}
+
+async function disableTrustedLogin() {
+  await clearTrustedSession();
+  toast('이 브라우저의 자동 로그인을 해제했습니다', 'success');
+}
+
 /* ═══════ Session Timeout ═══════ */
 function resetActivity() { S.lastActivity = Date.now(); }
 
 function checkSession() {
-  if (S.token && Date.now() - S.lastActivity > SESSION_TIMEOUT) {
+  if (S.trusted && !isTrustedLoginActive()) {
+    clearTrustedSession();
+    lockSession();
+    return;
+  }
+  if (!S.trusted && S.token && Date.now() - S.lastActivity > SESSION_TIMEOUT) {
     lockSession();
   }
 }
@@ -772,10 +1032,15 @@ function checkSession() {
 function lockSession() {
   S.token = '';
   S.user = null;
-  document.getElementById('bottombar').style.display = 'none';
+  setAuthenticatedShell(false);
   var hasStored = localStorage.getItem(CRYPT_KEY);
   showView(hasStored ? 'lock' : 'auth');
-  toast('세션 만료 - 비밀번호를 다시 입력하세요', 'info');
+  toast(hasStored ? '기존 비밀번호로 한 번만 전환해 주세요' : '세션이 만료되었습니다. GitHub로 다시 연결해 주세요.', 'info');
+}
+
+function setAuthenticatedShell(authenticated) {
+  document.getElementById('bottombar').style.display = authenticated ? 'flex' : 'none';
+  document.getElementById('sidebar').style.display = authenticated ? '' : 'none';
 }
 
 function isAuthenticated() {
@@ -799,9 +1064,14 @@ function requireAuth(targetView, options) {
 /* ═══════ Init ═══════ */
 window.addEventListener('DOMContentLoaded', function() {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').catch(function() {});
+    navigator.serviceWorker.register('sw.js').then(function(registration) {
+      registration.update().catch(function() {});
+    }).catch(function() {});
   }
-  marked.setOptions({ gfm: true, breaks: true });
+  if (window.marked) marked.setOptions({ gfm: true, breaks: true });
+  setAuthenticatedShell(false);
+  updateTrustedLoginUI();
+  setupViewportHandling();
 
   /* Activity tracking */
   ['touchstart', 'click', 'keydown', 'scroll'].forEach(function(evt) {
@@ -809,12 +1079,7 @@ window.addEventListener('DOMContentLoaded', function() {
   });
   setInterval(checkSession, 60000);
 
-  /* Enter key support */
-  bindEnter('password-setup', doSetup);
-  bindEnter('password-unlock', doUnlock);
-  bindEnter('oauth-password-setup', finishOAuthSetup);
-
-  ['ed-title','ed-date','ed-desc','ed-cats','ed-tags','ed-hero-title','ed-summary','ed-permalink'].forEach(function(id) {
+  ['ed-title','ed-date','ed-desc','ed-cats','ed-tags','ed-hero-title','ed-summary','ed-permalink','ed-cover-alt'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.addEventListener('input', autoSave);
   });
@@ -822,26 +1087,60 @@ window.addEventListener('DOMContentLoaded', function() {
     var el = document.getElementById(id);
     if (el) el.addEventListener('change', autoSave);
   });
+  window.addEventListener('pagehide', flushAutosave);
+  document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'hidden') flushAutosave();
+  });
+  window.addEventListener('offline', function() { toast('오프라인 상태입니다. 작성 내용은 이 브라우저에 보관됩니다.', 'info'); });
+  window.addEventListener('online', function() { toast('연결이 복구되었습니다', 'success'); });
+  window.addEventListener('popstate', function(event) {
+    if (!isAuthenticated()) return;
+    if (S.saving || S.loadingPost) {
+      window.history.pushState({ jmStudioView: S.currentView || 'editor' }, '', window.location.pathname);
+      toast('현재 작업이 끝날 때까지 편집 화면을 유지합니다.', 'info');
+      return;
+    }
+    var target = event.state && event.state.jmStudioView;
+    if (target && ['list', 'editor', 'preview', 'settings'].indexOf(target) !== -1) {
+      showView(target, { skipHistory: true });
+    }
+  });
 
   /* Check for OAuth callback */
   var params = new URLSearchParams(window.location.search);
   var code = params.get('code');
-  if (code) {
-    /* OAuth callback - exchange code for token */
+  var callbackState = params.get('state');
+  var oauthError = params.get('error');
+  if (oauthError) {
+    try {
+      sessionStorage.removeItem(OAUTH_STATE_KEY);
+      sessionStorage.removeItem(OAUTH_VERIFIER_KEY);
+    } catch (e) {}
     window.history.replaceState({}, '', window.location.pathname);
-    handleOAuthCallback(code);
-    return;
-  }
-
-  /* Normal init */
-  var stored = localStorage.getItem(CRYPT_KEY);
-  if (stored) {
-    showView('lock');
-  } else {
     showView('auth');
+    toast(oauthError === 'access_denied' ? 'GitHub 로그인이 취소되었습니다' : 'GitHub 로그인에 실패했습니다: ' + oauthError, 'error');
+  } else if (code) {
+    var expectedState = '';
+    var codeVerifier = '';
+    try {
+      expectedState = sessionStorage.getItem(OAUTH_STATE_KEY) || '';
+      codeVerifier = sessionStorage.getItem(OAUTH_VERIFIER_KEY) || '';
+      sessionStorage.removeItem(OAUTH_STATE_KEY);
+      sessionStorage.removeItem(OAUTH_VERIFIER_KEY);
+    } catch (e) {}
+    window.history.replaceState({}, '', window.location.pathname);
+    if (!expectedState || callbackState !== expectedState) {
+      showView('auth');
+      toast('로그인 요청을 확인할 수 없습니다. GitHub 로그인을 다시 시작해 주세요.', 'error');
+    } else if (!codeVerifier) {
+      showView('auth');
+      toast('안전한 로그인 검증 정보가 없습니다. GitHub 로그인을 다시 시작해 주세요.', 'error');
+    } else {
+      handleOAuthCallback(code, codeVerifier);
+    }
+  } else {
+    bootstrapAuth();
   }
-  syncRuntimeModeUI();
-  refreshLocalRuntime(false);
   window.addEventListener('resize', function() {
     updateEditorDock(S.currentView);
   });
@@ -850,6 +1149,10 @@ window.addEventListener('DOMContentLoaded', function() {
   window.addEventListener('keydown', function(e) {
     if ((e.ctrlKey || e.metaKey) && S.currentView === 'editor') {
       var key = e.key.toLowerCase();
+      if (S.saving || S.loadingPost) {
+        if (['s', 'p', 'b', 'i', 'k'].indexOf(key) !== -1) e.preventDefault();
+        return;
+      }
       if (key === 's') { e.preventDefault(); savePost(); }
       else if (key === 'p') { e.preventDefault(); togglePreview(); }
       else if (key === 'b') { e.preventDefault(); wrap('**', '**'); }
@@ -885,106 +1188,171 @@ window.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-function bindEnter(id, fn) {
-  var el = document.getElementById(id);
-  if (el) el.addEventListener('keydown', function(e) { if (e.key === 'Enter') fn(); });
+async function bootstrapAuth() {
+  S.restoreBlocked = false;
+  showView('boot');
+  if (await restoreTrustedSession()) return;
+
+  setAuthenticatedShell(false);
+  var hasStored = localStorage.getItem(CRYPT_KEY);
+  showView(hasStored ? 'lock' : 'auth');
+  syncRuntimeModeUI();
+  refreshLocalRuntime(false);
+  if (S.restoreBlocked) {
+    toast('GitHub 연결을 확인하지 못했습니다. 로그인 정보는 유지했으니 연결 후 다시 열어 주세요.', 'error');
+  }
+}
+
+function setupViewportHandling() {
+  var viewport = window.visualViewport;
+  var wasKeyboardOpen = false;
+  function updateViewport() {
+    var height = viewport ? viewport.height : window.innerHeight;
+    var keyboardOpen = Boolean(viewport && window.innerHeight - viewport.height > 140);
+    document.documentElement.style.setProperty('--app-height', Math.round(height) + 'px');
+    document.documentElement.classList.toggle('keyboard-open', keyboardOpen);
+    if (keyboardOpen && !wasKeyboardOpen && document.activeElement && typeof document.activeElement.scrollIntoView === 'function') {
+      requestAnimationFrame(function() { document.activeElement.scrollIntoView({ block: 'center' }); });
+    }
+    wasKeyboardOpen = keyboardOpen;
+  }
+  updateViewport();
+  window.addEventListener('resize', updateViewport, { passive: true });
+  if (viewport) {
+    viewport.addEventListener('resize', updateViewport, { passive: true });
+    viewport.addEventListener('scroll', updateViewport, { passive: true });
+  }
 }
 
 /* ═══════ OAuth Login ═══════ */
-function oauthLogin() {
+function studioRedirectUri() {
+  var path = window.location.pathname.replace(/index\.html$/i, '');
+  if (!path.endsWith('/')) path += '/';
+  return window.location.origin + path;
+}
+
+async function requireSecureWorker() {
+  var controller = new AbortController();
+  var timeout = setTimeout(function() { controller.abort(); }, 3000);
+  try {
+    var response = await fetch(WORKER_URL + '/capabilities', { signal: controller.signal, cache: 'no-store', credentials: 'omit' });
+    if (!response.ok) throw new Error('인증 서버 업데이트가 필요합니다');
+    var data = await response.json();
+    if (data.pkce !== true || data.oauth_scope !== 'public_repo') throw new Error('인증 서버 보안 설정을 확인할 수 없습니다');
+    return true;
+  } catch (e) {
+    throw new Error(e && e.name === 'AbortError' ? '인증 서버 응답이 지연되고 있습니다' : e.message);
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function revealPatFallback(message) {
+  var details = document.getElementById('pat-details');
+  if (details) details.open = true;
+  toast(message + '. 아래 PAT 연결은 계속 사용할 수 있습니다.', 'info');
+  setTimeout(function() {
+    var input = document.getElementById('pat-input');
+    if (input) input.focus();
+  }, 80);
+}
+
+async function oauthLogin() {
   if (!WORKER_URL) {
-    toast('Cloudflare Worker URL이 설정되지 않았습니다. PAT를 사용하세요.', 'error');
+    revealPatFallback('Cloudflare Worker URL이 설정되지 않았습니다');
     return;
   }
-  var redirectUri = window.location.origin + window.location.pathname;
+  try {
+    await requireSecureWorker();
+  } catch (error) {
+    revealPatFallback(error.message + '. Worker를 배포한 뒤 GitHub 로그인을 다시 시도해 주세요');
+    return;
+  }
+  var stateBytes = crypto.getRandomValues(new Uint8Array(24));
+  var state = btoa(String.fromCharCode.apply(null, stateBytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+  try { sessionStorage.setItem(OAUTH_STATE_KEY, state); } catch (e) {
+    toast('이 브라우저에서는 안전한 GitHub 로그인을 시작할 수 없습니다. PAT 방식을 사용해 주세요.', 'error');
+    return;
+  }
+  var redirectUri = studioRedirectUri();
+  var verifierBytes = crypto.getRandomValues(new Uint8Array(48));
+  var codeVerifier = btoa(String.fromCharCode.apply(null, verifierBytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+  var digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(codeVerifier));
+  var challenge = btoa(String.fromCharCode.apply(null, new Uint8Array(digest))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+  try { sessionStorage.setItem(OAUTH_VERIFIER_KEY, codeVerifier); } catch (e) {
+    toast('이 브라우저에서는 안전한 GitHub 로그인을 시작할 수 없습니다. PAT 방식을 사용해 주세요.', 'error');
+    return;
+  }
   var authUrl = 'https://github.com/login/oauth/authorize'
     + '?client_id=' + CLIENT_ID
     + '&redirect_uri=' + encodeURIComponent(redirectUri)
-    + '&scope=repo';
+    + '&scope=public_repo'
+    + '&state=' + encodeURIComponent(state)
+    + '&code_challenge=' + encodeURIComponent(challenge)
+    + '&code_challenge_method=S256';
   window.location.href = authUrl;
 }
 
-async function handleOAuthCallback(code) {
+async function handleOAuthCallback(code, codeVerifier) {
   showView('auth');
   toast('GitHub 인증 처리 중...', 'info');
 
   try {
+    var redirectUri = studioRedirectUri();
+    var controller = new AbortController();
+    var timeout = setTimeout(function() { controller.abort(); }, 20000);
     var res = await fetch(WORKER_URL + '/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code: code })
+      body: JSON.stringify({ code: code, code_verifier: codeVerifier, redirect_uri: redirectUri }),
+      signal: controller.signal,
+      cache: 'no-store',
+      credentials: 'omit'
     });
+    clearTimeout(timeout);
     var data = await res.json();
 
     if (!res.ok || !data.access_token) {
       throw new Error(data.error || 'Token exchange failed');
     }
-
-    /* Verify the token and check owner */
-    S.token = data.access_token;
-    var user = await ghApi('/user');
-
-    if (user.login.toLowerCase() !== OWNER.toLowerCase()) {
-      S.token = '';
-      toast('이 계정은 블로그 소유자가 아닙니다', 'error');
-      showView('auth');
-      return;
+    if (data.scope && data.scope.split(',').map(function(scope) { return scope.trim(); }).filter(Boolean).some(function(scope) { return scope !== 'public_repo'; })) {
+      throw new Error('GitHub에서 요청보다 넓은 권한을 반환했습니다. 앱 권한을 취소한 뒤 다시 연결해 주세요.');
     }
 
-    S.user = user;
-    S.pendingOAuthToken = data.access_token;
-    S.token = ''; /* 비밀번호 설정 전까지 메모리에서 제거 */
-
-    /* 비밀번호 설정 화면으로 이동 */
-    showView('password-setup');
+    await authenticateToken(data.access_token);
+    localStorage.removeItem(CRYPT_KEY);
+    try {
+      await saveTrustedSession(data.access_token);
+      toast('연결 완료 · 이 브라우저 프로필에서 30일간 바로 열립니다', 'success');
+    } catch (trustError) {
+      S.trusted = false;
+      toast('연결 완료 · 브라우저 저장 제한으로 이번 탭에서만 유지됩니다', 'info');
+    }
+    onLoginSuccess();
   } catch (e) {
     S.token = '';
-    toast('인증 실패: ' + e.message, 'error');
+    toast('인증 실패: ' + (e && e.name === 'AbortError' ? '요청 시간이 초과되었습니다' : e.message), 'error');
     showView('auth');
-  }
-}
-
-async function finishOAuthSetup() {
-  var password = document.getElementById('oauth-password-setup').value.trim();
-  if (!isValidPassword(password)) {
-    return toast('비밀번호는 8~64자이며 영문/숫자/특수문자 중 2종류 이상을 포함해야 합니다', 'error');
-  }
-
-  try {
-    var encrypted = await encryptPAT(S.pendingOAuthToken, password);
-    localStorage.setItem(CRYPT_KEY, encrypted);
-    S.token = S.pendingOAuthToken;
-    S.pendingOAuthToken = '';
-    document.getElementById('oauth-password-setup').value = '';
-    onLoginSuccess();
-    toast('설정 완료', 'success');
-  } catch (e) {
-    toast('암호화 실패: ' + e.message, 'error');
   }
 }
 
 /* ═══════ PAT Setup ═══════ */
 async function doSetup() {
   var pat = document.getElementById('pat-input').value.trim();
-  var password = document.getElementById('password-setup').value.trim();
   if (!pat) return toast('토큰을 입력하세요', 'error');
-  if (!isValidPassword(password)) return toast('비밀번호는 8~64자이며 영문/숫자/특수문자 중 2종류 이상을 포함해야 합니다', 'error');
 
-  S.token = pat;
   try {
-    var user = await ghApi('/user');
-    if (user.login.toLowerCase() !== OWNER.toLowerCase()) {
-      S.token = '';
-      return toast('이 토큰은 블로그 소유자의 것이 아닙니다', 'error');
+    await authenticateToken(pat);
+    localStorage.removeItem(CRYPT_KEY);
+    try {
+      await saveTrustedSession(pat);
+    } catch (trustError) {
+      S.trusted = false;
+      toast('브라우저 저장 제한으로 이번 탭에서만 로그인됩니다.', 'info');
     }
-
-    var encrypted = await encryptPAT(pat, password);
-    localStorage.setItem(CRYPT_KEY, encrypted);
-    S.user = user;
     document.getElementById('pat-input').value = '';
-    document.getElementById('password-setup').value = '';
     onLoginSuccess();
-    toast('설정 완료', 'success');
+    toast('연결 완료', 'success');
   } catch (e) {
     S.token = '';
     toast('인증 실패: ' + e.message, 'error');
@@ -999,57 +1367,154 @@ async function doUnlock() {
   var stored = localStorage.getItem(CRYPT_KEY);
   if (!stored) return toast('저장된 토큰이 없습니다. 초기화해주세요.', 'error');
 
+  var pat;
   try {
-    var pat = await decryptPAT(stored, password);
-    S.token = pat;
-    var user = await ghApi('/user');
-    S.user = user;
-    document.getElementById('password-unlock').value = '';
-    onLoginSuccess();
-  } catch (e) {
+    pat = await decryptPAT(stored, password);
+  } catch (error) {
     S.token = '';
     document.getElementById('password-unlock').value = '';
     toast('비밀번호가 올바르지 않습니다', 'error');
+    return;
   }
+
+  try {
+    await authenticateToken(pat);
+  } catch (error) {
+    document.getElementById('password-unlock').value = '';
+    toast(isInvalidAuthError(error) ? '저장된 GitHub 인증이 만료되었습니다. 초기화 후 다시 연결해 주세요.' : 'GitHub 연결에 실패했습니다. 네트워크를 확인하고 다시 시도해 주세요.', 'error');
+    return;
+  }
+
+  try {
+    await saveTrustedSession(pat);
+    localStorage.removeItem(CRYPT_KEY);
+    toast('전환 완료 · 다음부터 비밀번호 없이 열립니다', 'success');
+  } catch (trustError) {
+    S.trusted = false;
+    toast('자동 로그인 저장에 실패해 기존 암호는 유지했습니다.', 'info');
+  }
+  document.getElementById('password-unlock').value = '';
+  onLoginSuccess();
 }
 
-function doReset() {
+async function doReset() {
   if (!confirm('저장된 토큰을 삭제하고 초기화할까요?')) return;
   localStorage.removeItem(CRYPT_KEY);
-  localStorage.removeItem(AUTOSAVE_KEY);
+  await clearTrustedSession();
   S.token = '';
   S.user = null;
+  setAuthenticatedShell(false);
   showView('auth');
 }
 
-function onLoginSuccess() {
+function onLoginSuccess(options) {
+  options = options || {};
+  S.posts = [];
+  S.postsLoaded = false;
+  S.loadingPosts = false;
+  syncNewPostAvailability();
   resetActivity();
   document.getElementById('settings-user').textContent = S.user.login;
   document.getElementById('settings-repo').textContent = OWNER + '/' + REPO;
   document.getElementById('sidebar-user').textContent = S.user.login;
-  document.getElementById('bottombar').style.display = 'flex';
-  document.getElementById('sidebar').style.display = '';
-  showView('list');
+  setAuthenticatedShell(true);
+  updateTrustedLoginUI();
+  window.history.replaceState({ jmStudioView: 'list' }, '', window.location.pathname);
+  showView('list', { skipHistory: true });
   refreshAutosaveBanner();
   Promise.resolve(refreshLocalRuntime(false)).finally(function() {
     loadPosts();
-    loadSettingsWorkspace();
+  });
+  loadAudienceStats();
+}
+
+function goatCounterStart(days) {
+  var date = new Date();
+  date.setDate(date.getDate() - days);
+  return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+}
+
+function parseGoatCount(value) {
+  return parseInt(String(value == null ? '0' : value).replace(/[^0-9]/g, ''), 10) || 0;
+}
+
+function normalizeGoatPath(value) {
+  var path = String(value || '/').split('?')[0].split('#')[0];
+  if (path.charAt(0) !== '/') path = '/' + path;
+  if (path.length > 1) path = path.replace(/\/+$/, '');
+  return path || '/';
+}
+
+function formatAudienceCount(value) {
+  return Number(value || 0).toLocaleString('ko-KR');
+}
+
+async function fetchGoatCount(path, start) {
+  var endpoint = 'https://' + GOATCOUNTER_ID + '.goatcounter.com/counter/' + encodeURIComponent(path) + '.json';
+  if (start) endpoint += '?start=' + encodeURIComponent(start);
+  var response = await fetch(endpoint, { cache: 'default', credentials: 'omit' });
+  if (response.status === 404) return 0;
+  if (!response.ok) throw new Error('조회 통계를 불러올 수 없습니다');
+  var data = await response.json();
+  return parseGoatCount(data.count);
+}
+
+async function loadAudienceStats() {
+  var totalEl = document.getElementById('views-total');
+  var monthEl = document.getElementById('views-month');
+  var weekEl = document.getElementById('views-week');
+  if (!totalEl || !monthEl || !weekEl) return;
+  try {
+    var counts = await Promise.all([
+      fetchGoatCount('TOTAL'),
+      fetchGoatCount('TOTAL', goatCounterStart(30)),
+      fetchGoatCount('TOTAL', goatCounterStart(7))
+    ]);
+    totalEl.textContent = formatAudienceCount(counts[0]);
+    monthEl.textContent = formatAudienceCount(counts[1]);
+    weekEl.textContent = formatAudienceCount(counts[2]);
+  } catch (error) {
+    totalEl.textContent = monthEl.textContent = weekEl.textContent = '확인 실패';
+  }
+}
+
+function getStudioViewCount(path) {
+  var normalized = normalizeGoatPath(path);
+  if (!S.viewCounts[normalized]) S.viewCounts[normalized] = fetchGoatCount(normalized);
+  return S.viewCounts[normalized];
+}
+
+function loadRenderedPostViews() {
+  document.querySelectorAll('[data-studio-view-path]').forEach(function(element) {
+    var path = element.getAttribute('data-studio-view-path');
+    getStudioViewCount(path).then(function(count) {
+      if (!element.isConnected) return;
+      element.textContent = formatAudienceCount(count) + '회 조회';
+      element.setAttribute('aria-label', formatAudienceCount(count) + '회 조회');
+    }).catch(function() {
+      if (element.isConnected) element.textContent = '조회 확인 실패';
+    });
   });
 }
 
-function doLogout() {
+async function doLogout() {
   if (!confirm('로그아웃할까요? (저장된 토큰도 삭제됩니다)')) return;
   S.token = '';
   S.user = null;
   localStorage.removeItem(CRYPT_KEY);
-  localStorage.removeItem(AUTOSAVE_KEY);
-  document.getElementById('bottombar').style.display = 'none';
+  await clearTrustedSession();
+  setAuthenticatedShell(false);
   showView('auth');
 }
 
-function changeToken() {
+async function changeToken() {
+  flushAutosave();
+  await clearTrustedSession();
+  S.token = '';
+  S.user = null;
+  setAuthenticatedShell(false);
   document.getElementById('pat-input').value = '';
-  document.getElementById('password-setup').value = '';
+  localStorage.removeItem(CRYPT_KEY);
   showView('auth');
 }
 
@@ -1062,13 +1527,15 @@ function collectEditorState() {
     title: document.getElementById('ed-title').value,
     date: document.getElementById('ed-date').value,
     description: document.getElementById('ed-desc').value,
-    categories: '',
+    categories: document.getElementById('ed-cats').value,
     tags: document.getElementById('ed-tags').value,
     heroTitle: document.getElementById('ed-hero-title').value,
     summary: document.getElementById('ed-summary').value,
     permalink: document.getElementById('ed-permalink').value,
     cover: document.getElementById('ed-cover').value,
+    coverAlt: document.getElementById('ed-cover-alt').value,
     heroImagePosition: document.getElementById('ed-hero-image-position').value,
+    imageExtra: document.getElementById('ed-image-extra').value,
     extraFrontMatter: document.getElementById('ed-extra-front-matter').value,
     toc: document.getElementById('ed-toc').checked,
     comments: document.getElementById('ed-comments').checked,
@@ -1088,13 +1555,15 @@ function applyEditorState(data) {
   document.getElementById('ed-title').value = data.title || '';
   document.getElementById('ed-date').value = data.date || formatNow();
   document.getElementById('ed-desc').value = data.description || '';
-  document.getElementById('ed-cats').value = '';
+  document.getElementById('ed-cats').value = Array.isArray(data.categories) ? data.categories.join(', ') : (data.categories || '');
   document.getElementById('ed-tags').value = data.tags || '';
   document.getElementById('ed-hero-title').value = data.heroTitle || '';
   document.getElementById('ed-summary').value = data.summary || '';
   document.getElementById('ed-permalink').value = data.permalink || '';
   document.getElementById('ed-cover').value = data.cover || '';
+  document.getElementById('ed-cover-alt').value = data.coverAlt || extractImageAlt(data.imageExtra || '');
   document.getElementById('ed-hero-image-position').value = data.heroImagePosition || '';
+  document.getElementById('ed-image-extra').value = data.imageExtra || '';
   document.getElementById('ed-extra-front-matter').value = data.extraFrontMatter || '';
   document.getElementById('ed-toc').checked = data.toc !== false;
   document.getElementById('ed-comments').checked = data.comments !== false;
@@ -1108,6 +1577,7 @@ function applyEditorState(data) {
   if (data.cover) {
     document.getElementById('cover-preview').style.display = 'block';
     document.getElementById('cover-img').src = 'https://raw.githubusercontent.com/' + OWNER + '/' + REPO + '/main' + data.cover;
+    document.getElementById('cover-img').alt = data.coverAlt || '글 표지 미리보기';
     document.getElementById('cover-upload').style.display = 'none';
   } else {
     document.getElementById('cover-preview').style.display = 'none';
@@ -1117,12 +1587,62 @@ function applyEditorState(data) {
   updateEditorStats();
 }
 
-function getAutosave() {
+function getAutosaveStore() {
   try {
-    return JSON.parse(localStorage.getItem(AUTOSAVE_KEY) || 'null');
+    var parsed = JSON.parse(localStorage.getItem(AUTOSAVE_KEY) || 'null');
+    if (!parsed) return { version: 2, entries: {} };
+    if (parsed.version === 2 && parsed.entries) return parsed;
+    var legacyPath = parsed.path || '__new__';
+    var migrated = { version: 2, entries: {} };
+    migrated.entries[legacyPath] = parsed;
+    return migrated;
   } catch (e) {
-    return null;
+    return { version: 2, entries: {} };
   }
+}
+
+function writeAutosave(snapshot) {
+  if (!snapshot || !snapshot.savedAt) return false;
+  var store = getAutosaveStore();
+  var key = snapshot.path || '__new__';
+  store.entries[key] = snapshot;
+  var keys = Object.keys(store.entries).sort(function(a, b) {
+    return new Date(store.entries[b].savedAt || 0) - new Date(store.entries[a].savedAt || 0);
+  });
+  keys.slice(8).forEach(function(oldKey) { delete store.entries[oldKey]; });
+  try {
+    localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(store));
+    delete S.memoryAutosaves[key];
+    return true;
+  } catch (error) {
+    try {
+      var currentOnly = { version: 2, entries: {} };
+      currentOnly.entries[key] = snapshot;
+      localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(currentOnly));
+      delete S.memoryAutosaves[key];
+      return true;
+    } catch (retryError) {
+      S.memoryAutosaves[key] = snapshot;
+      return false;
+    }
+  }
+}
+
+function getAutosave(path) {
+  var store = getAutosaveStore();
+  var key = path || currentEditorPath();
+  return store.entries[key] || S.memoryAutosaves[key] || null;
+}
+
+function clearAutosave(path) {
+  var store = getAutosaveStore();
+  var key = path || currentEditorPath();
+  delete store.entries[key];
+  delete S.memoryAutosaves[key];
+  try {
+    if (Object.keys(store.entries).length) localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(store));
+    else localStorage.removeItem(AUTOSAVE_KEY);
+  } catch (e) {}
 }
 
 function refreshAutosaveBanner() {
@@ -1131,13 +1651,9 @@ function refreshAutosaveBanner() {
   if (!banner || S.autosaveDismissed) return banner && banner.classList.remove('show');
   if (!isAuthenticated()) return banner.classList.remove('show');
 
-  var data = getAutosave();
   var currentPath = currentEditorPath();
+  var data = getAutosave(currentPath);
   if (!data || !data.savedAt) {
-    return banner.classList.remove('show');
-  }
-
-  if (data.path && currentPath !== '__new__' && data.path !== currentPath) {
     return banner.classList.remove('show');
   }
 
@@ -1152,8 +1668,12 @@ function dismissAutosaveBanner() {
 
 function restoreAutosave() {
   if (!requireAuth('임시저장 복원')) return;
-  var data = getAutosave();
+  var data = getAutosave(currentEditorPath());
   if (!data) return toast('복원할 임시저장이 없습니다', 'error');
+  if (data.path && data.path !== '__new__') {
+    var post = S.posts.find(function(item) { return item.path === data.path; });
+    if (post) S.editing = { path: post.path, sha: post.sha, isNew: false };
+  }
   applyEditorState(data);
   S.autosaveDismissed = true;
   document.getElementById('autosave-banner').classList.remove('show');
@@ -1169,9 +1689,9 @@ function updateEditorStats() {
   var chars = body.replace(/\s/g, '').length;
   var words = body.trim() ? body.trim().split(/\s+/).length : 0;
   
-  /* Reading time: 600 chars/min for Korean, 200 words/min for English */
-  var korMinutes = Math.ceil(chars / 600);
-  var engMinutes = Math.ceil(words / 200);
+  /* Keep the Studio estimate aligned with the public blog. */
+  var korMinutes = Math.ceil(chars / 500);
+  var engMinutes = Math.ceil(words / 220);
   var minutes = Math.max(korMinutes, engMinutes) || 1;
   
   document.getElementById('editor-stats').textContent = chars + '자 · ' + words + '단어 · 예상 ' + minutes + '분';
@@ -1186,6 +1706,50 @@ function updateEditorStats() {
   } else {
     snsImg.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
   }
+  updatePublishChecklist();
+}
+
+function setPublishCheck(name, state, label) {
+  var item = document.querySelector('[data-check="' + name + '"]');
+  if (!item) return;
+  item.classList.remove('ok', 'warn');
+  if (state) item.classList.add(state);
+  if (label) item.textContent = label;
+}
+
+function updatePublishChecklist() {
+  var title = document.getElementById('ed-title').value.trim();
+  var description = document.getElementById('ed-desc').value.trim();
+  var categories = parseList(document.getElementById('ed-cats').value);
+  var tags = parseList(document.getElementById('ed-tags').value);
+  var cover = document.getElementById('ed-cover').value.trim();
+  var coverAlt = document.getElementById('ed-cover-alt').value.trim();
+
+  setPublishCheck('title', title ? 'ok' : 'warn', title ? '제목 입력 완료' : '제목 입력 필요');
+  setPublishCheck('description', description.length >= 40 && description.length <= 160 ? 'ok' : 'warn', '설명 ' + description.length + '자 · 40~160자 권장');
+  setPublishCheck('category', categories.length ? 'ok' : 'warn', categories.length ? '카테고리 ' + categories.length + '개' : '카테고리 1개 이상 필요');
+  setPublishCheck('tags', tags.length >= 1 && tags.length <= 5 ? 'ok' : 'warn', '태그 ' + tags.length + '개 · 1~5개 권장');
+  setPublishCheck('image-alt', !cover || coverAlt ? 'ok' : 'warn', !cover ? '표지 이미지 없음' : (coverAlt ? '이미지 설명 입력 완료' : '표지 이미지 설명 필요'));
+}
+
+function hidePublishStatus() {
+  var status = document.getElementById('publish-status');
+  if (status) status.classList.remove('show');
+}
+
+function showPublishStatus(fm, isDraft) {
+  var status = document.getElementById('publish-status');
+  var title = document.getElementById('publish-status-title');
+  var copy = document.getElementById('publish-status-copy');
+  var link = document.getElementById('publish-live-link');
+  if (!status || !title || !copy || !link) return;
+
+  var canOpen = !isDraft && !fm.hidden && fm.permalink;
+  title.textContent = isDraft ? '임시저장 완료' : (fm.hidden ? '숨김 글 저장 완료' : 'GitHub 저장 완료');
+  copy.textContent = isDraft ? '아직 공개되지 않습니다.' : (fm.hidden ? '배포되지만 목록에서는 숨겨집니다.' : '배포가 끝나면 라이브 페이지에 반영됩니다. 보통 1~3분 정도 걸립니다.');
+  link.style.display = canOpen ? 'inline-flex' : 'none';
+  if (canOpen) link.href = new URL(fm.permalink, 'https://jmchoi4u.github.io').href;
+  status.classList.add('show');
 }
 
 function hasMeaningfulEditorContent() {
@@ -1217,16 +1781,21 @@ function updateEditorDock(viewId) {
 
 function togglePreviewMode() {
   if (S.currentView === 'preview') {
-    showView('editor');
-    setTopbar(S.editing && !S.editing.isNew ? '글 수정' : '새 글', true);
+    if (window.history.state && window.history.state.jmStudioView === 'preview') {
+      window.history.back();
+    } else {
+      showView('editor', { skipHistory: true });
+    }
     return;
   }
   togglePreview();
 }
 
 function leaveEditorToList() {
+  if (S.saving || S.loadingPost) return toast('현재 작업이 끝날 때까지 편집 화면을 유지합니다.', 'info');
   if (hasMeaningfulEditorContent()) {
     autoSave();
+    flushAutosave();
   }
   showView('list');
 }
@@ -1352,7 +1921,7 @@ function parseTemplateText(text, fileName) {
     heroTitle: (fm.hero_title || '').replace(/<br\s*\/?>/gi, '\n'),
     summary: fm.summary || '',
     heroImagePosition: fm.hero_image_position || '',
-    categories: [],
+    categories: fm.categories || [],
     tags: fm.tags || [],
     description: fm.description || '',
     toc: fm.toc !== false && fm.toc !== 'false',
@@ -1362,6 +1931,8 @@ function parseTemplateText(text, fileName) {
     mermaid: fm.mermaid === true || fm.mermaid === 'true',
     math: fm.math === true || fm.math === 'true',
     extra: fm._extra || '',
+    imageExtra: fm._imageExtra || '',
+    coverAlt: extractImageAlt(fm._imageExtra || ''),
     permalink: fm.permalink || '',
     coverImage: (fm.image && fm.image.path) ? fm.image.path : (typeof fm.image === 'string' ? fm.image : ''),
     body: body
@@ -1373,12 +1944,14 @@ function fillEditorFromData(data) {
   document.getElementById('ed-title').value = data.title || '';
   document.getElementById('ed-date').value = data.date || formatNow();
   document.getElementById('ed-desc').value = data.description || '';
-  document.getElementById('ed-cats').value = '';
+  document.getElementById('ed-cats').value = (data.categories || []).join(', ');
   document.getElementById('ed-tags').value = (data.tags || []).join(', ');
   document.getElementById('ed-hero-title').value = data.heroTitle || '';
   document.getElementById('ed-summary').value = data.summary || '';
   document.getElementById('ed-permalink').value = data.permalink || '';
   document.getElementById('ed-extra-front-matter').value = data.extra || '';
+  document.getElementById('ed-image-extra').value = data.imageExtra || '';
+  document.getElementById('ed-cover-alt').value = data.coverAlt || extractImageAlt(data.imageExtra || '');
   document.getElementById('ed-toc').checked = data.toc !== false;
   document.getElementById('ed-comments').checked = data.comments !== false;
   document.getElementById('ed-pin').checked = !!data.pin;
@@ -1393,6 +1966,7 @@ function fillEditorFromData(data) {
   if (data.coverImage) {
     document.getElementById('cover-preview').style.display = 'block';
     document.getElementById('cover-img').src = 'https://raw.githubusercontent.com/' + OWNER + '/' + REPO + '/main' + data.coverImage;
+    document.getElementById('cover-img').alt = data.coverAlt || '글 표지 미리보기';
     document.getElementById('cover-upload').style.display = 'none';
   } else {
     document.getElementById('cover-preview').style.display = 'none';
@@ -1585,7 +2159,7 @@ function updateTemplatePreview() {
   var parsed = parseTemplateText(document.getElementById('template-editor').value, document.getElementById('template-name').value.trim());
   preview.innerHTML = '';
   var bodyWrap = document.createElement('div');
-  bodyWrap.innerHTML = sanitizePreviewHtml(marked.parse(parsed.body || ''));
+  bodyWrap.innerHTML = renderMarkdown(parsed.body || '');
   preview.appendChild(bodyWrap);
 }
 
@@ -1611,17 +2185,34 @@ async function loadSettingsWorkspace() {
 async function ghApi(path, opts) {
   opts = opts || {};
   var url = path.startsWith('http') ? path : API + path;
-  var res = await fetch(url, {
-    headers: {
-      'Authorization': 'Bearer ' + S.token,
-      'Accept': 'application/vnd.github.v3+json'
-    },
-    method: opts.method || 'GET',
-    body: opts.body || undefined
-  });
+  var controller = new AbortController();
+  var timeout = setTimeout(function() { controller.abort(); }, 20000);
+  var res;
+  try {
+    res = await fetch(url, {
+      headers: {
+        'Authorization': 'Bearer ' + S.token,
+        'Accept': 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28'
+      },
+      method: opts.method || 'GET',
+      body: opts.body || undefined,
+      signal: controller.signal,
+      cache: 'no-store',
+      credentials: 'omit'
+    });
+  } catch (error) {
+    var networkError = new Error(error && error.name === 'AbortError' ? '요청 시간이 초과되었습니다' : '네트워크에 연결할 수 없습니다');
+    networkError.code = error && error.name === 'AbortError' ? 'timeout' : 'network';
+    throw networkError;
+  } finally {
+    clearTimeout(timeout);
+  }
   if (!res.ok) {
     var err = await res.json().catch(function() { return {}; });
-    throw new Error(err.message || 'HTTP ' + res.status);
+    var apiError = new Error(err.message || 'HTTP ' + res.status);
+    apiError.status = res.status;
+    throw apiError;
   }
   if (res.status === 204) return {};
   return res.json();
@@ -1675,6 +2266,7 @@ function mapLocalPost(post) {
     tags: post.tags || [],
     hidden: Boolean(post.hidden),
     pin: Boolean(post.pin),
+    permalink: post.permalink || '',
     _loaded: true
   };
 }
@@ -1682,6 +2274,8 @@ function mapLocalPost(post) {
 async function loadPosts() {
   if (!requireAuth('글 목록', { silent: true })) return;
   var listEl = document.getElementById('post-list');
+  S.loadingPosts = true;
+  syncNewPostAvailability();
   listEl.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:8px">불러오는 중...</p></div>';
 
   try {
@@ -1690,12 +2284,22 @@ async function loadPosts() {
       S.posts = (localPosts.posts || []).map(mapLocalPost).sort(function(a, b) {
         return (b.date || b.name).localeCompare(a.date || a.name);
       });
+      S.postsLoaded = true;
+      updateListStats();
+      updateFilterOptions();
       renderPosts();
       return;
     }
 
-    var postsData = await ghApi('/repos/' + OWNER + '/' + REPO + '/contents/_posts').catch(function() { return []; });
-    var draftsData = await ghApi('/repos/' + OWNER + '/' + REPO + '/contents/_drafts').catch(function() { return []; });
+    var directories = await Promise.all([
+      ghApi('/repos/' + OWNER + '/' + REPO + '/contents/_posts'),
+      ghApi('/repos/' + OWNER + '/' + REPO + '/contents/_drafts').catch(function(error) {
+        if (error && error.status === 404) return [];
+        throw error;
+      })
+    ]);
+    var postsData = directories[0];
+    var draftsData = directories[1];
 
     var posts = [];
 
@@ -1725,34 +2329,41 @@ async function loadPosts() {
     });
 
     await loadPostTitles();
+    S.postsLoaded = true;
     updateListStats();
     updateFilterOptions();
     renderPosts();
   } catch (e) {
     listEl.innerHTML = '<div class="empty">불러오기 실패: ' + esc(e.message) + '</div>';
+  } finally {
+    S.loadingPosts = false;
+    syncNewPostAvailability();
   }
 }
 
 async function loadPostTitles() {
-  var promises = S.posts.map(async function(p) {
-    try {
-      var data = await ghGetFile(p.path);
-      var content = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ''))));
-      var fm = parseFrontMatter(content);
-      p.title = fm.title || p.slug;
-      p.description = fm.description || '';
-      p.categories = fm.categories || [];
-      p.tags = fm.tags || [];
-      p.hidden = fm.hidden === true || fm.hidden === 'true';
-      p.pin = fm.pin === true || fm.pin === 'true';
-      p.sha = data.sha;
-      p._content = content;
-      p._loaded = true;
-    } catch (e) {
-      p.title = p.slug;
-    }
-  });
-  await Promise.all(promises);
+  var batchSize = 4;
+  for (var i = 0; i < S.posts.length; i += batchSize) {
+    await Promise.all(S.posts.slice(i, i + batchSize).map(async function(p) {
+      try {
+        var data = await ghGetFile(p.path);
+        var content = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ''))));
+        var fm = parseFrontMatter(content);
+        p.title = fm.title || p.slug;
+        p.description = fm.description || '';
+        p.categories = fm.categories || [];
+        p.tags = fm.tags || [];
+        p.hidden = fm.hidden === true || fm.hidden === 'true';
+        p.pin = fm.pin === true || fm.pin === 'true';
+        p.permalink = fm.permalink || '';
+        p.sha = data.sha;
+        p._content = content;
+        p._loaded = true;
+      } catch (e) {
+        p.title = p.slug;
+      }
+    }));
+  }
 }
 
 function updateListStats() {
@@ -1822,38 +2433,55 @@ function renderPosts() {
     var hideBtnCls = p.hidden ? 'btn-primary' : '';
     var draftBtnLabel = p.isDraft ? '발행' : (canUseLocalPower() ? '편집' : '임시저장');
     var modeTag = canUseLocalPower() ? '<span class="power-badge active local" style="margin-left:auto">로컬</span>' : '';
+    var viewPath = !p.isDraft ? (p.permalink || ('/posts/' + p.slug + '/')) : '';
+    var viewChip = viewPath ? '<span class="view-count-chip" data-studio-view-path="' + esc(normalizeGoatPath(viewPath)) + '">조회 확인 중</span>' : '';
 
+    var safePath = esc(p.path);
     return '<div class="card">'
       + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
       + '<span class="card-status ' + statusCls + '"></span>'
       + '<span style="font-size:.68rem;color:var(--muted)">' + statusLabel + '</span>'
       + (p.pin ? '<span style="font-size:.68rem">&#128204;</span>' : '')
       + modeTag
+      + viewChip
       + '</div>'
-      + '<div class="card-title" style="cursor:pointer" onclick="editPost(\'' + esc(p.path) + '\')">' + esc(p.title || p.slug) + '</div>'
+      + '<button type="button" class="card-title card-title-button" data-post-action="edit" data-path="' + safePath + '">' + esc(p.title || p.slug) + '</button>'
       + '<div class="card-meta">'
-      + (p.date ? '<span>' + p.date + '</span>' : '')
+      + (p.date ? '<span>' + esc(p.date) + '</span>' : '')
       + (cats ? '<span>' + esc(cats) + '</span>' : '')
       + '</div>'
       + (tags ? '<div class="card-meta" style="margin-top:3px">' + tags + '</div>' : '')
       + '<div class="card-actions">'
-      + '<button class="btn btn-sm" onclick="editPost(\'' + esc(p.path) + '\')">수정</button>'
-      + '<button class="btn btn-sm ' + hideBtnCls + '" onclick="event.stopPropagation();quickToggleHidden(\'' + esc(p.path) + '\')">' + hideBtnLabel + '</button>'
-      + '<button class="btn btn-sm" onclick="event.stopPropagation();quickToggleDraft(\'' + esc(p.path) + '\')">' + draftBtnLabel + '</button>'
+      + '<button type="button" class="btn btn-sm" data-post-action="edit" data-path="' + safePath + '">수정</button>'
+      + '<button type="button" class="btn btn-sm ' + hideBtnCls + '" data-post-action="hidden" data-path="' + safePath + '">' + hideBtnLabel + '</button>'
+      + '<button type="button" class="btn btn-sm" data-post-action="draft" data-path="' + safePath + '">' + draftBtnLabel + '</button>'
       + '</div>'
       + '</div>';
   }).join('');
+
+  listEl.onclick = function(event) {
+    var target = event.target.closest('[data-post-action]');
+    if (!target || !listEl.contains(target)) return;
+    var path = target.getAttribute('data-path') || '';
+    var action = target.getAttribute('data-post-action');
+    if (action === 'edit') editPost(path);
+    else if (action === 'hidden') quickToggleHidden(path);
+    else if (action === 'draft') quickToggleDraft(path);
+  };
+  loadRenderedPostViews();
 }
 
 function filterPosts() { renderPosts(); }
 
 async function quickToggleHidden(path) {
   if (!requireAuth('글 숨김 설정')) return;
+  if (S.saving || S.loadingPost) return toast('진행 중인 작업이 끝날 때까지 기다려 주세요.', 'info');
   var post = S.posts.find(function(p) { return p.path === path; });
   if (!post) return toast('글 데이터를 불러올 수 없습니다', 'error');
-
-  if (canUseLocalPower()) {
-    try {
+  if (!canUseLocalPower() && !post._content) return toast('글 데이터를 불러올 수 없습니다', 'error');
+  setSavingState(true);
+  try {
+    if (canUseLocalPower()) {
       var hiddenResult = await localApi('/api/toggle-hidden', {
         method: 'POST',
         body: JSON.stringify({ relativePath: path })
@@ -1861,25 +2489,19 @@ async function quickToggleHidden(path) {
       post.hidden = hiddenResult.hidden;
       toast(hiddenResult.hidden ? '숨김 처리됨' : '보이기 처리됨', 'success');
       loadPosts();
-    } catch (e) {
-      toast('실패: ' + e.message, 'error');
+      return;
     }
-    return;
-  }
 
-  if (!post._content) return toast('글 데이터를 불러올 수 없습니다', 'error');
+    var content = post._content;
+    var newHidden = !post.hidden;
 
-  var content = post._content;
-  var newHidden = !post.hidden;
+    /* front matter에서 hidden 토글 */
+    if (content.match(/^hidden:\s*(true|false)\s*$/m)) {
+      content = content.replace(/^hidden:\s*(true|false)\s*$/m, 'hidden: ' + newHidden);
+    } else if (newHidden) {
+      content = content.replace(/\n---\n/, '\nhidden: true\n---\n');
+    }
 
-  /* front matter에서 hidden 토글 */
-  if (content.match(/^hidden:\s*(true|false)\s*$/m)) {
-    content = content.replace(/^hidden:\s*(true|false)\s*$/m, 'hidden: ' + newHidden);
-  } else if (newHidden) {
-    content = content.replace(/\n---\n/, '\nhidden: true\n---\n');
-  }
-
-  try {
     var result = await ghPutFile(post.path, content, post.sha, (newHidden ? 'hide' : 'show') + ' ' + post.path);
     post.sha = result.content.sha;
     post.hidden = newHidden;
@@ -1888,42 +2510,43 @@ async function quickToggleHidden(path) {
     renderPosts();
   } catch (e) {
     toast('실패: ' + e.message, 'error');
+  } finally {
+    setSavingState(false);
   }
 }
 
 async function quickToggleDraft(path) {
   if (!requireAuth('발행 상태 변경')) return;
+  if (S.saving || S.loadingPost) return toast('진행 중인 작업이 끝날 때까지 기다려 주세요.', 'info');
   var post = S.posts.find(function(p) { return p.path === path; });
   if (!post) return toast('글 데이터를 불러올 수 없습니다', 'error');
+  if (!canUseLocalPower() && !post._content) return toast('글 데이터를 불러올 수 없습니다', 'error');
+  if (canUseLocalPower() && !post.isDraft) return editPost(path);
 
-  if (canUseLocalPower()) {
-    if (!post.isDraft) {
-      return editPost(path);
-    }
-    try {
+  setSavingState(true);
+  try {
+    if (canUseLocalPower()) {
       await localApi('/api/publish-post', {
         method: 'POST',
         body: JSON.stringify({ relativePath: path })
       });
       toast('발행 완료', 'success');
       loadPosts();
-    } catch (e) {
-      toast('실패: ' + e.message, 'error');
+      return;
     }
-    return;
-  }
 
-  if (!post._content) return toast('글 데이터를 불러올 수 없습니다', 'error');
+    var content = post._content;
+    var wasDraft = post.isDraft;
+    var newDir = wasDraft ? '_posts' : '_drafts';
+    var newPath = newDir + '/' + post.name;
 
-  var content = post._content;
-  var wasDraft = post.isDraft;
-  var newDir = wasDraft ? '_posts' : '_drafts';
-  var newPath = newDir + '/' + post.name;
-
-  try {
-    /* delete old, create new */
-    await ghDeleteFile(post.path, post.sha, (wasDraft ? 'publish' : 'draft') + ' ' + post.name);
+    /* Create first so a mobile/network failure cannot delete the only copy. */
     var result = await ghPutFile(newPath, content, null, (wasDraft ? 'publish' : 'draft') + ' ' + post.name);
+    try {
+      await ghDeleteFile(post.path, post.sha, (wasDraft ? 'publish' : 'draft') + ' ' + post.name);
+    } catch (cleanupError) {
+      toast('새 위치에는 저장됐지만 기존 파일 정리에 실패했습니다. 중복 파일을 확인해 주세요.', 'info');
+    }
     post.path = newPath;
     post.sha = result.content.sha;
     post.isDraft = !wasDraft;
@@ -1931,6 +2554,8 @@ async function quickToggleDraft(path) {
     renderPosts();
   } catch (e) {
     toast('실패: ' + e.message, 'error');
+  } finally {
+    setSavingState(false);
   }
 }
 
@@ -1957,8 +2582,13 @@ function renderSuggestions() {
 
   function makeChips(wrap, items, inputId) {
     wrap.innerHTML = Object.keys(items).sort().map(function(item) {
-      return '<span class="card-tag" style="cursor:pointer" onclick="addTagSuggestion(\'' + inputId + '\', \'' + esc(item) + '\')">' + esc(item) + '</span>';
+      return '<button type="button" class="card-tag suggestion-chip" data-suggestion-target="' + esc(inputId) + '" data-suggestion-value="' + esc(item) + '">' + esc(item) + '</button>';
     }).join('');
+    wrap.onclick = function(event) {
+      var chip = event.target.closest('[data-suggestion-target]');
+      if (!chip || !wrap.contains(chip)) return;
+      addTagSuggestion(chip.getAttribute('data-suggestion-target'), chip.getAttribute('data-suggestion-value'));
+    };
   }
 
   makeChips(catsWrap, categories, 'ed-cats');
@@ -1975,26 +2605,53 @@ function addTagSuggestion(inputId, value) {
   }
 }
 
+function hasMeaningfulSnapshot(snapshot) {
+  return Boolean(snapshot && [snapshot.title, snapshot.body, snapshot.description, snapshot.summary].some(function(value) {
+    return String(value || '').trim();
+  }));
+}
+
 function newPost() {
   if (!requireAuth('새 글 작성')) return;
+  if (S.saving || S.loadingPost) return toast('현재 작업이 끝난 뒤 새 글을 열어 주세요.', 'info');
+  if (!S.postsLoaded || S.loadingPosts) return toast('글 목록을 모두 불러온 뒤 새 글을 만들 수 있습니다.', 'info');
+  if ((S.currentView === 'editor' || S.currentView === 'preview') && S.editing && S.editing.isNew && hasMeaningfulEditorContent()) {
+    toast('이미 새 글을 작성 중입니다. 먼저 저장하거나 내용을 비워 주세요.', 'info');
+    showView('editor');
+    return;
+  }
+  flushAutosave();
+  var existingDraft = getAutosave('__new__');
   S.editing = { path: null, sha: null, isNew: true };
   clearEditor();
-  document.getElementById('ed-date').value = formatNow();
+  if (hasMeaningfulSnapshot(existingDraft)) {
+    applyEditorState(existingDraft);
+    S.autosaveDismissed = true;
+    toast('작성 중이던 새 글을 이어서 열었습니다', 'success');
+  } else {
+    clearAutosave('__new__');
+    document.getElementById('ed-date').value = formatNow();
+    S.autosaveDismissed = false;
+  }
   document.getElementById('ed-delete-btn').style.display = 'none';
   showView('editor');
   setTopbar('새 글', true);
-  S.autosaveDismissed = false;
   refreshAutosaveBanner();
   renderSuggestions();
 }
 
 async function editPost(path) {
   if (!requireAuth('글 수정')) return;
-  showView('editor');
-  setTopbar('글 수정', true);
-
+  if (S.saving || S.loadingPost) return toast('현재 작업이 끝난 뒤 다른 글을 열어 주세요.', 'info');
   var post = S.posts.find(function(p) { return p.path === path; });
   if (!post) return toast('글을 찾을 수 없습니다', 'error');
+
+  flushAutosave();
+  S.editing = null;
+  clearEditor();
+  showView('editor');
+  setTopbar('글 불러오는 중…', true);
+  setPostLoadingState(true);
 
   try {
     if (canUseLocalPower()) {
@@ -2002,12 +2659,14 @@ async function editPost(path) {
       document.getElementById('ed-title').value = localPost.title || '';
       document.getElementById('ed-date').value = localPost.date || '';
       document.getElementById('ed-desc').value = localPost.description || '';
-  document.getElementById('ed-cats').value = '';
+  document.getElementById('ed-cats').value = (localPost.categories || []).join(', ');
       document.getElementById('ed-tags').value = (localPost.tags || []).join(', ');
       document.getElementById('ed-hero-title').value = (localPost.heroTitle || '').replace(/<br\s*\/?>/gi, '\n');
       document.getElementById('ed-summary').value = localPost.summary || '';
       document.getElementById('ed-permalink').value = localPost.permalink || '';
       document.getElementById('ed-hero-image-position').value = localPost.heroImagePosition || '';
+      document.getElementById('ed-image-extra').value = localPost.imageExtra || '';
+      document.getElementById('ed-cover-alt').value = localPost.coverAlt || extractImageAlt(localPost.imageExtra || '');
       document.getElementById('ed-extra-front-matter').value = localPost.extra || '';
       document.getElementById('ed-toc').checked = localPost.toc !== false;
       document.getElementById('ed-comments').checked = localPost.comments !== false;
@@ -2023,6 +2682,7 @@ async function editPost(path) {
       if (localPost.coverImage) {
         document.getElementById('cover-preview').style.display = 'block';
         document.getElementById('cover-img').src = localPost.coverImage;
+        document.getElementById('cover-img').alt = localPost.coverAlt || '글 표지 미리보기';
         document.getElementById('cover-upload').style.display = 'none';
       }
       document.getElementById('ed-delete-btn').style.display = 'inline-flex';
@@ -2030,6 +2690,7 @@ async function editPost(path) {
       S.autosaveDismissed = false;
       refreshAutosaveBanner();
       updateEditorStats();
+      setTopbar('글 수정', true);
       return;
     }
 
@@ -2047,12 +2708,14 @@ async function editPost(path) {
     document.getElementById('ed-title').value = fm.title || '';
     document.getElementById('ed-date').value = fm.date || '';
     document.getElementById('ed-desc').value = fm.description || '';
-    document.getElementById('ed-cats').value = '';
+    document.getElementById('ed-cats').value = (fm.categories || []).join(', ');
     document.getElementById('ed-tags').value = (fm.tags || []).join(', ');
     document.getElementById('ed-hero-title').value = (fm.hero_title || '').replace(/<br\s*\/?>/gi, '\n');
     document.getElementById('ed-summary').value = fm.summary || '';
     document.getElementById('ed-permalink').value = fm.permalink || '';
     document.getElementById('ed-hero-image-position').value = fm.hero_image_position || '';
+    document.getElementById('ed-image-extra').value = fm._imageExtra || '';
+    document.getElementById('ed-cover-alt').value = extractImageAlt(fm._imageExtra || '');
     document.getElementById('ed-extra-front-matter').value = fm._extra || '';
     document.getElementById('ed-toc').checked = fm.toc !== false && fm.toc !== 'false';
     document.getElementById('ed-comments').checked = fm.comments !== false && fm.comments !== 'false';
@@ -2070,6 +2733,7 @@ async function editPost(path) {
     if (cover) {
       document.getElementById('cover-preview').style.display = 'block';
       document.getElementById('cover-img').src = 'https://raw.githubusercontent.com/' + OWNER + '/' + REPO + '/main' + cover;
+      document.getElementById('cover-img').alt = document.getElementById('ed-cover-alt').value || '글 표지 미리보기';
       document.getElementById('cover-upload').style.display = 'none';
     }
 
@@ -2078,17 +2742,30 @@ async function editPost(path) {
     S.autosaveDismissed = false;
     refreshAutosaveBanner();
     updateEditorStats();
+    setTopbar('글 수정', true);
   } catch (e) {
+    setPostLoadingState(false);
     toast('불러오기 실패: ' + e.message, 'error');
+    if (window.history.state && window.history.state.jmStudioView === 'editor') window.history.back();
+    else showView('list', { skipHistory: true });
+  } finally {
+    setPostLoadingState(false);
   }
 }
 
 async function savePost() {
   if (!requireAuth('저장')) return;
+  if (S.saving || S.loadingPost) return toast('현재 작업이 끝날 때까지 잠시만 기다려 주세요.', 'info');
+  if ((!S.editing || S.editing.isNew) && (!S.postsLoaded || S.loadingPosts)) {
+    return toast('글 목록 확인이 끝난 뒤 새 글을 저장할 수 있습니다.', 'info');
+  }
   var title = document.getElementById('ed-title').value.trim();
   if (!title) return toast('제목을 입력하세요', 'error');
 
   var date = document.getElementById('ed-date').value.trim() || formatNow();
+  if (!isValidPostDate(date)) {
+    return toast('날짜는 2026-07-13 18:30:00 +0900 형식으로 입력해 주세요', 'error');
+  }
   var isDraft = document.getElementById('ed-draft').checked;
   var body = document.getElementById('ed-body').value;
 
@@ -2102,7 +2779,7 @@ async function savePost() {
     title: title,
     date: date,
     description: document.getElementById('ed-desc').value.trim(),
-    categories: [],
+    categories: parseList(document.getElementById('ed-cats').value),
     tags: parseList(document.getElementById('ed-tags').value),
     toc: document.getElementById('ed-toc').checked,
     comments: document.getElementById('ed-comments').checked,
@@ -2114,15 +2791,16 @@ async function savePost() {
     summary: document.getElementById('ed-summary').value.trim(),
     permalink: document.getElementById('ed-permalink').value.trim(),
     hero_image_position: document.getElementById('ed-hero-image-position').value.trim(),
+    image_extra: mergeImageAlt(document.getElementById('ed-image-extra').value, document.getElementById('ed-cover-alt').value.trim()),
     extra_front_matter: document.getElementById('ed-extra-front-matter').value.trim(),
     cover: document.getElementById('ed-cover').value.trim()
   };
-
   var datePrefix = date.slice(0, 10);
   var slug;
 
-  if (S.editing && !S.editing.isNew) {
-    var match = S.editing.path.match(/\d{4}-\d{2}-\d{2}-(.+)\.md$/);
+  var editingAtStart = S.editing ? { path: S.editing.path, sha: S.editing.sha, isNew: S.editing.isNew } : null;
+  if (editingAtStart && !editingAtStart.isNew) {
+    var match = editingAtStart.path.match(/\d{4}-\d{2}-\d{2}-(.+)\.md$/);
     slug = match ? match[1] : title;
   } else {
     var nums = S.posts.map(function(p) { return parseInt(p.slug); }).filter(function(n) { return !isNaN(n); });
@@ -2135,19 +2813,26 @@ async function savePost() {
     fm.permalink = '/posts/' + slug + '/';
   }
   var content = buildFileContent(fm, body);
+  var autosavePath = currentEditorPath();
+  var originalPath = editingAtStart && !editingAtStart.isNew ? editingAtStart.path : '';
+  var originalSha = editingAtStart && !editingAtStart.isNew ? editingAtStart.sha : null;
+  var moving = Boolean(originalPath && originalPath !== newPath && originalSha);
 
+  flushAutosave();
+  setSavingState(true);
   try {
     if (canUseLocalPower()) {
       var localResult = await localApi('/api/save-post', {
         method: 'POST',
         body: JSON.stringify({
-          originalRelativePath: S.editing && !S.editing.isNew ? S.editing.path : '',
+          originalRelativePath: originalPath,
           title: title,
           date: date,
           draft: isDraft,
           heroTitle: fm.hero_title,
           summary: fm.summary,
           heroImagePosition: fm.hero_image_position,
+          imageExtra: fm.image_extra,
           categories: fm.categories,
           tags: fm.tags,
           description: fm.description,
@@ -2160,47 +2845,95 @@ async function savePost() {
           extra: fm.extra_front_matter,
           body: body,
           coverImage: fm.cover,
+          coverAlt: document.getElementById('ed-cover-alt').value.trim(),
           permalink: fm.permalink
         })
       });
       S.editing = { path: localResult.relativePath, sha: null, isNew: false };
       document.getElementById('ed-delete-btn').style.display = 'inline-flex';
       toast('로컬 저장 완료', 'success');
-      localStorage.removeItem(AUTOSAVE_KEY);
+      completeAutosaveAfterSave(autosavePath);
       document.getElementById('autosave-status').textContent = '자동저장 없음';
       S.autosaveDismissed = false;
       refreshAutosaveBanner();
       updateEditorDock(S.currentView);
+      showPublishStatus(fm, isDraft);
       await refreshLocalRuntime(true);
       return;
     }
 
-    if (S.editing && !S.editing.isNew && S.editing.path !== newPath && S.editing.sha) {
-      await ghDeleteFile(S.editing.path, S.editing.sha, 'move ' + S.editing.path + ' to ' + newPath);
-      S.editing.sha = null;
-    }
-
-    var result = await ghPutFile(newPath, content, (S.editing && S.editing.sha) || null);
+    /* Create the new path first. If cleanup fails, a duplicate is recoverable; a deleted original is not. */
+    var result = await ghPutFile(newPath, content, moving ? null : originalSha);
     S.editing = { path: newPath, sha: result.content.sha, isNew: false };
+    var cleanupWarning = '';
+    if (moving) {
+      try {
+        await ghDeleteFile(originalPath, originalSha, 'move ' + originalPath + ' to ' + newPath);
+      } catch (cleanupError) {
+        cleanupWarning = '새 위치에는 저장됐지만 기존 파일 정리에 실패했습니다. 글 목록에서 중복 파일을 확인해 주세요.';
+      }
+    }
     document.getElementById('ed-delete-btn').style.display = 'inline-flex';
 
-    toast('저장 완료', 'success');
-    localStorage.removeItem(AUTOSAVE_KEY);
+    toast(cleanupWarning || '저장 완료', cleanupWarning ? 'info' : 'success');
+    completeAutosaveAfterSave(autosavePath);
     document.getElementById('autosave-status').textContent = '자동저장 없음';
     S.autosaveDismissed = false;
     refreshAutosaveBanner();
     updateEditorDock(S.currentView);
+    showPublishStatus(fm, isDraft);
     loadPosts();
   } catch (e) {
     toast('저장 실패: ' + e.message, 'error');
+  } finally {
+    setSavingState(false);
   }
+}
+
+function setSavingState(saving) {
+  S.saving = saving;
+  syncEditorBusyState();
+  updateEditorDock(S.currentView);
+}
+
+function setPostLoadingState(loading) {
+  S.loadingPost = loading;
+  syncEditorBusyState();
+}
+
+function syncEditorBusyState() {
+  var busy = S.saving || S.loadingPost;
+  document.querySelectorAll('#view-editor input, #view-editor textarea, #view-editor button, #editor-dock button, #post-list button').forEach(function(control) {
+    control.disabled = busy;
+  });
+  document.querySelectorAll('[data-save-action]').forEach(function(button) {
+    button.textContent = S.loadingPost ? '불러오는 중…' : (S.saving ? '저장 중…' : '저장');
+  });
+  syncNewPostAvailability();
+}
+
+function syncNewPostAvailability() {
+  var unavailable = !S.postsLoaded || S.loadingPosts || S.saving || S.loadingPost;
+  document.querySelectorAll('[data-new-post-action]').forEach(function(button) {
+    button.disabled = unavailable;
+    button.setAttribute('aria-disabled', unavailable ? 'true' : 'false');
+  });
+}
+
+function completeAutosaveAfterSave(path) {
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = null;
+  if (S.pendingAutosave && (S.pendingAutosave.path || '__new__') === path) S.pendingAutosave = null;
+  clearAutosave(path);
 }
 
 async function deletePost() {
   if (!requireAuth('삭제')) return;
+  if (S.saving || S.loadingPost) return toast('현재 작업이 끝난 뒤 삭제해 주세요.', 'info');
   if (!S.editing || S.editing.isNew || (!canUseLocalPower() && !S.editing.sha)) return;
   if (!confirm('이 글을 삭제할까요?')) return;
 
+  setSavingState(true);
   try {
     if (canUseLocalPower()) {
       await localApi('/api/delete-post', {
@@ -2209,7 +2942,9 @@ async function deletePost() {
       });
       toast('로컬 삭제 완료', 'success');
       S.editing = null;
-      showView('list');
+      setSavingState(false);
+      window.history.replaceState({ jmStudioView: 'list' }, '', window.location.pathname);
+      showView('list', { skipHistory: true });
       await refreshLocalRuntime(true);
       return;
     }
@@ -2217,15 +2952,19 @@ async function deletePost() {
     await ghDeleteFile(S.editing.path, S.editing.sha);
     toast('삭제 완료', 'success');
     S.editing = null;
-    showView('list');
+    setSavingState(false);
+    window.history.replaceState({ jmStudioView: 'list' }, '', window.location.pathname);
+    showView('list', { skipHistory: true });
     loadPosts();
   } catch (e) {
     toast('삭제 실패: ' + e.message, 'error');
+  } finally {
+    setSavingState(false);
   }
 }
 
 function clearEditor() {
-  ['ed-title','ed-date','ed-desc','ed-cats','ed-tags','ed-hero-title','ed-summary','ed-permalink','ed-body','ed-cover','ed-hero-image-position','ed-extra-front-matter'].forEach(function(id) {
+  ['ed-title','ed-date','ed-desc','ed-cats','ed-tags','ed-hero-title','ed-summary','ed-permalink','ed-body','ed-cover','ed-cover-alt','ed-hero-image-position','ed-image-extra','ed-extra-front-matter'].forEach(function(id) {
     document.getElementById(id).value = '';
   });
   document.getElementById('ed-toc').checked = true;
@@ -2238,6 +2977,7 @@ function clearEditor() {
   document.getElementById('cover-preview').style.display = 'none';
   document.getElementById('cover-upload').style.display = '';
   document.getElementById('autosave-status').textContent = '자동저장 대기';
+  hidePublishStatus();
   updateEditorStats();
   updateEditorDock(S.currentView);
 }
@@ -2253,10 +2993,12 @@ async function uploadCover(input) {
     document.getElementById('cover-upload').style.display = 'none';
     autoSave();
   });
+  input.value = '';
 }
 
 function removeCover() {
   document.getElementById('ed-cover').value = '';
+  document.getElementById('ed-cover-alt').value = '';
   document.getElementById('cover-preview').style.display = 'none';
   document.getElementById('cover-upload').style.display = '';
   autoSave();
@@ -2280,19 +3022,27 @@ function triggerBodyImage() {
 }
 
 async function uploadImageFile(file, onSuccess) {
+  if (S.saving || S.loadingPost) return toast('진행 중인 작업이 끝난 뒤 이미지를 올려 주세요.', 'info');
+  if (!file || !String(file.type || '').startsWith('image/')) {
+    return toast('이미지 파일만 업로드할 수 있습니다', 'error');
+  }
+  if (file.size > 12 * 1024 * 1024) {
+    return toast('이미지는 12MB 이하로 줄인 뒤 업로드해 주세요', 'error');
+  }
   var titleSlug = document.getElementById('ed-title').value.trim().replace(/[^a-zA-Z0-9가-힣_-]/g, '-').toLowerCase() || 'upload';
   var folder = 'assets/img/posts/' + titleSlug;
   var fileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '-');
   var path = folder + '/' + fileName;
 
-  var reader = new FileReader();
-  var base64 = await new Promise(function(resolve, reject) {
-    reader.onload = function() { resolve(reader.result.split(',')[1]); };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-
+  setSavingState(true);
   try {
+    var reader = new FileReader();
+    var base64 = await new Promise(function(resolve, reject) {
+      reader.onload = function() { resolve(reader.result.split(',')[1]); };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
     toast('업로드 중...', 'info');
     if (canUseLocalPower()) {
       var localUpload = await localApi('/api/upload-image', {
@@ -2308,17 +3058,16 @@ async function uploadImageFile(file, onSuccess) {
       return;
     }
 
-    var sha = null;
     try {
-      var existing = await ghGetFile(path);
-      sha = existing.sha;
+      await ghGetFile(path);
+      fileName = Date.now() + '-' + fileName;
+      path = folder + '/' + fileName;
     } catch (e) { /* file does not exist yet */ }
 
     var putBody = {
       message: 'upload image ' + fileName,
       content: base64
     };
-    if (sha) putBody.sha = sha;
 
     await ghApi('/repos/' + OWNER + '/' + REPO + '/contents/' + path, {
       method: 'PUT',
@@ -2330,6 +3079,8 @@ async function uploadImageFile(file, onSuccess) {
     onSuccess(sitePath);
   } catch (e) {
     toast('업로드 실패: ' + e.message, 'error');
+  } finally {
+    setSavingState(false);
   }
 }
 
@@ -2370,7 +3121,7 @@ function togglePreview() {
   if (cover) {
     var img = document.createElement('img');
     img.src = 'https://raw.githubusercontent.com/' + OWNER + '/' + REPO + '/main' + (cover.charAt(0) === '/' ? cover : ('/' + cover));
-    img.alt = '표지';
+    img.alt = document.getElementById('ed-cover-alt').value.trim() || '글 표지';
     img.style.width = '100%';
     img.style.borderRadius = '8px';
     img.style.marginBottom = '1em';
@@ -2384,7 +3135,7 @@ function togglePreview() {
   preview.appendChild(hr);
 
   var bodyWrap = document.createElement('div');
-  bodyWrap.innerHTML = sanitizePreviewHtml(marked.parse(body || ''));
+  bodyWrap.innerHTML = renderMarkdown(body || '');
   preview.appendChild(bodyWrap);
 
   showView('preview');
@@ -2425,19 +3176,63 @@ function insertText(text) {
 var autoSaveTimer = null;
 function autoSave() {
   updateEditorStats();
+  var snapshot = collectEditorState();
+  S.pendingAutosave = snapshot;
   document.getElementById('autosave-status').textContent = '자동저장 예정...';
   updateEditorDock(S.currentView);
   clearTimeout(autoSaveTimer);
   autoSaveTimer = setTimeout(function() {
-    localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(collectEditorState()));
-    document.getElementById('autosave-status').textContent = '자동저장됨';
-    S.autosaveDismissed = false;
-    refreshAutosaveBanner();
-    updateEditorDock(S.currentView);
+    persistAutosave(snapshot);
   }, 2000);
 }
 
+function persistAutosave(snapshot) {
+  if (!snapshot) return;
+  var persisted = writeAutosave(snapshot);
+  if (!persisted) {
+    document.getElementById('autosave-status').textContent = '기기 저장 공간 부족';
+    updateEditorDock(S.currentView);
+    return;
+  }
+  if (S.pendingAutosave === snapshot) S.pendingAutosave = null;
+  if (currentEditorPath() === (snapshot.path || '__new__')) {
+    document.getElementById('autosave-status').textContent = '자동저장됨';
+    updateEditorDock(S.currentView);
+  }
+}
+
+function flushAutosave() {
+  if (!S.pendingAutosave) return;
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = null;
+  persistAutosave(S.pendingAutosave);
+}
+
 /* ═══════ Front Matter ═══════ */
+function parseYamlScalar(value) {
+  var text = String(value || '').trim();
+  if (text.length >= 2 && text[0] === '"' && text[text.length - 1] === '"') {
+    return text.slice(1, -1).replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+  }
+  if (text.length >= 2 && text[0] === "'" && text[text.length - 1] === "'") {
+    return text.slice(1, -1).replace(/''/g, "'");
+  }
+  return text;
+}
+
+function extractImageAlt(imageExtra) {
+  var match = String(imageExtra || '').match(/^\s+alt:\s*(.+)\s*$/m);
+  return match ? parseYamlScalar(match[1]) : '';
+}
+
+function mergeImageAlt(imageExtra, alt) {
+  var lines = String(imageExtra || '').split('\n').filter(function(line) {
+    return line.trim() && !/^\s+alt:\s*/.test(line);
+  });
+  if (alt) lines.push('  alt: ' + yamlQuoted(alt));
+  return lines.join('\n');
+}
+
 function parseFrontMatter(text) {
   var n = text.replace(/\r\n/g, '\n');
   if (!n.startsWith('---\n')) return {};
@@ -2447,30 +3242,64 @@ function parseFrontMatter(text) {
   var result = {};
 
   var lines = head.split('\n');
+  var consumed = {};
+  var knownKeys = { title: true, date: true, description: true, categories: true, tags: true, toc: true, comments: true, pin: true, hidden: true, mermaid: true, math: true, hero_title: true, summary: true, hero_image_position: true, permalink: true, image: true };
   for (var i = 0; i < lines.length; i++) {
     var line = lines[i];
     var m = line.match(/^(\w[\w_]*)\s*:\s*(.*)$/);
     if (!m) continue;
     var key = m[1];
-    var val = m[2].trim().replace(/^["']|["']$/g, '');
+    if (!knownKeys[key]) continue;
+    var val = parseYamlScalar(m[2]);
+    consumed[i] = true;
 
     if (key === 'categories' || key === 'tags') {
       if (val.startsWith('[')) {
-        result[key] = val.slice(1, -1).split(',').map(function(s) { return s.trim().replace(/^["']|["']$/g, ''); }).filter(Boolean);
+        result[key] = val.slice(1, -1).split(',').map(parseYamlScalar).filter(Boolean);
+      } else if (!val) {
+        var list = [];
+        var listIndex = i + 1;
+        while (listIndex < lines.length) {
+          var listMatch = lines[listIndex].match(/^\s+-\s*(.+)$/);
+          if (!listMatch) break;
+          list.push(parseYamlScalar(listMatch[1]));
+          consumed[listIndex] = true;
+          listIndex++;
+        }
+        result[key] = list.filter(Boolean);
+        i = listIndex - 1;
       } else {
         result[key] = val ? [val] : [];
       }
     } else if (key === 'image') {
-      if (!val && i + 1 < lines.length) {
-        var next = lines[i + 1];
-        var pm = next.match(/^\s+path:\s*(.+)$/);
-        if (pm) {
-          result.image = { path: pm[1].trim().replace(/^["']|["']$/g, '') };
-          i++;
-          continue;
+      if (!val) {
+        var image = {};
+        var imageExtra = [];
+        var imageIndex = i + 1;
+        while (imageIndex < lines.length) {
+          var imageMatch = lines[imageIndex].match(/^\s+([\w-]+):\s*(.*)$/);
+          if (!imageMatch) break;
+          consumed[imageIndex] = true;
+          if (imageMatch[1] === 'path') image.path = parseYamlScalar(imageMatch[2]);
+          else imageExtra.push(lines[imageIndex]);
+          imageIndex++;
         }
+        result.image = image;
+        result._imageExtra = imageExtra.join('\n');
+        i = imageIndex - 1;
+      } else {
+        result.image = val;
       }
-      result.image = val;
+    } else if ((val === '|' || val === '>') && i + 1 < lines.length) {
+      var block = [];
+      var blockIndex = i + 1;
+      while (blockIndex < lines.length && /^\s+/.test(lines[blockIndex])) {
+        block.push(lines[blockIndex].replace(/^\s{1,2}/, ''));
+        consumed[blockIndex] = true;
+        blockIndex++;
+      }
+      result[key] = val === '>' ? block.join(' ').trim() : block.join('\n');
+      i = blockIndex - 1;
     } else if (val === 'true') {
       result[key] = true;
     } else if (val === 'false') {
@@ -2480,8 +3309,8 @@ function parseFrontMatter(text) {
     }
   }
   var knownKeyPattern = /^(title|date|description|categories|tags|toc|comments|pin|hidden|mermaid|math|hero_title|summary|hero_image_position|permalink|image):/;
-  result._extra = lines.filter(function(line) {
-    return line.trim() && !knownKeyPattern.test(line.trim()) && !/^\s+path:/.test(line);
+  result._extra = lines.filter(function(line, index) {
+    return !consumed[index] && line.trim() && !knownKeyPattern.test(line.trim()) && !/^\s+path:/.test(line);
   }).join('\n');
   return result;
 }
@@ -2494,23 +3323,33 @@ function extractBody(text) {
   return n.slice(end + 5).replace(/^\n/, '');
 }
 
+function yamlQuoted(value) {
+  return '"' + String(value || '')
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, '\\n') + '"';
+}
+
 function buildFileContent(fm, body) {
   var yaml = '---\n';
-  yaml += 'title: "' + fm.title.replace(/"/g, '\\"') + '"\n';
+  yaml += 'title: ' + yamlQuoted(fm.title) + '\n';
   yaml += 'date: ' + fm.date + '\n';
-  if (fm.description) yaml += 'description: "' + fm.description.replace(/"/g, '\\"') + '"\n';
-  if (fm.categories.length) yaml += 'categories: [' + fm.categories.map(function(c) { return '"' + c + '"'; }).join(', ') + ']\n';
-  if (fm.tags.length) yaml += 'tags: [' + fm.tags.map(function(t) { return '"' + t + '"'; }).join(', ') + ']\n';
+  if (fm.description) yaml += 'description: ' + yamlQuoted(fm.description) + '\n';
+  if (fm.categories.length) yaml += 'categories: [' + fm.categories.map(yamlQuoted).join(', ') + ']\n';
+  if (fm.tags.length) yaml += 'tags: [' + fm.tags.map(yamlQuoted).join(', ') + ']\n';
   yaml += 'toc: ' + fm.toc + '\n';
   yaml += 'comments: ' + fm.comments + '\n';
   if (fm.pin) yaml += 'pin: true\n';
   if (fm.hidden) yaml += 'hidden: true\n';
   if (fm.mermaid) yaml += 'mermaid: true\n';
   if (fm.math) yaml += 'math: true\n';
-  if (fm.hero_title) yaml += 'hero_title: "' + fm.hero_title.replace(/\n/g, '<br>').replace(/"/g, '\\"') + '"\n';
-  if (fm.summary) yaml += 'summary: "' + fm.summary.replace(/"/g, '\\"') + '"\n';
-  if (fm.hero_image_position) yaml += 'hero_image_position: "' + fm.hero_image_position.replace(/"/g, '\\"') + '"\n';
-  if (fm.cover) yaml += 'image:\n  path: ' + fm.cover + '\n';
+  if (fm.hero_title) yaml += 'hero_title: ' + yamlQuoted(fm.hero_title.replace(/\n/g, '<br>')) + '\n';
+  if (fm.summary) yaml += 'summary: ' + yamlQuoted(fm.summary) + '\n';
+  if (fm.hero_image_position) yaml += 'hero_image_position: ' + yamlQuoted(fm.hero_image_position) + '\n';
+  if (fm.cover) {
+    yaml += 'image:\n  path: ' + fm.cover + '\n';
+    if (fm.image_extra) yaml += fm.image_extra.replace(/\n+$/, '') + '\n';
+  }
   if (fm.permalink) yaml += 'permalink: ' + fm.permalink + '\n';
   if (fm.extra_front_matter) yaml += fm.extra_front_matter.replace(/\n+$/,'') + '\n';
   yaml += '---\n\n';
@@ -2518,14 +3357,23 @@ function buildFileContent(fm, body) {
 }
 
 /* ═══════ Navigation ═══════ */
-function showView(id) {
+function showView(id, options) {
+  options = options || {};
+  var previousView = S.currentView;
+  if ((S.saving || S.loadingPost) && previousView && id !== previousView) {
+    toast('현재 작업이 끝날 때까지 이 화면을 유지합니다.', 'info');
+    return;
+  }
+  if ((S.currentView === 'editor' || S.currentView === 'preview') && id !== 'editor' && id !== 'preview') {
+    flushAutosave();
+  }
   var protectedViews = ['list', 'editor', 'preview', 'settings'];
   if (protectedViews.indexOf(id) !== -1 && !isAuthenticated()) {
     var hasStored = localStorage.getItem(CRYPT_KEY);
     id = hasStored ? 'lock' : 'auth';
   }
 
-  var views = ['auth', 'password-setup', 'lock', 'list', 'editor', 'preview', 'settings'];
+  var views = ['boot', 'auth', 'lock', 'list', 'editor', 'preview', 'settings'];
   views.forEach(function(v) {
     var el = document.getElementById('view-' + v);
     if (el) el.classList.toggle('active', v === id);
@@ -2539,9 +3387,9 @@ function showView(id) {
   });
 
   var backBtn = document.getElementById('topbar-back');
-  var titles = { auth: 'Blog Studio', 'password-setup': '비밀번호 설정', lock: 'Blog Studio', list: 'Blog Studio', editor: '글 작성', preview: '미리보기', settings: '설정' };
+  var titles = { boot: 'Blog Studio', auth: 'Blog Studio', lock: 'Blog Studio', list: 'Blog Studio', editor: (S.editing && !S.editing.isNew ? '글 수정' : '새 글'), preview: '미리보기', settings: '설정' };
   document.getElementById('topbar-title').textContent = titles[id] || 'Blog Studio';
-  backBtn.style.display = (id === 'list' || id === 'auth' || id === 'settings' || id === 'lock' || id === 'password-setup') ? 'none' : 'block';
+  backBtn.style.display = (id === 'boot' || id === 'list' || id === 'auth' || id === 'settings' || id === 'lock') ? 'none' : 'block';
 
   if (id !== S.viewStack[S.viewStack.length - 1]) {
     S.viewStack.push(id);
@@ -2550,9 +3398,13 @@ function showView(id) {
 
   document.getElementById('main-scroll').scrollTop = 0;
   S.currentView = id;
+  if (!options.skipHistory && isAuthenticated() && previousView && previousView !== id && ['list', 'editor', 'preview', 'settings'].indexOf(id) !== -1) {
+    window.history.pushState({ jmStudioView: id }, '', window.location.pathname);
+  }
   updateEditorDock(id);
   syncRuntimeModeUI();
   if (id === 'settings') {
+    updateTrustedLoginUI();
     refreshLocalRuntime(false);
     loadSettingsWorkspace();
   }
@@ -2564,9 +3416,14 @@ function setTopbar(title, showBack) {
 }
 
 function goBack() {
+  if (S.saving || S.loadingPost) return toast('현재 작업이 끝날 때까지 편집 화면을 유지합니다.', 'info');
+  if (window.history.state && window.history.state.jmStudioView && window.history.state.jmStudioView !== 'list') {
+    window.history.back();
+    return;
+  }
   S.viewStack.pop();
   var prev = S.viewStack.pop() || 'list';
-  showView(prev);
+  showView(prev, { skipHistory: true });
 }
 
 function toggleSidebar() {
@@ -2591,6 +3448,24 @@ function formatNow() {
   var d = new Date();
   var pad = function(n) { return String(n).padStart(2, '0'); };
   return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':00 +0900';
+}
+
+function isValidPostDate(value) {
+  var match = String(value || '').match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?(?:\s*([+-])(\d{2})(\d{2}))?)?$/);
+  if (!match) return false;
+  var year = Number(match[1]);
+  var month = Number(match[2]);
+  var day = Number(match[3]);
+  var hour = Number(match[4] || 0);
+  var minute = Number(match[5] || 0);
+  var second = Number(match[6] || 0);
+  var zoneHour = Number(match[8] || 0);
+  var zoneMinute = Number(match[9] || 0);
+  var calendar = new Date(Date.UTC(year, month - 1, day));
+  return calendar.getUTCFullYear() === year &&
+    calendar.getUTCMonth() === month - 1 &&
+    calendar.getUTCDate() === day &&
+    hour < 24 && minute < 60 && second < 60 && zoneHour < 24 && zoneMinute < 60;
 }
 
 function parseList(str) {
@@ -2668,6 +3543,13 @@ function sanitizePreviewHtml(html) {
   });
 
   return template.innerHTML;
+}
+
+function renderMarkdown(text) {
+  if (!window.marked) {
+    return '<pre style="white-space:pre-wrap">' + esc(text || '') + '</pre>';
+  }
+  return sanitizePreviewHtml(marked.parse(text || ''));
 }
 
 function esc(s) {

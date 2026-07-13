@@ -1,87 +1,61 @@
-<!-- 인기글 by views (with rank badges) -->
+<!-- 조회 데이터가 있으면 인기순, 없으면 최신순으로 유지되는 글 목록 -->
 
 {% include lang.html %}
 
-<section id="access-popular" class="sidebar-section">
+<section class="sidebar-section" data-popular-root data-popular-limit="3">
   <h2 class="panel-heading sidebar-heading">
-    <i class="fas fa-trophy" style="color:#f59e0b;"></i> 인기글
+    <i class="fas fa-clock popular-heading-icon" data-popular-icon aria-hidden="true"></i>
+    <span data-popular-heading>최근 글</span>
   </h2>
-  <ul class="content list-unstyled ps-0 pb-1 mt-2 sidebar-list" id="popular-posts">
-    {% assign pop_count = 0 %}
-    {% for post in site.posts %}
-      {% if post.hidden == true %}{% continue %}{% endif %}
-      {% assign pop_count = pop_count | plus: 1 %}
-      <li class="sidebar-list-item">
-        <a href="{{ post.url | relative_url }}" class="sidebar-link popular-link">
-          <span class="rank-badge rank-{{ pop_count }}">{{ pop_count }}</span>
-          <span class="sidebar-link-title">{{ post.title }}</span>
-        </a>
-      </li>
-      {% if pop_count >= 3 %}{% break %}{% endif %}
+
+  <ol class="content list-unstyled ps-0 pb-1 mt-2 sidebar-list" data-popular-list>
+    {% assign popular_candidate_count = 0 %}
+    {% for post in site.posts limit: 30 %}
+      {% if post.hidden != true %}
+        {% assign popular_candidate_count = popular_candidate_count | plus: 1 %}
+        <li
+          class="sidebar-list-item popular-candidate"
+          data-popular-item
+          data-view-path="{{ post.url }}"
+          data-published="{{ post.date | date_to_xmlschema }}"
+          {% if popular_candidate_count > 3 %}hidden{% endif %}
+        >
+          <a
+            href="{{ post.url | relative_url }}"
+            class="sidebar-link popular-link"
+            data-analytics-event="popular-post-open"
+            data-analytics-path="{{ post.url }}"
+            data-analytics-title="인기 글에서 {{ post.title | escape }} 열기"
+          >
+            <span
+              class="rank-badge rank-{{ popular_candidate_count | at_most: 3 }}"
+              data-popular-rank
+              aria-hidden="true"
+            >{{ popular_candidate_count }}</span>
+            <span class="sidebar-link-title">{{ post.title }}</span>
+            <span
+              class="sidebar-link-date popular-view-count"
+              data-view-count
+              data-view-path="{{ post.url }}"
+              data-view-suffix="회"
+              data-view-label="{{ post.title | escape }} 조회 {count}회"
+              hidden
+            >—</span>
+          </a>
+        </li>
+      {% endif %}
     {% endfor %}
-  </ul>
+  </ol>
 </section>
 
 <style>
-  .rank-badge{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;font-size:0.65rem;font-weight:700;flex-shrink:0;margin-right:6px}
-  .rank-1{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1a1a1a}
-  .rank-2{background:linear-gradient(135deg,#d1d5db,#9ca3af);color:#1a1a1a}
-  .rank-3{background:linear-gradient(135deg,#d97706,#b45309);color:#fff}
-  .popular-link{font-weight:500}
+  .popular-heading-icon{color:#b45335}
+  .popular-candidate[hidden],.popular-view-count[hidden]{display:none!important}
+  .rank-badge{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;font-size:.68rem;font-weight:750;line-height:1;flex:0 0 22px;margin-right:4px;font-variant-numeric:tabular-nums}
+  .rank-1{background:#d99b54;color:#24170f}
+  .rank-2{background:#d6d0c8;color:#29231e}
+  .rank-3{background:#a65b42;color:#fffaf3}
+  .popular-link{font-weight:550;min-height:36px}
+  .popular-view-count{font-variant-numeric:tabular-nums}
+  [data-popular-root][aria-busy="true"] .popular-view-count{opacity:.62}
 </style>
-
-<script>
-(function() {
-  var posts = [
-    {% for post in site.posts limit: 30 %}{% unless post.hidden == true %}
-    { url: {{ post.url | jsonify }}, title: {{ post.title | jsonify }}, href: {{ post.url | relative_url | jsonify }} },
-    {% endunless %}{% endfor %}
-  ];
-
-  var gcId = {{ site.analytics.goatcounter.id | jsonify }};
-  if (!gcId || posts.length === 0) return;
-
-  Promise.all(posts.map(function(p) {
-    var uri = p.url.replace(/\/$/, '');
-    return fetch('https://' + gcId + '.goatcounter.com/counter/' + encodeURIComponent(uri) + '.json')
-      .then(function(r) { return r.json(); })
-      .then(function(d) { p.views = parseInt((d.count || '0').replace(/\D/g, ''), 10) || 0; return p; })
-      .catch(function() { p.views = 0; return p; });
-  })).then(function(results) {
-    results.sort(function(a, b) { return b.views - a.views; });
-    var top3 = results.slice(0, 3);
-    var ul = document.getElementById('popular-posts');
-    if (!ul) return;
-    ul.innerHTML = '';
-    var colors = [
-      'linear-gradient(135deg,#fbbf24,#f59e0b)',
-      'linear-gradient(135deg,#d1d5db,#9ca3af)',
-      'linear-gradient(135deg,#d97706,#b45309)'
-    ];
-    var textColors = ['#1a1a1a','#1a1a1a','#fff'];
-    top3.forEach(function(p, i) {
-      var li = document.createElement('li');
-      li.className = 'sidebar-list-item';
-      var a = document.createElement('a');
-      a.href = p.href;
-      a.className = 'sidebar-link popular-link';
-      var badge = document.createElement('span');
-      badge.className = 'rank-badge';
-      badge.style.background = colors[i];
-      badge.style.color = textColors[i];
-      badge.textContent = i + 1;
-      var title = document.createElement('span');
-      title.className = 'sidebar-link-title';
-      title.textContent = p.title;
-      var viewSpan = document.createElement('span');
-      viewSpan.className = 'sidebar-link-date';
-      viewSpan.textContent = p.views > 0 ? p.views + '회' : '';
-      a.appendChild(badge);
-      a.appendChild(title);
-      a.appendChild(viewSpan);
-      li.appendChild(a);
-      ul.appendChild(li);
-    });
-  });
-})();
-</script>

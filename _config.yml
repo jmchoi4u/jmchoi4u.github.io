@@ -70,7 +70,7 @@ analytics:
 
 # Page views settings
 pageviews:
-  provider: # Temporarily disabled: public counter endpoint currently returns 404 in production
+  provider: # Custom GoatCounter UI is rendered by assets/js/blog-analytics.js
 
 # Prefer color scheme setting.
 #
@@ -221,8 +221,10 @@ exclude:
   - "package*.json"
 
 jekyll-archives:
-  enabled: [tags]
+  enabled: [categories, tags]
   layouts:
+    category: category
     tag: tag
   permalinks:
+    category: /categories/:name/
     tag: /tags/:name/

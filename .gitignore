@@ -54,3 +54,5 @@ Desktop.ini
 _sass/vendors/
 assets/js/dist/
 .omx/
+.wrangler/
+/output/

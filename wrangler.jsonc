@@ -1,0 +1,15 @@
+{
+  "name": "jm-studio-auth",
+  "main": "tools/oauth-worker.js",
+  "compatibility_date": "2026-07-13",
+  "workers_dev": true,
+  "vars": {
+    "EMAIL_FROM": "Jaemin Choi <onboarding@resend.dev>"
+  },
+  "kv_namespaces": [
+    {
+      "binding": "SUBSCRIBERS",
+      "id": "c7d033b576e74126960a6c4e839e5a56"
+    }
+  ]
+}

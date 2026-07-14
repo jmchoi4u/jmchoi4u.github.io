@@ -43,8 +43,10 @@ jobs:
         id: pages
         uses: actions/configure-pages@v5
 
-      - name: Test Blog Studio
-        run: node tools/test-jm-studio.mjs
+      - name: Test browser features
+        run: |
+          node tools/test-jm-studio.mjs
+          node tools/test-blog-analytics.mjs
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1

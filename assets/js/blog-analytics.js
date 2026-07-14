@@ -25,9 +25,15 @@
     notation: 'compact',
     maximumFractionDigits: 1,
   });
+  var COUNTER_RETRY_DELAYS = [0, 500, 1500];
+  var COUNTER_REQUEST_TIMEOUT = 6000;
+  var COUNTER_STORAGE_PREFIX = 'jm-blog-counter-v1:';
+  var COUNTER_STORAGE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
   var pendingEvents = [];
   var eventRetryTimer = null;
   var eventRetryCount = 0;
+  var counterRecoveryTimer = null;
+  var counterRecoveryCount = 0;
   var initialized = false;
 
   function sanitizeSiteId(value) {
@@ -125,6 +131,127 @@
     return digits ? Math.max(0, parseInt(digits, 10) || 0) : 0;
   }
 
+  function waitForCounterRetry(delay) {
+    if (!delay) return Promise.resolve();
+    return new Promise(function (resolve) {
+      window.setTimeout(resolve, delay);
+    });
+  }
+
+  function storedCounterKey(key) {
+    return COUNTER_STORAGE_PREFIX + key;
+  }
+
+  function readStoredCounter(key, path) {
+    try {
+      if (typeof localStorage === 'undefined') return null;
+      var raw = localStorage.getItem(storedCounterKey(key));
+      if (!raw) return null;
+      var stored = JSON.parse(raw);
+      var savedAt = Number(stored && stored.savedAt);
+      var count = Number(stored && stored.count);
+      if (
+        !Number.isFinite(savedAt) ||
+        !Number.isFinite(count) ||
+        Date.now() - savedAt > COUNTER_STORAGE_MAX_AGE
+      ) {
+        localStorage.removeItem(storedCounterKey(key));
+        return null;
+      }
+      return {
+        count: Math.max(0, Math.floor(count)),
+        ok: true,
+        stale: true,
+        status: 0,
+        path: path,
+      };
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function storeSuccessfulCounter(key, result) {
+    if (!result || !result.ok || result.stale) return;
+    try {
+      if (typeof localStorage === 'undefined') return;
+      localStorage.setItem(
+        storedCounterKey(key),
+        JSON.stringify({ count: result.count, savedAt: Date.now() })
+      );
+    } catch (_) {
+      // Storage may be unavailable in private or hardened browser modes. The
+      // live counter still works without a persisted fallback.
+    }
+  }
+
+  function isRetryableCounterStatus(status) {
+    return status === 0 || status === 408 || status === 425 || status === 429 || status >= 500;
+  }
+
+  async function requestCounterOnce(siteId, path, options) {
+    var controller = typeof AbortController === 'function' ? new AbortController() : null;
+    var timeoutId = controller
+      ? window.setTimeout(function () {
+          controller.abort();
+        }, COUNTER_REQUEST_TIMEOUT)
+      : null;
+
+    try {
+      var response = await fetch(buildCounterUrl(siteId, path, options), {
+        method: 'GET',
+        mode: 'cors',
+        credentials: 'omit',
+        cache: 'default',
+        signal: controller ? controller.signal : undefined,
+      });
+
+      // GoatCounter intentionally returns 404 for a path that has never been
+      // recorded. That is a valid zero, not a service failure.
+      if (response.status === 404) {
+        return { count: 0, ok: true, stale: false, status: 404, path: path };
+      }
+      if (!response.ok) {
+        return { count: 0, ok: false, stale: false, status: response.status, path: path };
+      }
+
+      var payload = await response.json();
+      return {
+        count: parseCount(payload && payload.count),
+        ok: true,
+        stale: false,
+        status: response.status,
+        path: path,
+      };
+    } catch (_) {
+      return { count: 0, ok: false, stale: false, status: 0, path: path };
+    } finally {
+      if (timeoutId) window.clearTimeout(timeoutId);
+    }
+  }
+
+  async function requestCounterWithRecovery(siteId, path, options, key) {
+    var result = { count: 0, ok: false, stale: false, status: 0, path: path };
+
+    for (var attempt = 0; attempt < COUNTER_RETRY_DELAYS.length; attempt += 1) {
+      await waitForCounterRetry(COUNTER_RETRY_DELAYS[attempt]);
+      result = await requestCounterOnce(siteId, path, options);
+      result.attempts = attempt + 1;
+      if (result.ok || !isRetryableCounterStatus(result.status)) break;
+    }
+
+    if (result.ok) {
+      storeSuccessfulCounter(key, result);
+      return result;
+    }
+
+    var stored = readStoredCounter(key, path);
+    if (stored) {
+      stored.attempts = result.attempts;
+      return stored;
+    }
+    return result;
+  }
+
   function fetchCountMeta(pathValue, optionValue) {
     var siteId = resolveSiteId();
     var path = normalizePath(pathValue);
@@ -137,54 +264,14 @@
     var key = counterCacheKey(siteId, path, options);
     if (counterCache.has(key)) return counterCache.get(key);
 
-    var requestPromise = (async function () {
-      var controller = typeof AbortController === 'function' ? new AbortController() : null;
-      var timeoutId = controller
-        ? window.setTimeout(function () {
-            controller.abort();
-          }, 8000)
-        : null;
-
-      try {
-        var response = await fetch(buildCounterUrl(siteId, path, options), {
-          method: 'GET',
-          mode: 'cors',
-          credentials: 'omit',
-          cache: 'default',
-          signal: controller ? controller.signal : undefined,
-        });
-
-        // GoatCounter intentionally returns 404 for a path that has never been
-        // recorded. That is a valid zero, not a service failure.
-        if (response.status === 404) {
-          return { count: 0, ok: true, status: 404, path: path };
-        }
-        if (!response.ok) {
-          return { count: 0, ok: false, status: response.status, path: path };
-        }
-
-        var payload = await response.json();
-        return {
-          count: parseCount(payload && payload.count),
-          ok: true,
-          status: response.status,
-          path: path,
-        };
-      } catch (_) {
-        return { count: 0, ok: false, status: 0, path: path };
-      } finally {
-        if (timeoutId) window.clearTimeout(timeoutId);
-      }
-    })();
+    var requestPromise = requestCounterWithRecovery(siteId, path, options, key);
 
     counterCache.set(key, requestPromise);
     requestPromise.then(function (result) {
-      // Share a transient failure between concurrent consumers, then permit a
-      // later refresh to recover without requiring a full page reload.
-      if (!result.ok) {
-        window.setTimeout(function () {
-          if (counterCache.get(key) === requestPromise) counterCache.delete(key);
-        }, 30000);
+      // Concurrent consumers share an in-flight request, but failed or stale
+      // results must be revalidated by the background recovery pass.
+      if ((!result.ok || result.stale) && counterCache.get(key) === requestPromise) {
+        counterCache.delete(key);
       }
     });
 
@@ -223,6 +310,9 @@
 
     if (!result.ok) {
       element.dataset.viewState = 'error';
+      delete element.dataset.viewValue;
+      element.removeAttribute('data-view-stale');
+      element.removeAttribute('title');
       element.textContent = element.getAttribute('data-view-error-text') || '—';
       element.setAttribute('aria-label', '조회수를 불러오지 못했습니다');
       return;
@@ -232,17 +322,30 @@
     var suffix = element.getAttribute('data-view-suffix') || '';
     var formatted = formatCount(result.count, element.getAttribute('data-view-format'));
     element.textContent = prefix + formatted + suffix;
-    element.dataset.viewState = 'loaded';
+    element.dataset.viewState = result.stale ? 'stale' : 'loaded';
     element.dataset.viewValue = String(result.count);
+    if (result.stale) {
+      element.setAttribute('data-view-stale', 'true');
+      element.setAttribute('title', '조회수 연결이 지연되어 최근 값을 표시합니다.');
+    } else {
+      element.removeAttribute('data-view-stale');
+      element.removeAttribute('title');
+    }
 
     var accessibleLabel = element.getAttribute('data-view-label');
     if (accessibleLabel) {
       element.setAttribute(
         'aria-label',
-        accessibleLabel.replace(/\{count\}/g, numberFormatter.format(result.count))
+        accessibleLabel.replace(/\{count\}/g, numberFormatter.format(result.count)) +
+          (result.stale ? ' (최근 저장된 값)' : '')
       );
     } else {
-      element.setAttribute('aria-label', numberFormatter.format(result.count) + '회 조회');
+      element.setAttribute(
+        'aria-label',
+        numberFormatter.format(result.count) +
+          '회 조회' +
+          (result.stale ? ' (최근 저장된 값)' : '')
+      );
     }
 
     if (element.hasAttribute('data-view-hide-zero')) element.hidden = result.count === 0;
@@ -264,7 +367,41 @@
           }
         );
       })
-    );
+    ).then(function (results) {
+      if (results.some(function (result) { return !result.ok || result.stale; })) {
+        scheduleCounterRecovery();
+      } else if (results.length) {
+        if (counterRecoveryTimer) {
+          window.clearTimeout(counterRecoveryTimer);
+          counterRecoveryTimer = null;
+        }
+        counterRecoveryCount = 0;
+      }
+      return results;
+    });
+  }
+
+  function scheduleCounterRecovery() {
+    if (counterRecoveryTimer || counterRecoveryCount >= 2) return;
+    var delay = counterRecoveryCount === 0 ? 15000 : 45000;
+    counterRecoveryTimer = window.setTimeout(function () {
+      counterRecoveryTimer = null;
+      counterRecoveryCount += 1;
+      counterCache.clear();
+      fillViewCounts(document);
+      sortPopular(document);
+    }, delay);
+  }
+
+  function recoverCountersNow() {
+    if (counterRecoveryTimer) {
+      window.clearTimeout(counterRecoveryTimer);
+      counterRecoveryTimer = null;
+    }
+    counterRecoveryCount = 0;
+    counterCache.clear();
+    fillViewCounts(document);
+    sortPopular(document);
   }
 
   function publishedTimestamp(element) {
@@ -590,6 +727,7 @@
     if (initialized) return;
     initialized = true;
     bindDataEvents();
+    window.addEventListener('online', recoverCountersNow);
     hydrateReadingTimes(document);
     setupReadingDepth();
     fillViewCounts(document);

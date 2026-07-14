@@ -35,6 +35,7 @@ const ALLOWED_REDIRECT_URIS = [
 ];
 
 const OWNER_LOGIN = 'jmchoi4u';
+const GOATCOUNTER_SITE = 'jmchoi4u';
 const UNSUBSCRIBE_KEY_PREFIX = 'unsub:';
 const CONFIRM_KEY_PREFIX = 'confirm:';
 const RATE_KEY_PREFIX = 'rate:subscribe:';
@@ -66,6 +67,87 @@ function jsonResponse(body, status, origin, extraHeaders = {}) {
       ...extraHeaders,
     },
   });
+}
+
+function normalizeCounterPath(value) {
+  let path = String(value || '').trim();
+  if (path.toUpperCase() === 'TOTAL') return 'TOTAL';
+  if (!path || path.length > 512 || path.charAt(0) !== '/') return '';
+
+  try {
+    path = decodeURIComponent(path);
+  } catch (e) {
+    return '';
+  }
+  if (/[\u0000-\u001f\u007f?#]/.test(path)) return '';
+
+  path = path.replace(/\/{2,}/g, '/');
+  if (path.length > 1) path = path.replace(/\/+$/, '');
+  return path || '/';
+}
+
+function normalizeCounterRange(value, allowRelative) {
+  const range = String(value || '').trim().toLowerCase();
+  if (!range) return '';
+  if (allowRelative && /^(week|month|year)$/.test(range)) return range;
+  return /^\d{4}-\d{2}-\d{2}$/.test(range) ? range : '';
+}
+
+function sanitizeCounterValue(value) {
+  const digits = String(value == null ? '' : value).replace(/[^0-9]/g, '');
+  return digits || '0';
+}
+
+async function proxyViewCounter(url, origin) {
+  const counterPath = normalizeCounterPath(url.searchParams.get('path'));
+  const rawStart = url.searchParams.get('start') || '';
+  const rawEnd = url.searchParams.get('end') || '';
+  const start = normalizeCounterRange(rawStart, true);
+  const end = normalizeCounterRange(rawEnd, false);
+
+  if (!counterPath || (rawStart && !start) || (rawEnd && !end)) {
+    return jsonResponse({ error: 'invalid counter query' }, 400, origin);
+  }
+
+  const upstream = new URL(
+    'https://' + GOATCOUNTER_SITE + '.goatcounter.com/counter/'
+      + encodeURIComponent(counterPath) + '.json'
+  );
+  if (start) upstream.searchParams.set('start', start);
+  if (end) upstream.searchParams.set('end', end);
+
+  let response;
+  try {
+    response = await fetch(upstream.toString(), {
+      headers: { 'Accept': 'application/json' },
+      cf: { cacheEverything: true, cacheTtl: 300 },
+    });
+  } catch (e) {
+    return jsonResponse({ error: 'counter upstream unavailable' }, 502, origin);
+  }
+
+  const cacheHeaders = {
+    'Cache-Control': 'public, max-age=60, s-maxage=300, stale-while-revalidate=86400',
+    'X-Content-Type-Options': 'nosniff',
+  };
+  if (response.status === 404) {
+    return jsonResponse({ count: '0', count_unique: '0' }, 404, origin, cacheHeaders);
+  }
+  if (!response.ok) {
+    return jsonResponse({ error: 'counter upstream failed' }, 502, origin);
+  }
+
+  let payload;
+  try {
+    payload = await response.json();
+  } catch (e) {
+    return jsonResponse({ error: 'invalid counter response' }, 502, origin);
+  }
+
+  return jsonResponse({
+    count: sanitizeCounterValue(payload && payload.count),
+    count_unique: sanitizeCounterValue(payload && payload.count_unique),
+  }, 200, origin, cacheHeaders);
 }
 
 function subscribersUnavailable(origin) {
@@ -259,6 +341,10 @@ export default {
         status: 403,
         headers: { 'Content-Type': 'application/json' },
       });
+    }
+
+    if (request.method === 'GET' && path === '/views') {
+      return proxyViewCounter(url, origin);
     }
 
     if (request.method === 'GET' && path === '/capabilities') {

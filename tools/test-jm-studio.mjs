@@ -58,6 +58,48 @@ try {
   assert.equal(narrowResponse.status, 200);
   assert.equal((await narrowResponse.json()).scope, 'public_repo');
 
+  let upstreamViewUrl = '';
+  globalThis.fetch = async (url) => {
+    upstreamViewUrl = String(url);
+    return new Response(JSON.stringify({ count: '312', count_unique: '271' }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  };
+  const viewResponse = await workerModule.default.fetch(new Request(
+    'https://worker.example/views?path=TOTAL&start=week',
+    { headers: { Origin: 'https://jmchoi4u.github.io' } },
+  ), {});
+  assert.equal(viewResponse.status, 200);
+  assert.equal((await viewResponse.json()).count, '312');
+  assert.equal(viewResponse.headers.get('Access-Control-Allow-Origin'), 'https://jmchoi4u.github.io');
+  assert.match(viewResponse.headers.get('Cache-Control'), /max-age=60/);
+  assert.equal(
+    upstreamViewUrl,
+    'https://jmchoi4u.goatcounter.com/counter/TOTAL.json?start=week',
+    'the Worker must be the only component that talks to GoatCounter counters'
+  );
+
+  const postViewResponse = await workerModule.default.fetch(new Request(
+    'https://worker.example/views?path=%2Fposts%2F6%2F',
+    { headers: { Origin: 'https://jmchoi4u.github.io' } },
+  ), {});
+  assert.equal(postViewResponse.status, 200);
+  assert.equal(
+    upstreamViewUrl,
+    'https://jmchoi4u.goatcounter.com/counter/%2Fposts%2F6.json',
+    'post paths must be normalized without losing their leading slash'
+  );
+
+  let invalidCounterFetches = 0;
+  globalThis.fetch = async () => { invalidCounterFetches += 1; return new Response('{}'); };
+  const invalidCounterResponse = await workerModule.default.fetch(new Request(
+    'https://worker.example/views?path=https%3A%2F%2Fevil.example',
+    { headers: { Origin: 'https://jmchoi4u.github.io' } },
+  ), {});
+  assert.equal(invalidCounterResponse.status, 400);
+  assert.equal(invalidCounterFetches, 0, 'invalid paths must not reach the upstream counter');
+
   let invalidVerifierFetches = 0;
   globalThis.fetch = async () => { invalidVerifierFetches += 1; return new Response('{}'); };
   const invalidVerifierResponse = await workerModule.default.fetch(new Request('https://worker.example/token', {
@@ -386,6 +428,7 @@ assert.match(serviceWorker, /isOAuthCallback/, 'OAuth callback responses must no
 assert.match(worker, /grantedScopes/, 'OAuth worker must validate the granted scope');
 assert.match(worker, /PKCE_VERIFIER_PATTERN/, 'OAuth worker must validate PKCE verifier syntax');
 assert.match(worker, /OWNER_LOGIN/, 'OAuth worker must verify the GitHub owner before returning a token');
+assert.match(worker, /path === ['"]\/views['"]/, 'view counts must have an allowed-origin Worker proxy');
 assert.doesNotMatch(worker, /searchParams\.get\(['"]email['"]\)/, 'unsubscribe links must not expose raw email addresses');
 assert.doesNotMatch(worker, /path === ['"]\/unsubscribe['"]/, 'email-only unsubscribe must not return');
 assert.match(worker, /path === ['"]\/confirm['"]/, 'subscriptions must require an email confirmation route');
@@ -412,6 +455,10 @@ assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512' && icon.purpose
 assert.match(blogHead, /width=device-width, initial-scale=1, viewport-fit=cover/, 'public pages must allow pinch zoom');
 assert.match(blogHead, /count\.v5\.js/, 'production GoatCounter recorder must be present');
 assert.match(blogHead, /blog-analytics\.js/, 'shared blog analytics helper must be loaded');
+assert.match(blogHead, /blog-analytics\.js[^\n]*\?v=/, 'analytics fixes must bypass stale browser caches');
+assert.match(blogHead, /data-view-counter-endpoint=/, 'public view counts must declare the Worker proxy');
+assert.match(html, /WORKER_URL \+ ['"]\/views\?path=/, 'Studio view counts must use the Worker proxy');
+assert.doesNotMatch(html, /goatcounter\.com\/counter\//, 'Studio must not request tracker-domain counters directly');
 assert.doesNotMatch(postLayout, /requestGoatCounterCount/, 'post layout must use the shared counter implementation');
 assert.match(postLayout, /if\(!response\.ok\|\|data\.ok!==true\)/, 'subscribe UI must reject HTTP and application failures');
 assert.match(postLayout, /post-floating-topbar[^>]*inert/, 'hidden floating controls must not receive keyboard focus');

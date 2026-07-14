@@ -2,7 +2,8 @@
  * Shared, privacy-friendly analytics helpers for the public blog.
  *
  * Expected markup:
- *   <script defer src="/assets/js/blog-analytics.js" data-goatcounter-id="SITE_ID"></script>
+ *   <script defer src="/assets/js/blog-analytics.js" data-goatcounter-id="SITE_ID"
+ *     data-view-counter-endpoint="https://worker.example/views"></script>
  *   <span data-view-count data-view-path="/posts/2/" data-view-suffix="회"></span>
  *   <span data-view-count data-view-path="TOTAL" data-view-range="week"></span>
  *
@@ -18,6 +19,9 @@
   var loaderScript = document.currentScript;
   var configuredSiteId = sanitizeSiteId(
     loaderScript && loaderScript.getAttribute('data-goatcounter-id')
+  );
+  var configuredCounterEndpoint = sanitizeCounterEndpoint(
+    loaderScript && loaderScript.getAttribute('data-view-counter-endpoint')
   );
   var counterCache = new Map();
   var numberFormatter = new Intl.NumberFormat('ko-KR');
@@ -39,6 +43,23 @@
   function sanitizeSiteId(value) {
     var candidate = String(value || '').trim();
     return /^[a-z0-9][a-z0-9-]*$/i.test(candidate) ? candidate : '';
+  }
+
+  function sanitizeCounterEndpoint(value) {
+    var candidate = String(value || '').trim();
+    if (!candidate) return '';
+
+    try {
+      var url = new URL(candidate);
+      if (url.protocol !== 'https:') return '';
+      url.username = '';
+      url.password = '';
+      url.hash = '';
+      url.search = '';
+      return url.toString().replace(/\/$/, '');
+    } catch (_) {
+      return '';
+    }
   }
 
   function resolveSiteId() {
@@ -113,13 +134,19 @@
   }
 
   function counterCacheKey(siteId, path, options) {
-    return [siteId, path, options.start, options.end].join('|');
+    return [configuredCounterEndpoint || siteId, path, options.start, options.end].join('|');
   }
 
   function buildCounterUrl(siteId, path, options) {
-    var url = new URL(
-      'https://' + siteId + '.goatcounter.com/counter/' + encodeURIComponent(path) + '.json'
-    );
+    var url;
+    if (configuredCounterEndpoint) {
+      url = new URL(configuredCounterEndpoint);
+      url.searchParams.set('path', path);
+    } else {
+      url = new URL(
+        'https://' + siteId + '.goatcounter.com/counter/' + encodeURIComponent(path) + '.json'
+      );
+    }
     if (options.start) url.searchParams.set('start', options.start);
     if (options.end) url.searchParams.set('end', options.end);
     return url.toString();

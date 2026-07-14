@@ -9,7 +9,7 @@ sitemap: false
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="strict-origin-when-cross-origin">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://raw.githubusercontent.com; connect-src 'self' https://api.github.com https://jm-studio-auth.jmchoi4u.workers.dev https://jmchoi4u.goatcounter.com; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self' https://github.com">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://raw.githubusercontent.com; connect-src 'self' https://api.github.com https://jm-studio-auth.jmchoi4u.workers.dev; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self' https://github.com">
 <title>Blog Studio</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="../assets/img/favicons/favicon.svg" type="image/svg+xml">
@@ -787,7 +787,6 @@ var TRUST_RECORD_KEY = 'trusted-device';
 var TRUSTED_SESSION_TTL = 30 * 24 * 60 * 60 * 1000; /* 30 days */
 var SESSION_TIMEOUT = 30 * 60 * 1000; /* 30 minutes */
 var API = 'https://api.github.com';
-var GOATCOUNTER_ID = 'jmchoi4u';
 var OAUTH_STATE_KEY = 'jm-studio-oauth-state';
 var OAUTH_VERIFIER_KEY = 'jm-studio-oauth-verifier';
 
@@ -1450,8 +1449,8 @@ function formatAudienceCount(value) {
 }
 
 async function fetchGoatCount(path, start) {
-  var endpoint = 'https://' + GOATCOUNTER_ID + '.goatcounter.com/counter/' + encodeURIComponent(path) + '.json';
-  if (start) endpoint += '?start=' + encodeURIComponent(start);
+  var endpoint = WORKER_URL + '/views?path=' + encodeURIComponent(path);
+  if (start) endpoint += '&start=' + encodeURIComponent(start);
   var response = await fetch(endpoint, { cache: 'default', credentials: 'omit' });
   if (response.status === 404) return 0;
   if (!response.ok) throw new Error('조회 통계를 불러올 수 없습니다');

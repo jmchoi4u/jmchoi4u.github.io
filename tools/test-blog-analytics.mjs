@@ -42,7 +42,13 @@ function createHarness(fetchImpl) {
   const document = {
     readyState: 'loading',
     currentScript: {
-      getAttribute(name) { return name === 'data-goatcounter-id' ? 'jmchoi4u' : null; },
+      getAttribute(name) {
+        if (name === 'data-goatcounter-id') return 'jmchoi4u';
+        if (name === 'data-view-counter-endpoint') {
+          return 'https://jm-studio-auth.jmchoi4u.workers.dev/views';
+        }
+        return null;
+      },
     },
     documentElement: { getAttribute() { return null; } },
     addEventListener(type, handler) { eventHandlers.set(`document:${type}`, handler); },
@@ -96,8 +102,10 @@ function createHarness(fetchImpl) {
 }
 
 let retryCalls = 0;
-const retryHarness = createHarness(async () => {
+const retryUrls = [];
+const retryHarness = createHarness(async (url) => {
   retryCalls += 1;
+  retryUrls.push(String(url));
   if (retryCalls < 3) throw new TypeError('simulated transient network failure');
   return new Response(JSON.stringify({ count: '42' }), {
     status: 200,
@@ -110,6 +118,12 @@ assert.equal(recovered.ok, true);
 assert.equal(recovered.stale, false);
 assert.equal(recovered.count, 42);
 assert.equal(recovered.attempts, 3);
+assert.ok(
+  retryUrls.every((url) => url.startsWith('https://jm-studio-auth.jmchoi4u.workers.dev/views?')),
+  'view counts must use the first-party Worker proxy'
+);
+assert.ok(retryUrls.every((url) => !url.includes('goatcounter.com')));
+assert.equal(new URL(retryUrls[0]).searchParams.get('path'), '/posts/retry');
 
 let sharedCalls = 0;
 retryHarness.analytics.setSiteId('jmchoi4u');

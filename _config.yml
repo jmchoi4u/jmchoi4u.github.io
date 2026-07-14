@@ -57,6 +57,7 @@ analytics:
     id: G-T6TE2BYEJM
   goatcounter:
     id: jmchoi4u
+    counter_proxy: https://jm-studio-auth.jmchoi4u.workers.dev/views
   umami:
     id: # fill in your Umami ID
     domain: # fill in your Umami domain

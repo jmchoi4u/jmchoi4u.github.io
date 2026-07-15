@@ -23,6 +23,10 @@
   var configuredCounterEndpoint = sanitizeCounterEndpoint(
     loaderScript && loaderScript.getAttribute('data-view-counter-endpoint')
   );
+  var configuredContentCategory = sanitizeGoogleString(
+    loaderScript && loaderScript.getAttribute('data-content-category'),
+    100
+  );
   var counterCache = new Map();
   var numberFormatter = new Intl.NumberFormat('ko-KR');
   var compactFormatter = new Intl.NumberFormat('ko-KR', {
@@ -60,6 +64,14 @@
     } catch (_) {
       return '';
     }
+  }
+
+  function sanitizeGoogleString(value, maxLength) {
+    return String(value || '')
+      .replace(/[\u0000-\u001f\u007f]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, maxLength || 100);
   }
 
   function resolveSiteId() {
@@ -533,6 +545,122 @@
     return (cleanName + ':' + contextPath).slice(0, 200);
   }
 
+  function normalizeGoogleEventName(value) {
+    var eventName = String(value || '')
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9_]+/g, '_')
+      .replace(/^_+|_+$/g, '');
+    if (!/^[a-z]/.test(eventName)) eventName = 'blog_' + eventName;
+    return eventName.slice(0, 40);
+  }
+
+  function googleEventPreset(name) {
+    switch (name) {
+      case 'open_post':
+        return { eventName: 'select_content', component: 'home_feed', kind: 'article_select' };
+      case 'popular-post-open':
+        return { eventName: 'select_content', component: 'popular_sidebar', kind: 'article_select' };
+      case 'home_latest':
+      case 'home_browse':
+        return { eventName: 'navigation_click', component: 'home_hero', kind: 'navigation' };
+      case 'home_search':
+        return { eventName: 'search_open', component: 'home_hero', kind: 'navigation' };
+      case 'home_filter':
+        return { eventName: 'content_filter', component: 'home_filter', kind: 'filter' };
+      case 'read-90':
+      case 'read_progress':
+        return { eventName: 'read_progress', component: 'article_body', kind: 'reading' };
+      case 'share_native':
+        return { eventName: 'share', component: 'article_share', kind: 'share', method: 'native' };
+      case 'share_copy':
+        return { eventName: 'share', component: 'article_share', kind: 'share', method: 'copy' };
+      case 'subscribe_open':
+        return { eventName: 'subscribe_open', component: 'article_subscription', kind: 'subscription' };
+      case 'subscribe_success':
+        return { eventName: 'sign_up', component: 'article_subscription', kind: 'sign_up' };
+      default:
+        return { eventName: normalizeGoogleEventName(name), component: 'blog', kind: 'custom' };
+    }
+  }
+
+  function sanitizeGoogleParameters(value) {
+    var input = value && typeof value === 'object' ? value : {};
+    var output = {};
+    ['content_category', 'filter_name'].forEach(function (key) {
+      var normalized = sanitizeGoogleString(input[key], 100);
+      if (normalized) output[key] = normalized;
+    });
+    ['read_percent', 'result_count', 'query_length'].forEach(function (key) {
+      var numeric = Number(input[key]);
+      if (Number.isFinite(numeric) && numeric >= 0) output[key] = Math.floor(numeric);
+    });
+    return output;
+  }
+
+  function googleEventDefinition(name, options) {
+    var resolvedOptions = options || {};
+    var rawName = String(name || '').trim().toLowerCase();
+    var preset = googleEventPreset(rawName);
+    if (!preset.eventName) return null;
+
+    var contextPath = normalizePath(resolvedOptions.contextPath || window.location.pathname);
+    var parameters = {
+      content_path: contextPath.slice(0, 100),
+      source_component: sanitizeGoogleString(
+        resolvedOptions.component || preset.component,
+        100
+      ),
+    };
+    var category = sanitizeGoogleString(
+      resolvedOptions.parameters && resolvedOptions.parameters.content_category
+        ? resolvedOptions.parameters.content_category
+        : configuredContentCategory,
+      100
+    );
+    if (category) parameters.content_category = category;
+
+    var customParameters = sanitizeGoogleParameters(resolvedOptions.parameters);
+    Object.keys(customParameters).forEach(function (key) {
+      parameters[key] = customParameters[key];
+    });
+
+    if (preset.kind === 'article_select') {
+      parameters.content_type = 'article';
+      parameters.content_id = contextPath.slice(0, 100);
+    } else if (preset.kind === 'navigation') {
+      parameters.link_text = sanitizeGoogleString(resolvedOptions.title, 100);
+    } else if (preset.kind === 'reading' && !Number.isFinite(parameters.read_percent)) {
+      parameters.read_percent = rawName === 'read-90' ? 90 : 0;
+    } else if (preset.kind === 'share') {
+      parameters.method = preset.method;
+      parameters.content_type = 'article';
+      parameters.item_id = contextPath.slice(0, 100);
+    } else if (preset.kind === 'sign_up') {
+      parameters.method = 'email';
+    }
+
+    return { eventName: preset.eventName, parameters: parameters };
+  }
+
+  function dispatchGoogleEvent(name, options) {
+    if (!Array.isArray(window.dataLayer)) return false;
+    var definition = googleEventDefinition(name, options);
+    if (!definition) return false;
+
+    try {
+      if (typeof window.gtag !== 'function') {
+        window.gtag = function () {
+          window.dataLayer.push(arguments);
+        };
+      }
+      window.gtag('event', definition.eventName, definition.parameters);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   function dispatchEvent(payload) {
     if (
       window.goatcounter &&
@@ -579,10 +707,16 @@
       no_session: Boolean(resolvedOptions.noSession),
     };
 
-    if (dispatchEvent(payload)) return true;
-    if (pendingEvents.length < 20) pendingEvents.push(payload);
-    if (!eventRetryTimer) eventRetryTimer = window.setTimeout(flushEventQueue, 0);
-    return false;
+    var googleSent = dispatchGoogleEvent(name, resolvedOptions);
+    var goatCounterSent = false;
+    if (resolvedOptions.goatcounter !== false) {
+      goatCounterSent = dispatchEvent(payload);
+      if (!goatCounterSent && pendingEvents.length < 20) pendingEvents.push(payload);
+      if (!goatCounterSent && !eventRetryTimer) {
+        eventRetryTimer = window.setTimeout(flushEventQueue, 0);
+      }
+    }
+    return googleSent || goatCounterSent;
   }
 
   function bindDataEvents() {
@@ -598,10 +732,14 @@
       var scope = target.getAttribute('data-analytics-scope');
 
       trackEvent(name, {
+        component: target.getAttribute('data-analytics-component'),
         contextPath: target.getAttribute('data-analytics-path') || window.location.pathname,
         includePath: scope !== 'global',
         title: target.getAttribute('data-analytics-title') || target.textContent.trim(),
         noSession: boolFromData(target.getAttribute('data-analytics-no-session')),
+        parameters: {
+          content_category: target.getAttribute('data-analytics-category'),
+        },
       });
     });
 
@@ -639,10 +777,14 @@
     if (!explicitContent && !isPost) return;
 
     var normalizedPath = normalizePath(window.location.pathname);
-    var storageKey = 'jm-read-90:' + normalizedPath;
-    if (safeSessionGet(storageKey) === '1') return;
+    var thresholds = [25, 50, 75, 90];
+    var storagePrefix = 'jm-read-depth-v1:' + normalizedPath + ':';
+    var reached = {};
+    thresholds.forEach(function (threshold) {
+      reached[threshold] = safeSessionGet(storagePrefix + threshold) === '1';
+    });
+    if (thresholds.every(function (threshold) { return reached[threshold]; })) return;
 
-    var fired = false;
     var scheduled = false;
 
     function cleanup() {
@@ -652,23 +794,31 @@
 
     function checkDepth() {
       scheduled = false;
-      if (fired || !content.isConnected) return;
+      if (!content.isConnected) return;
 
       var rect = content.getBoundingClientRect();
       if (rect.height <= 0) return;
 
       var contentTop = rect.top + window.scrollY;
       var viewportBottom = window.scrollY + window.innerHeight;
-      var ninetyPercent = contentTop + rect.height * 0.9;
-      if (viewportBottom < ninetyPercent) return;
+      var readPercent = Math.max(
+        0,
+        Math.min(100, Math.floor(((viewportBottom - contentTop) / rect.height) * 100))
+      );
 
-      fired = true;
-      safeSessionSet(storageKey, '1');
-      cleanup();
-      trackEvent(content.getAttribute('data-reading-event') || 'read-90', {
-        contextPath: normalizedPath,
-        title: '90% 읽음 · ' + document.title,
+      thresholds.forEach(function (threshold) {
+        if (reached[threshold] || readPercent < threshold) return;
+        reached[threshold] = true;
+        safeSessionSet(storagePrefix + threshold, '1');
+        trackEvent('read_progress', {
+          component: 'article_body',
+          contextPath: normalizedPath,
+          goatcounter: false,
+          parameters: { read_percent: threshold },
+          title: threshold + '% 읽음 · ' + document.title,
+        });
       });
+      if (reached[90]) cleanup();
     }
 
     function scheduleCheck() {

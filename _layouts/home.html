@@ -53,9 +53,9 @@ layout: default
   <h1 id="home-intro-title">{{ site.tagline }}</h1>
   <p class="home-intro-copy">{{ site.description }}</p>
   <div class="home-intro-actions">
-    <a class="home-primary-action" href="#latest-posts" data-analytics-event="home_latest">최신 글 보기 <i class="fas fa-arrow-down" aria-hidden="true"></i></a>
-    <a class="home-secondary-action" href="{{ '/browse/' | relative_url }}" data-analytics-event="home_browse">주제별 탐색</a>
-    <button class="home-secondary-action" type="button" data-home-search data-analytics-event="home_search">검색</button>
+    <a class="home-primary-action" href="#latest-posts" data-analytics-event="home_latest" data-analytics-component="home_hero">최신 글 보기 <i class="fas fa-arrow-down" aria-hidden="true"></i></a>
+    <a class="home-secondary-action" href="{{ '/browse/' | relative_url }}" data-analytics-event="home_browse" data-analytics-path="{{ '/browse/' | relative_url }}" data-analytics-component="home_hero">주제별 탐색</a>
+    <button class="home-secondary-action" type="button" data-home-search data-analytics-event="home_search" data-analytics-component="home_hero">검색</button>
   </div>
   <dl class="home-proof" aria-label="블로그 현황">
     <div><dt>공개 기록</dt><dd>{{ visible_posts | size }}</dd></div>
@@ -88,7 +88,7 @@ layout: default
 <div id="post-list" class="home-post-list flex-grow-1 px-xl-1" aria-live="polite">
   {% for post in posts %}
     <article class="card-wrapper card home-card{% unless post.image %} home-card-text{% endunless %}" data-home-post data-home-categories="{{ post.categories | join: '|' | escape }}">
-      <a href="{{ post.url | relative_url }}" class="post-preview row g-0 flex-md-row-reverse" data-analytics-event="open_post" data-analytics-title="{{ post.title | escape }}">
+      <a href="{{ post.url | relative_url }}" class="post-preview row g-0 flex-md-row-reverse" data-analytics-event="open_post" data-analytics-path="{{ post.url }}" data-analytics-category="{{ post.categories | first | escape }}" data-analytics-component="home_feed" data-analytics-title="{{ post.title | escape }}">
         {% assign card_body_col = '12' %}
 
         {% if post.image %}
@@ -157,4 +157,4 @@ layout: default
   {% include post-paginator.html %}
 {% endif %}
 
-<script defer src="{{ '/assets/js/blog-home.js' | relative_url }}"></script>
+<script defer src="{{ '/assets/js/blog-home.js' | relative_url }}?v={{ site.time | date: '%s' }}"></script>

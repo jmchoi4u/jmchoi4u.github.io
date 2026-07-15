@@ -887,5 +887,6 @@
     src="{{ '/assets/js/blog-analytics.js' | relative_url }}?v={{ site.time | date: '%s' }}"
     data-goatcounter-id="{{ site.analytics.goatcounter.id }}"
     data-view-counter-endpoint="{{ site.analytics.goatcounter.counter_proxy }}"
+    data-content-category="{{ page.categories | first | escape }}"
   ></script>
 </head>

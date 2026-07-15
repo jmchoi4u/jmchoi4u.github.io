@@ -38,8 +38,10 @@
       if (empty) empty.hidden = visible !== 0;
       if (window.JMBlogAnalytics) {
         window.JMBlogAnalytics.trackEvent('home_filter', {
+          component: 'home_filter',
           title: button.textContent.trim(),
           includePath: false,
+          parameters: { filter_name: selected },
         });
       }
     });

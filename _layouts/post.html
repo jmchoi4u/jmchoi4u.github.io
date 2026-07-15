@@ -139,7 +139,7 @@ script_includes:
             <i class="fas fa-dollar-sign"></i>
             <span>Support</span>
           </a>
-          <button type="button" class="author-subscribe-btn" onclick="openSubscribeModal(this)" data-analytics-event="subscribe_open">
+          <button type="button" class="author-subscribe-btn" onclick="openSubscribeModal(this)" data-analytics-event="subscribe_open" data-analytics-component="article_subscription">
             <i class="fas fa-bell"></i>
             <span>새 글 알림</span>
           </button>
@@ -253,7 +253,7 @@ async function handleSubscribe(e){
     document.getElementById('subscribe-done').style.display='block';
     document.getElementById('subscribe-done').focus();
     document.getElementById('subscribe-email').value='';
-    if(window.JMBlogAnalytics)window.JMBlogAnalytics.trackEvent('subscribe_success',{includePath:false,title:'새 글 알림 구독'});
+    if(window.JMBlogAnalytics)window.JMBlogAnalytics.trackEvent('subscribe_success',{includePath:false,component:'article_subscription',title:'새 글 알림 구독'});
   }catch(fetchError){
     error.textContent=fetchError.message||'구독 처리에 실패했습니다. 네트워크 연결을 확인해 주세요.';
   }finally{
@@ -497,7 +497,7 @@ document.addEventListener('keydown',function(e){
     if (navigator.share) {
       try {
         await navigator.share({ title: document.title, text: {{ page.description | default: page.title | jsonify }}, url: window.location.href });
-        if (window.JMBlogAnalytics) window.JMBlogAnalytics.trackEvent('share_native', { title: document.title });
+        if (window.JMBlogAnalytics) window.JMBlogAnalytics.trackEvent('share_native', { component: 'article_share', title: document.title });
         return;
       } catch (error) {
         if (error && error.name === 'AbortError') return;
@@ -506,7 +506,7 @@ document.addEventListener('keydown',function(e){
     try {
       await navigator.clipboard.writeText(window.location.href);
       showCopyToast();
-      if (window.JMBlogAnalytics) window.JMBlogAnalytics.trackEvent('share_copy', { title: document.title });
+      if (window.JMBlogAnalytics) window.JMBlogAnalytics.trackEvent('share_copy', { component: 'article_share', title: document.title });
     } catch (error) {
       window.prompt('아래 링크를 복사해 주세요.', window.location.href);
     }

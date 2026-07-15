@@ -32,27 +32,36 @@ function createViewElement(attributes = {}) {
   };
 }
 
-function createHarness(fetchImpl) {
+function createHarness(fetchImpl, options = {}) {
   const storage = createStorage();
+  const sessionStorage = createStorage();
   const eventHandlers = new Map();
+  const goatEvents = [];
   let viewElements = [];
   let currentFetch = fetchImpl;
   let backgroundTimerId = 10000;
 
   const document = {
     readyState: 'loading',
+    title: options.title || 'Test page',
     currentScript: {
       getAttribute(name) {
         if (name === 'data-goatcounter-id') return 'jmchoi4u';
         if (name === 'data-view-counter-endpoint') {
           return 'https://jm-studio-auth.jmchoi4u.workers.dev/views';
         }
+        if (name === 'data-content-category') return options.contentCategory || '';
         return null;
       },
     },
     documentElement: { getAttribute() { return null; } },
     addEventListener(type, handler) { eventHandlers.set(`document:${type}`, handler); },
-    querySelector() { return null; },
+    querySelector(selector) {
+      if (selector === '[data-reading-content]' && options.readingContent) {
+        return options.readingContent;
+      }
+      return null;
+    },
     querySelectorAll(selector) {
       return selector === '[data-view-count][data-view-path]' ? viewElements : [];
     },
@@ -60,10 +69,26 @@ function createHarness(fetchImpl) {
 
   const window = {
     addEventListener(type, handler) { eventHandlers.set(`window:${type}`, handler); },
+    dataLayer: [],
+    goatcounter: {
+      count(payload) { goatEvents.push(payload); },
+    },
+    innerHeight: 100,
     clearTimeout(id) {
       if (id && typeof id === 'object') clearTimeout(id);
     },
-    location: { pathname: '/' },
+    location: { pathname: options.pathname || '/' },
+    removeEventListener(type, handler) {
+      if (eventHandlers.get(`window:${type}`) === handler) {
+        eventHandlers.delete(`window:${type}`);
+      }
+    },
+    requestAnimationFrame(handler) {
+      handler();
+      return 1;
+    },
+    scrollY: 0,
+    sessionStorage,
     setTimeout(handler, delay) {
       // Keep recovery timers from holding the test process open. Request
       // timeouts remain long enough for the immediate fake fetches to settle.
@@ -86,6 +111,7 @@ function createHarness(fetchImpl) {
     document,
     fetch(...args) { return currentFetch(...args); },
     localStorage: storage,
+    sessionStorage,
     window,
   };
   vm.createContext(sandbox);
@@ -95,9 +121,12 @@ function createHarness(fetchImpl) {
     analytics: window.JMBlogAnalytics,
     document,
     eventHandlers,
+    goatEvents,
     setFetch(nextFetch) { currentFetch = nextFetch; },
     setViewElements(elements) { viewElements = elements; },
+    sessionStorage,
     storage,
+    window,
   };
 }
 
@@ -191,4 +220,75 @@ assert.equal(failed.ok, false);
 assert.equal(failed.count, 0);
 assert.equal(failed.attempts, 3);
 
-console.log('Blog analytics recovery checks passed.');
+const googleHarness = createHarness(async () => new Response('{}', { status: 200 }), {
+  contentCategory: '개발환경',
+});
+googleHarness.analytics.trackEvent('open_post', {
+  component: 'home_feed',
+  contextPath: '/posts/7/',
+  parameters: {
+    content_category: '개발환경',
+    search_term: 'reader@example.com',
+  },
+  title: '맥북 Homebrew부터 Node.js까지',
+});
+let googleCommand = Array.from(googleHarness.window.dataLayer.at(-1));
+assert.equal(googleCommand[0], 'event');
+assert.equal(googleCommand[1], 'select_content');
+assert.equal(googleCommand[2].content_type, 'article');
+assert.equal(googleCommand[2].content_id, '/posts/7');
+assert.equal(googleCommand[2].content_category, '개발환경');
+assert.equal(googleCommand[2].source_component, 'home_feed');
+assert.equal('search_term' in googleCommand[2], false, 'free-form user input must not reach GA4');
+assert.equal(googleHarness.goatEvents.length, 1, 'GoatCounter success must not prevent GA4 delivery');
+
+googleHarness.analytics.trackEvent('share_copy', {
+  contextPath: '/posts/7/',
+  title: '맥북 Homebrew부터 Node.js까지',
+});
+googleCommand = Array.from(googleHarness.window.dataLayer.at(-1));
+assert.equal(googleCommand[1], 'share');
+assert.equal(googleCommand[2].method, 'copy');
+assert.equal(googleCommand[2].item_id, '/posts/7');
+
+googleHarness.analytics.trackEvent('subscribe_success', {
+  contextPath: '/posts/7/',
+  title: '새 글 알림 구독',
+});
+googleCommand = Array.from(googleHarness.window.dataLayer.at(-1));
+assert.equal(googleCommand[1], 'sign_up');
+assert.equal(googleCommand[2].method, 'email');
+
+let readingScroll = 0;
+const readingContent = {
+  isConnected: true,
+  getBoundingClientRect() {
+    return { height: 1000, top: -readingScroll };
+  },
+};
+const readingHarness = createHarness(async () => new Response('{}', { status: 200 }), {
+  contentCategory: '독후감',
+  pathname: '/posts/6/',
+  readingContent,
+  title: '뭐, 어쩔 수가 없죠 | Jaemin Choi',
+});
+readingHarness.analytics.init();
+const readingScrollHandler = readingHarness.eventHandlers.get('window:scroll');
+assert.equal(typeof readingScrollHandler, 'function');
+[200, 500, 700, 900].forEach((position) => {
+  readingScroll = position;
+  readingHarness.window.scrollY = position;
+  readingScrollHandler();
+});
+const readingCommands = readingHarness.window.dataLayer
+  .map((entry) => Array.from(entry))
+  .filter((entry) => entry[0] === 'event' && entry[1] === 'read_progress');
+assert.deepEqual(
+  readingCommands.map((entry) => entry[2].read_percent),
+  [25, 50, 75, 90],
+  'article engagement must be recorded at all four reading thresholds'
+);
+assert.ok(readingCommands.every((entry) => entry[2].content_category === '독후감'));
+assert.equal(readingHarness.goatEvents.length, 0, 'reading milestones must not inflate public views');
+
+console.log('Blog analytics recovery and GA4 event checks passed.');

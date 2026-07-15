@@ -25,6 +25,8 @@
             class="sidebar-link popular-link"
             data-analytics-event="popular-post-open"
             data-analytics-path="{{ post.url }}"
+            data-analytics-category="{{ post.categories | first | escape }}"
+            data-analytics-component="popular_sidebar"
             data-analytics-title="인기 글에서 {{ post.title | escape }} 열기"
           >
             <span

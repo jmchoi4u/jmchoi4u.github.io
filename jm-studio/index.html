@@ -86,6 +86,7 @@ html,body{font-family:'Inter',-apple-system,'Segoe UI','Malgun Gothic',sans-seri
 .card-title-button:focus-visible{outline:3px solid rgba(218,119,86,.3);outline-offset:3px;border-radius:4px}
 .card-meta{display:flex;flex-wrap:wrap;gap:6px;font-size:.72rem;color:var(--muted)}
 .card-meta span{display:inline-flex;align-items:center;gap:3px}
+.card-pin{display:inline-flex;align-items:center;gap:3px;color:var(--point);font-size:.68rem;font-weight:700}
 .card-tag{background:var(--point-s);color:var(--point);padding:1px 6px;border-radius:4px;font-size:.65rem;font-weight:600}
 .suggestion-chip{min-height:32px;padding:5px 9px;border:1px solid rgba(218,119,86,.2);font:inherit;cursor:pointer}
 .card-status{width:7px;height:7px;border-radius:50%;flex-shrink:0}
@@ -2250,6 +2251,23 @@ async function ghDeleteFile(path, sha, message) {
 }
 
 /* ═══════ Posts ═══════ */
+function comparePostsForDisplay(a, b) {
+  var aPinned = !!(a && a.pin);
+  var bPinned = !!(b && b.pin);
+  if (aPinned !== bPinned) return aPinned ? -1 : 1;
+
+  var aDate = String((a && (a.date || a.name)) || '');
+  var bDate = String((b && (b.date || b.name)) || '');
+  var dateOrder = bDate.localeCompare(aDate);
+  if (dateOrder !== 0) return dateOrder;
+
+  return String((b && b.name) || '').localeCompare(String((a && a.name) || ''));
+}
+
+function sortPostsForDisplay(posts) {
+  return (posts || []).slice().sort(comparePostsForDisplay);
+}
+
 function mapLocalPost(post) {
   return {
     name: post.fileName,
@@ -2280,9 +2298,7 @@ async function loadPosts() {
   try {
     if (canUseLocalPower()) {
       var localPosts = await localApi('/api/posts');
-      S.posts = (localPosts.posts || []).map(mapLocalPost).sort(function(a, b) {
-        return (b.date || b.name).localeCompare(a.date || a.name);
-      });
+      S.posts = sortPostsForDisplay((localPosts.posts || []).map(mapLocalPost));
       S.postsLoaded = true;
       updateListStats();
       updateFilterOptions();
@@ -2323,11 +2339,10 @@ async function loadPosts() {
         title: null,
         _loaded: false
       };
-    }).sort(function(a, b) {
-      return (b.date || b.name).localeCompare(a.date || a.name);
     });
 
     await loadPostTitles();
+    S.posts = sortPostsForDisplay(S.posts);
     S.postsLoaded = true;
     updateListStats();
     updateFilterOptions();
@@ -2417,6 +2432,8 @@ function renderPosts() {
     });
   }
 
+  filtered = sortPostsForDisplay(filtered);
+
   if (!filtered.length) {
     listEl.innerHTML = '<div class="empty">글이 없습니다.</div>';
     return;
@@ -2440,7 +2457,7 @@ function renderPosts() {
       + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
       + '<span class="card-status ' + statusCls + '"></span>'
       + '<span style="font-size:.68rem;color:var(--muted)">' + statusLabel + '</span>'
-      + (p.pin ? '<span style="font-size:.68rem">&#128204;</span>' : '')
+      + (p.pin ? '<span class="card-pin" aria-label="고정 글">&#128204; 고정</span>' : '')
       + modeTag
       + viewChip
       + '</div>'

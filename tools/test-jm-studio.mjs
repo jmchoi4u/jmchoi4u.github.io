@@ -315,6 +315,24 @@ assert.equal(appSandbox.studioRedirectUri(), 'https://jmchoi4u.github.io/jm-stud
 assert.equal(appSandbox.isValidPostDate('2026-07-13 18:30:00 +0900'), true);
 assert.equal(appSandbox.isValidPostDate('2026/07/13'), false);
 assert.equal(appSandbox.isValidPostDate('2026-02-30 18:30:00 +0900'), false);
+const studioPostOrder = [...appSandbox.sortPostsForDisplay([
+  { name: '2026-07-28-new.md', date: '2026-07-28', pin: false },
+  { name: '2026-03-17-pinned.md', date: '2026-03-17', pin: true },
+  { name: '2026-05-27-normal.md', date: '2026-05-27', pin: false },
+  { name: '2026-03-25-newer-pinned.md', date: '2026-03-25', pin: true },
+])];
+assert.deepEqual(
+  studioPostOrder.map((post) => post.name),
+  [
+    '2026-03-25-newer-pinned.md',
+    '2026-03-17-pinned.md',
+    '2026-07-28-new.md',
+    '2026-05-27-normal.md',
+  ],
+  'Studio must match the public home order: pinned posts first, then newest to oldest',
+);
+assert.match(html, /filtered = sortPostsForDisplay\(filtered\)/, 'filtered Studio lists must preserve pinned placement');
+assert.match(html, /class="card-pin"[^>]*>[^<]*고정/, 'pinned Studio cards must identify their placement');
 const blockFrontMatter = appSandbox.parseFrontMatter('---\ntitle: "block"\ndate: 2026-07-13 18:30:00 +0900\ncategories:\n  - "개발환경"\n  - mobile\ntags:\n  - pwa\nimage:\n  path: /assets/cover.png\n  alt: "cover"\ncustom_key: keep-me\n---\n\nbody');
 assert.deepEqual([...blockFrontMatter.categories], ['개발환경', 'mobile']);
 assert.deepEqual([...blockFrontMatter.tags], ['pwa']);

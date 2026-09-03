@@ -1,0 +1,38 @@
+---
+layout: page
+# The Archives of posts.
+#
+# Local override of the theme layout. Chirpy renders "03 / 09" (big day, numeric
+# month), which reads ambiguously to a Korean audience used to year-month-day.
+# This renders the month as an English abbreviation in English order — "Sep 3" —
+# so the two numbers can never be swapped by mistake.
+#
+# Dates are formatted server-side and the `data-ts`/`data-df` hooks are dropped on
+# purpose: the theme's dayjs pass would re-localise the month back to "9월".
+---
+
+{% include lang.html %}
+
+<div id="archives" class="pl-xl-3">
+  {% assign visible_posts = site.posts | where_exp: 'item', 'item.hidden != true' %}
+  {% for post in visible_posts %}
+    {% assign cur_year = post.date | date: '%Y' %}
+
+    {% if cur_year != last_year %}
+      {% unless forloop.first %}</ul>{% endunless %}
+
+      <time class="year lead d-block">{{ cur_year }}</time>
+      {{ '<ul class="list-unstyled">' }}
+
+      {% assign last_year = cur_year %}
+    {% endif %}
+
+    <li class="archive-row">
+      <span class="date month small text-muted archive-month">{{ post.date | date: '%b' }}</span>
+      <span class="date day archive-day">{{ post.date | date: '%-d' }}</span>
+      <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
+    </li>
+
+    {% if forloop.last %}</ul>{% endif %}
+  {% endfor %}
+</div>

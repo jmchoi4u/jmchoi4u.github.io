@@ -80,6 +80,13 @@
   <!-- Web Font -->
   <link rel="stylesheet" href="{{ site.data.origin[type].webfonts | relative_url }}">
 
+  <!-- Korean Web Font (Pretendard, unicode-range subset) -->
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css"
+  >
+
   <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="{{ site.data.origin[type].fontawesome.css | relative_url }}">
 
@@ -847,7 +854,44 @@
 
   <!-- Scripts -->
 
+  <!--
+    Chirpy's theme.min.js reads sessionStorage['mode'] and otherwise follows the OS.
+    We want a first-time reader to arrive in the warm light theme regardless of their OS,
+    while an explicit toggle still sticks - and sticks across visits, which sessionStorage
+    alone cannot do. Must run before theme.min.js so there is no flash.
+  -->
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('jm-theme-mode');
+        if (saved === 'light' || saved === 'dark') {
+          sessionStorage.setItem('mode', saved);
+        } else if (!sessionStorage.getItem('mode')) {
+          sessionStorage.setItem('mode', 'light');
+        }
+      } catch (e) {
+        /* private mode / storage disabled - fall back to the theme's own behaviour */
+      }
+    })();
+  </script>
+
   <script src="{{ '/assets/js/dist/theme.min.js' | relative_url }}"></script>
+
+  <script>
+    /* Persist whatever the reader is actually looking at after each toggle. */
+    window.addEventListener('message', function (event) {
+      if (!event.data || event.data.id !== 'theme-mode') return;
+      try {
+        var attr = document.documentElement.getAttribute('data-mode');
+        var visual =
+          attr ||
+          (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        localStorage.setItem('jm-theme-mode', visual);
+      } catch (e) {
+        /* ignore */
+      }
+    });
+  </script>
 
   {% include js-selector.html lang=lang %}
 

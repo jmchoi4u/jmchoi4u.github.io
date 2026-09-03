@@ -1,7 +1,7 @@
 ---
 title: "나의 첫 포스트"
 date: 2026-03-13 02:48:00 +0900
-categories: ["끄적끄적"]
+categories: ["writing", "끄적끄적"]
 tags: ["잡글"]
 toc: true
 comments: true

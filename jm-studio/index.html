@@ -9,9 +9,11 @@ sitemap: false
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="strict-origin-when-cross-origin">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://raw.githubusercontent.com; connect-src 'self' https://api.github.com https://jm-studio-auth.jmchoi4u.workers.dev; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self' https://github.com">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data: blob: https://raw.githubusercontent.com; connect-src 'self' https://api.github.com https://jm-studio-auth.jmchoi4u.workers.dev; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self' https://github.com">
 <title>Blog Studio</title>
 <link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css">
 <link rel="icon" href="../assets/img/favicons/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="../assets/img/favicons/apple-touch-icon.png">
 <meta name="theme-color" content="#B45335">
@@ -20,7 +22,7 @@ sitemap: false
 <style>
 :root{--bg:#F5F0EB;--bg2:#EDE8E2;--panel:#fff;--line:#E5DDD4;--text:#1A1A1A;--muted:#756B63;--point:#B45335;--point-h:#9F472E;--point-s:#FDF0EB;--danger:#B83D34;--success:#2F7D4E;--purple:#7C4DDB;--radius:12px;--shadow:0 2px 12px rgba(26,26,26,.06);--safe-top:env(safe-area-inset-top,0px);--safe-right:env(safe-area-inset-right,0px);--safe-bottom:env(safe-area-inset-bottom,0px);--safe-left:env(safe-area-inset-left,0px)}
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{font-family:'Inter',-apple-system,'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;min-height:100dvh;-webkit-font-smoothing:antialiased;overflow:hidden;-webkit-text-size-adjust:100%}
+html,body{font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;min-height:100dvh;-webkit-font-smoothing:antialiased;overflow:hidden;-webkit-text-size-adjust:100%}
 ::selection{background:rgba(218,119,86,.2)}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#CCC5BD;border-radius:99px}
 
@@ -152,12 +154,23 @@ textarea.editor-input{min-height:42dvh;font-family:'Cascadia Code','D2Coding',mo
 .soft-card{padding:14px;border:1px solid var(--bg2);border-radius:var(--radius);background:var(--panel)}
 
 /* === Preview === */
-.preview-content{padding:16px;line-height:1.8;font-size:.92rem;word-break:break-word}
-.preview-content h1,.preview-content h2,.preview-content h3{margin:1em 0 .5em;letter-spacing:-.01em}
-.preview-content h1{font-size:1.4rem}.preview-content h2{font-size:1.2rem}.preview-content h3{font-size:1.05rem}
+.editor-hint{margin:6px 2px 0;color:var(--muted);font-size:.72rem;line-height:1.5}
+.preview-content{padding:20px 18px;max-width:40rem;margin:0 auto;line-height:1.9;font-size:1.0625rem;letter-spacing:-.004em;word-break:keep-all;overflow-wrap:break-word;color:#3B352E}
+.preview-content p{margin:0 0 1.15em;text-wrap:pretty}
+.preview-content h1,.preview-content h2,.preview-content h3,.preview-content h4{letter-spacing:-.028em;line-height:1.45;text-wrap:balance;word-break:keep-all;color:#2A241D}
+.preview-content h1{margin:2.6rem 0 1rem;font-size:1.5rem;font-weight:700}
+.preview-content h2{margin:2.4rem 0 .9rem;font-size:1.28rem;font-weight:700}
+.preview-content h3{margin:1.9rem 0 .7rem;font-size:1.12rem;font-weight:700}
+.preview-content h4{margin:1.6rem 0 .55rem;font-size:1rem;font-weight:600}
+.preview-content>:first-child{margin-top:0}
+.preview-content ul,.preview-content ol{margin:0 0 1.15em;padding-left:1.3rem}
+.preview-content li{margin-bottom:.3rem;line-height:1.85}
+.preview-content hr{width:4.5rem;margin:2.4rem auto;border:0;border-top:2px solid var(--line)}
+.preview-content del{color:var(--muted)}
 .preview-content pre{padding:12px;border-radius:8px;background:#1E1C18;color:#E8E0D8;overflow-x:auto;font-size:.82rem}
 .preview-content code{font-family:'Cascadia Code','D2Coding',monospace;font-size:.88em}
-.preview-content blockquote{margin:.6em 0;padding:4px 14px;border-left:3px solid var(--point);color:var(--muted);background:var(--bg);border-radius:0 8px 8px 0}
+.preview-content blockquote{margin:1.9rem 0;padding:.1rem 0 .1rem 1.2rem;border-left:3px solid var(--point);color:var(--muted);background:transparent;border-radius:0;font-size:1.04em;line-height:1.85}
+.preview-content blockquote p:last-child{margin-bottom:0}
 .preview-content img{max-width:100%;border-radius:8px}
 .preview-content table{width:100%;border-collapse:collapse;font-size:.85rem}
 .preview-content th,.preview-content td{padding:6px 10px;border:1px solid var(--line);text-align:left}
@@ -263,9 +276,9 @@ textarea.editor-input{min-height:42dvh;font-family:'Cascadia Code','D2Coding',mo
   .card:hover{border-color:var(--point);box-shadow:var(--shadow)}
   .card-title{font-size:.95rem}
   .btn-fab{bottom:32px;right:32px;width:56px;height:56px}
-  .preview-content{max-width:720px;margin:0 auto;font-size:.95rem}
-  .preview-content h1{font-size:1.6rem}
-  .preview-content h2{font-size:1.3rem}
+  .preview-content{font-size:1.125rem;padding:24px 20px}
+  .preview-content h1{font-size:1.75rem}
+  .preview-content h2{font-size:1.42rem}
   .toast-wrap{left:auto;right:24px;top:24px;width:360px}
   .auth-view{min-height:60vh}
   .search-bar input{font-size:.9rem;padding:12px 16px 12px 40px}
@@ -561,7 +574,8 @@ textarea.editor-input{min-height:42dvh;font-family:'Cascadia Code','D2Coding',mo
           <button type="button" onclick="wrap('[','](https://)')" title="링크" aria-label="링크 삽입">&#128279;</button>
           <button type="button" onclick="triggerBodyImage()" title="이미지" aria-label="본문 이미지 삽입">&#128247;</button>
         </div>
-        <textarea class="editor-input" id="ed-body" placeholder="마크다운으로 작성하세요..." oninput="autoSave()"></textarea>
+        <textarea class="editor-input" id="ed-body" placeholder="마크다운으로 작성하세요. 엔터로 친 줄바꿈은 글에도 그대로 나옵니다." oninput="autoSave()"></textarea>
+        <p class="editor-hint">엔터 한 번 = 줄바꿈, 엔터 두 번 = 새 문단. 쓴 그대로 발행됩니다.</p>
         <div class="editor-meta">
           <span id="editor-stats">0자 · 0단어</span>
           <span id="autosave-status">자동저장 대기</span>
@@ -1068,6 +1082,8 @@ window.addEventListener('DOMContentLoaded', function() {
       registration.update().catch(function() {});
     }).catch(function() {});
   }
+  // Must mirror _config.yml `kramdown: {input: GFM, hard_wrap: true}` — otherwise the
+  // preview and the published post disagree about what a single newline means.
   if (window.marked) marked.setOptions({ gfm: true, breaks: true });
   setAuthenticatedShell(false);
   updateTrustedLoginUI();

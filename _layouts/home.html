@@ -4,49 +4,23 @@ layout: default
 
 {% include lang.html %}
 
-{% assign all_pinned = site.posts | where_exp: 'item', 'item.pin == true and item.hidden != true' %}
-{% assign all_normal = site.posts | where_exp: 'item', 'item.pin != true and item.hidden != true' %}
+<!--
+  Two categories only: `writing` (essays - the front door) and `dev` (technical notes).
+  Brunch-style: the feed opens on `writing`, and `dev` is one tap away. Every dev post is
+  still rendered into the HTML (just `hidden`), so its link stays crawlable and search
+  traffic lands on the post itself.
 
-{% assign posts = '' | split: '' %}
-
-<!-- Get pinned posts on current page -->
-
-{% assign visible_start = paginator.page | minus: 1 | times: paginator.per_page %}
-{% assign visible_end = visible_start | plus: paginator.per_page %}
-
-{% if all_pinned.size > visible_start %}
-  {% if all_pinned.size > visible_end %}
-    {% assign pinned_size = paginator.per_page %}
-  {% else %}
-    {% assign pinned_size = all_pinned.size | minus: visible_start %}
-  {% endif %}
-
-  {% for i in (visible_start..all_pinned.size) limit: pinned_size %}
-    {% assign posts = posts | push: all_pinned[i] %}
-  {% endfor %}
-{% else %}
-  {% assign pinned_size = 0 %}
-{% endif %}
-
-<!-- Get normal posts on current page -->
-
-{% assign normal_size = paginator.posts | size | minus: pinned_size %}
-
-{% if normal_size > 0 %}
-  {% if pinned_size > 0 %}
-    {% assign normal_start = 0 %}
-  {% else %}
-    {% assign normal_start = visible_start | minus: all_pinned.size %}
-  {% endif %}
-
-  {% assign normal_end = normal_start | plus: normal_size | minus: 1 %}
-
-  {% for i in (normal_start..normal_end) %}
-    {% assign posts = posts | push: all_normal[i] %}
-  {% endfor %}
-{% endif %}
-
+  Pagination is deliberately not used here - the paginator slices `site.posts` before we
+  can split by category, which would leave pages that are entirely `dev` looking empty.
+  The full list lives at /archives/ and /browse/.
+-->
 {% assign visible_posts = site.posts | where_exp: 'item', 'item.hidden != true' %}
+{% assign pinned_posts = visible_posts | where_exp: 'item', 'item.pin == true' %}
+{% assign rest_posts = visible_posts | where_exp: 'item', 'item.pin != true' %}
+{% assign posts = pinned_posts | concat: rest_posts %}
+
+{% assign writing_posts = visible_posts | where_exp: 'item', 'item.categories contains "writing"' %}
+{% assign dev_posts = visible_posts | where_exp: 'item', 'item.categories contains "dev"' %}
 
 <section class="home-intro" aria-labelledby="home-intro-title">
   <p class="home-eyebrow">{{ site.title }}</p>
@@ -58,8 +32,8 @@ layout: default
     <button class="home-secondary-action" type="button" data-home-search data-analytics-event="home_search" data-analytics-component="home_hero">검색</button>
   </div>
   <dl class="home-proof" aria-label="블로그 현황">
-    <div><dt>공개 기록</dt><dd>{{ visible_posts | size }}</dd></div>
-    <div><dt>주제</dt><dd>{{ site.categories | size }}</dd></div>
+    <div><dt>글</dt><dd>{{ writing_posts | size }}</dd></div>
+    <div><dt>개발</dt><dd>{{ dev_posts | size }}</dd></div>
     <div><dt>누적 조회</dt><dd data-view-count data-view-path="TOTAL" data-view-format="compact" data-view-error-text="—">—</dd></div>
   </dl>
 </section>
@@ -72,22 +46,48 @@ layout: default
   <a href="{{ '/archives/' | relative_url }}">전체 아카이브 <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
 </section>
 
-<div class="home-filter" role="toolbar" aria-label="카테고리로 글 필터링">
-  <button class="active" type="button" data-home-filter="all" aria-pressed="true">전체</button>
-  {% for category in site.categories %}
-    {% assign category_on_page = false %}
-    {% for post in posts %}
-      {% if post.categories contains category[0] %}{% assign category_on_page = true %}{% endif %}
-    {% endfor %}
-    {% if category_on_page %}
-      <button type="button" data-home-filter="{{ category[0] | escape }}" aria-pressed="false">{{ category[0] }}</button>
+<!-- Sub-categories are whatever authors put second in `categories:`, collected per group. -->
+{% assign writing_subs = '' | split: '' %}
+{% for post in writing_posts %}
+  {% assign sub = post.categories[1] %}
+  {% if sub %}{% unless writing_subs contains sub %}{% assign writing_subs = writing_subs | push: sub %}{% endunless %}{% endif %}
+{% endfor %}
+{% assign dev_subs = '' | split: '' %}
+{% for post in dev_posts %}
+  {% assign sub = post.categories[1] %}
+  {% if sub %}{% unless dev_subs contains sub %}{% assign dev_subs = dev_subs | push: sub %}{% endunless %}{% endif %}
+{% endfor %}
+
+<div class="home-controls">
+  <div class="home-filter" role="toolbar" aria-label="분류로 글 필터링">
+    <button class="active" type="button" data-home-filter="writing" aria-pressed="true">writing <span class="home-filter-count">{{ writing_posts | size }}</span></button>
+    {% if dev_posts.size > 0 %}
+      <button type="button" data-home-filter="dev" aria-pressed="false">dev <span class="home-filter-count">{{ dev_posts | size }}</span></button>
     {% endif %}
+    <button type="button" data-home-filter="all" aria-pressed="false">전체</button>
+  </div>
+
+  <div class="home-sort" role="group" aria-label="글 정렬">
+    <button class="active" type="button" data-home-sort="recent" aria-pressed="true">최신순</button>
+    <button type="button" data-home-sort="popular" aria-pressed="false">인기순</button>
+  </div>
+</div>
+
+<div class="home-subfilter" role="toolbar" aria-label="세부 분류로 글 필터링" data-home-subfilter>
+  <button class="active" type="button" data-home-sub-filter="all" data-home-parent="all" aria-pressed="true">전체</button>
+  {% for sub in writing_subs %}
+    <button type="button" data-home-sub-filter="{{ sub | escape }}" data-home-parent="writing" aria-pressed="false">{{ sub }}</button>
+  {% endfor %}
+  {% for sub in dev_subs %}
+    <button type="button" data-home-sub-filter="{{ sub | escape }}" data-home-parent="dev" aria-pressed="false" hidden>{{ sub }}</button>
   {% endfor %}
 </div>
 
 <div id="post-list" class="home-post-list flex-grow-1 px-xl-1" aria-live="polite">
   {% for post in posts %}
-    <article class="card-wrapper card home-card{% unless post.image %} home-card-text{% endunless %}" data-home-post data-home-categories="{{ post.categories | join: '|' | escape }}">
+    {% assign group = post.categories | first | default: 'writing' %}
+    {% assign sub = post.categories[1] %}
+    <article class="card-wrapper card home-card{% unless post.image %} home-card-text{% endunless %}" data-home-post data-home-group="{{ group | escape }}" data-home-sub="{{ sub | escape }}" data-home-date="{{ post.date | date: '%s' }}" data-home-pin="{% if post.pin %}1{% else %}0{% endif %}"{% if group == 'dev' %} hidden{% endif %}>
       <a href="{{ post.url | relative_url }}" class="post-preview row g-0 flex-md-row-reverse" data-analytics-event="open_post" data-analytics-path="{{ post.url }}" data-analytics-category="{{ post.categories | first | escape }}" data-analytics-component="home_feed" data-analytics-title="{{ post.title | escape }}">
         {% assign card_body_col = '12' %}
 
@@ -111,7 +111,7 @@ layout: default
         <div class="col-md-{{ card_body_col }}">
           <div class="card-body d-flex flex-column">
             {% if post.categories.size > 0 %}
-              <div class="home-card-category">{{ post.categories | first }}</div>
+              <div class="home-card-category">{{ sub | default: group }}</div>
             {% endif %}
             <h3 class="card-title">{{ post.title }}</h3>
 
@@ -149,12 +149,8 @@ layout: default
       </a>
     </article>
   {% endfor %}
-  <p class="home-filter-empty" data-home-filter-empty hidden>이 카테고리에는 현재 페이지의 글이 없습니다.</p>
+  <p class="home-filter-empty" data-home-filter-empty hidden>이 분류에는 아직 글이 없습니다.</p>
 </div>
 <!-- #post-list -->
-
-{% if paginator.total_pages > 1 %}
-  {% include post-paginator.html %}
-{% endif %}
 
 <script defer src="{{ '/assets/js/blog-home.js' | relative_url }}?v={{ site.time | date: '%s' }}"></script>

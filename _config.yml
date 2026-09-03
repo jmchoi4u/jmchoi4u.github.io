@@ -151,6 +151,11 @@ baseurl: ""
 # ------------ The following options are not recommended to be modified ------------------
 
 kramdown:
+  # GFM + hard_wrap: 글에서 친 줄바꿈(엔터 한 번)이 그대로 <br>로 발행된다.
+  # 기본 kramdown 파서는 한 줄 개행을 공백으로 합쳐 버려서, 작성 화면과
+  # 실제 글의 줄나눔이 어긋났다. jm-studio 미리보기(marked, breaks:true)와도 이제 동일하다.
+  input: GFM
+  hard_wrap: true
   footnote_backlink: "&#8617;&#xfe0e;"
   syntax_highlighter: rouge
   syntax_highlighter_opts: # Rouge Options › https://github.com/jneen/rouge#full-options

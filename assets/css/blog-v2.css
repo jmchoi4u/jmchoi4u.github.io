@@ -1,13 +1,270 @@
 /* JM Blog v2 — warm editorial system, shared by home, post and utility pages. */
-:root {
-  --jm-accent: #2d7a5a;
+
+/* ═══════════════════════════════════════════════════════════════════
+   1. Tokens
+
+   Light is the front door. A first-time reader is put here regardless of
+   their OS setting (see the sessionStorage bootstrap in _includes/head.html),
+   so it is warm paper rather than clinical white; dark is a warm night
+   rather than a blue-grey slab.
+
+   Scoping mirrors Chirpy's own (_sass/base/_base.scss): an explicit
+   [data-mode] always wins, and `:not([data-mode])` follows the OS. This file
+   loads after the theme stylesheet, so equal-specificity rules here win.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* `html[data-mode='light']` has to be in this list: Chirpy sets `--main-bg: white`
+   on exactly that selector, and the light bootstrap stamps the attribute on every
+   page, so a bare `:root` here loses on specificity and the warm ground never lands. */
+:root,
+html[data-mode='light'] {
+  --jm-accent: #2f7d5c;
   --jm-accent-strong: #1f6246;
   --jm-rust: #b45335;
-  --jm-ink: #252525;
-  --jm-cream: #f7f5f2;
-  --jm-surface: #fdfcfa;
-  --jm-line: #e3ddd5;
+  --jm-ink: #302a24;
+  --jm-cream: #f7f3ed;
+  --jm-surface: #fffdfa;
+  --jm-line: #e7dfd3;
   --jm-radius: 18px;
+
+  /* Korean-first stack. Pretendard arrives as a unicode-range subset; the
+     fallbacks are what each OS actually ships, so nothing breaks if it fails. */
+  --jm-font-sans:
+    'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
+    'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+
+  /* Reading measure. A Korean glyph sets about twice as wide as a Latin one,
+     so the comfortable line is nearer 38-42 characters than the Latin 65-75. */
+  --jm-measure: 40rem;
+
+  /* ── Warm light palette (overrides Chirpy's stock light theme) ── */
+  --main-bg: #fbf8f3;
+  --main-border-color: #ece4d8;
+  --mask-bg: #cdc4b7;
+
+  --text-color: #3b352e;
+  --text-muted-color: #837a6c;
+  --text-muted-highlight-color: #5f574c;
+  --heading-color: #2a241d;
+  --label-color: #5c544a;
+
+  --link-color: var(--jm-accent-strong);
+  --link-underline-color: #d8cec0;
+
+  --blockquote-border-color: #e4dacb;
+  --blockquote-text-color: #6f6659;
+
+  --button-bg: #fffdfa;
+  --btn-border-color: #ebe2d5;
+  --btn-backtotop-color: #6f6659;
+  --btn-backtotop-border-color: #ece4d8;
+
+  --site-title-color: #4a4239;
+  --site-subtitle-color: #8b8175;
+  --sidebar-bg: #f3ece1;
+  --sidebar-border-color: #e7ddce;
+  --sidebar-muted-color: #5f574c;
+  --sidebar-active-color: #241f19;
+  --sidebar-hover-bg: rgb(224 212 194 / 55%);
+  --sidebar-btn-bg: #fffdfa;
+  --sidebar-btn-color: #8b8175;
+  --avatar-border-color: #fffdfa;
+
+  --topbar-bg: rgb(251 248 243 / 82%);
+  --topbar-text-color: #4a4239;
+  --search-border-color: #ece4d8;
+  --search-icon-color: #b8ac9b;
+  --input-focus-border-color: #b0a597;
+
+  --post-list-text-color: #6f6659;
+  --btn-patinator-text-color: #5c544a;
+
+  --toc-highlight: var(--jm-accent-strong);
+  --toc-popup-border-color: #e2d8c9;
+  --card-bg: #fffdfa;
+  --card-hover-bg: #f3ece1;
+  --card-shadow: rgb(90 74 54 / 6%) 0 2px 8px 0, rgb(160 143 120 / 16%) 0 0 0 1px;
+
+  --tb-odd-bg: #fbf7f1;
+  --tb-border-color: #ece4d8;
+  --thead-bg: #f3ece1;
+  --dash-color: #cec4b4;
+
+  --inline-code-bg: rgb(120 90 50 / 8%);
+  --highlight-bg-color: #f4efe6;
+  --language-border-color: #ece4d8;
+  --blockquote-bg: rgb(120 90 50 / 5%);
+
+  --tag-border: #e4dacb;
+  --tag-hover: #ece2d3;
+  --search-tag-bg: #f3ece1;
+  --categories-border: rgb(90 74 54 / 12%);
+  --categories-hover-bg: #ece2d3;
+  --timeline-color: rgb(90 74 54 / 10%);
+  --timeline-node-bg: #bfb3a1;
+
+  --prompt-tip-bg: rgb(47 125 92 / 8%);
+  --prompt-info-bg: rgb(26 80 130 / 7%);
+  --prompt-warning-bg: rgb(214 158 46 / 13%);
+  --prompt-danger-bg: rgb(180 83 53 / 10%);
+}
+
+/* ── Warm night palette ── */
+html[data-mode='dark'] {
+  --main-bg: #1a1815;
+  --main-border-color: #2e2a25;
+  --mask-bg: #3a352e;
+
+  --text-color: #d8d1c6;
+  --text-muted-color: #9c9285;
+  --text-muted-highlight-color: #c4bcaf;
+  --heading-color: #f1ebe1;
+  --label-color: #b3a99b;
+
+  --link-color: #7fc9a3;
+  --link-underline-color: #3c3830;
+
+  --blockquote-border-color: #3a352e;
+  --blockquote-text-color: #a89e90;
+
+  --button-bg: #221f1a;
+  --btn-border-color: #332f28;
+
+  --site-title-color: #cfc6b8;
+  --site-subtitle-color: #9c9285;
+  --sidebar-bg: #151310;
+  --sidebar-border-color: #2a2621;
+  --sidebar-muted-color: #a49a8c;
+  --sidebar-active-color: #f1ebe1;
+  --sidebar-hover-bg: rgb(255 240 215 / 7%);
+  --sidebar-btn-bg: #221f1a;
+  --sidebar-btn-color: #9c9285;
+  --avatar-border-color: #2e2a25;
+
+  --topbar-bg: rgb(26 24 21 / 82%);
+  --topbar-text-color: #cfc6b8;
+  --search-border-color: #332f28;
+
+  --toc-highlight: #7fc9a3;
+  --toc-popup-border-color: #3a352e;
+  --card-bg: #211e1a;
+  --card-hover-bg: #2a2621;
+
+  --tb-odd-bg: #1f1c18;
+  --tb-border-color: #332f28;
+  --thead-bg: #26231e;
+  --dash-color: #4a443c;
+
+  --inline-code-bg: rgb(255 240 215 / 8%);
+  --highlight-bg-color: #201d19;
+  --language-border-color: #2e2a25;
+  --blockquote-bg: rgb(255 245 225 / 4%);
+
+  --tag-border: #3a352e;
+  --tag-hover: #332f28;
+  --search-tag-bg: #221f1a;
+  --timeline-color: rgb(255 240 215 / 9%);
+  --timeline-node-bg: #4a443c;
+
+  --prompt-tip-bg: rgb(127 201 163 / 10%);
+  --prompt-info-bg: rgb(100 160 220 / 10%);
+  --prompt-warning-bg: rgb(233 178 63 / 12%);
+  --prompt-danger-bg: rgb(224 122 95 / 12%);
+}
+
+@media (prefers-color-scheme: dark) {
+  /* Only reached when JS or storage is unavailable, so the light bootstrap
+     never ran. Without this the light tokens above would bleed over Chirpy's
+     dark theme and produce black-on-cream. */
+  html:not([data-mode]) {
+  --main-bg: #1a1815;
+  --main-border-color: #2e2a25;
+  --mask-bg: #3a352e;
+
+  --text-color: #d8d1c6;
+  --text-muted-color: #9c9285;
+  --text-muted-highlight-color: #c4bcaf;
+  --heading-color: #f1ebe1;
+  --label-color: #b3a99b;
+
+  --link-color: #7fc9a3;
+  --link-underline-color: #3c3830;
+
+  --blockquote-border-color: #3a352e;
+  --blockquote-text-color: #a89e90;
+
+  --button-bg: #221f1a;
+  --btn-border-color: #332f28;
+
+  --site-title-color: #cfc6b8;
+  --site-subtitle-color: #9c9285;
+  --sidebar-bg: #151310;
+  --sidebar-border-color: #2a2621;
+  --sidebar-muted-color: #a49a8c;
+  --sidebar-active-color: #f1ebe1;
+  --sidebar-hover-bg: rgb(255 240 215 / 7%);
+  --sidebar-btn-bg: #221f1a;
+  --sidebar-btn-color: #9c9285;
+  --avatar-border-color: #2e2a25;
+
+  --topbar-bg: rgb(26 24 21 / 82%);
+  --topbar-text-color: #cfc6b8;
+  --search-border-color: #332f28;
+
+  --toc-highlight: #7fc9a3;
+  --toc-popup-border-color: #3a352e;
+  --card-bg: #211e1a;
+  --card-hover-bg: #2a2621;
+
+  --tb-odd-bg: #1f1c18;
+  --tb-border-color: #332f28;
+  --thead-bg: #26231e;
+  --dash-color: #4a443c;
+
+  --inline-code-bg: rgb(255 240 215 / 8%);
+  --highlight-bg-color: #201d19;
+  --language-border-color: #2e2a25;
+  --blockquote-bg: rgb(255 245 225 / 4%);
+
+  --tag-border: #3a352e;
+  --tag-hover: #332f28;
+  --search-tag-bg: #221f1a;
+  --timeline-color: rgb(255 240 215 / 9%);
+  --timeline-node-bg: #4a443c;
+
+  --prompt-tip-bg: rgb(127 201 163 / 10%);
+  --prompt-info-bg: rgb(100 160 220 / 10%);
+  --prompt-warning-bg: rgb(233 178 63 / 12%);
+  --prompt-danger-bg: rgb(224 122 95 / 12%);
+  }
+}
+
+/* One font stack for the whole site, inherited rather than re-declared per
+   component - which is what made the previous rules need `!important`. */
+body,
+input,
+button,
+select,
+textarea {
+  font-family: var(--jm-font-sans);
+}
+
+body { background-color: var(--main-bg); }
+
+code,
+pre,
+kbd,
+samp {
+  font-family: 'JetBrains Mono', 'D2Coding', 'Fira Code', ui-monospace,
+    SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+h1, h2, h3, h4, h5, h6,
+.card-title,
+.post-hero-center h1 {
+  letter-spacing: -.035em;
+  word-break: keep-all;
 }
 
 html { scroll-padding-top: 4.5rem; }
@@ -231,7 +488,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   body.post-page .hero-actions { right: max(.65rem, env(safe-area-inset-right)); top: max(.65rem, env(safe-area-inset-top)); gap: .28rem; max-width: calc(100% - 4.4rem); flex-wrap: nowrap; }
   body.post-page .hero-action-btn { font-size: .95rem; }
   body.post-page .post-hero-footer { right: .8rem !important; bottom: .8rem; left: .8rem !important; width: auto !important; transform: none !important; }
-  body.post-page .post-hero-tag-list { max-width: calc(100vw - 5rem); overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; }
+  body.post-page .post-hero-tag-list { max-width: 100%; overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; }
   body.post-page .post-hero-meta-pill { min-height: 30px; }
   body.post-page .post-floating-topbar-inner { min-height: 52px; height: calc(52px + env(safe-area-inset-top, 0px)); padding: env(safe-area-inset-top, 0) .55rem 0; }
   body.post-page .post-floating-icon-btn, body.post-page .post-floating-icon-link { min-width: 42px; min-height: 42px; }
@@ -240,7 +497,6 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   body.post-page .content { padding: 0 1.05rem; font-size: 1rem; line-height: 1.82; word-break: normal; }
   body.post-page .content h2 { margin-top: 2.35rem; font-size: 1.3rem; line-height: 1.45; }
   body.post-page .content h3 { margin-top: 1.8rem; font-size: 1.1rem; line-height: 1.45; }
-  body.post-page .content pre { max-width: calc(100vw - 2.1rem); }
   body.post-page .post-floating-bottom { padding-bottom: env(safe-area-inset-bottom, 0); }
   .subscribe-modal { max-height: calc(100dvh - 2rem); overflow-y: auto; }
 }
@@ -248,4 +504,321 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto !important; }
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   Reading typography
+
+   The blog is written in Korean, where a glyph sets about twice as wide as a
+   Latin one and there is no inter-word space to hang a line break on. So:
+   a narrower measure than a Latin blog, a taller line, `keep-all` so words are
+   never split mid-eojeol, and a paragraph gap clearly larger than a line gap —
+   which matters more now that kramdown's hard_wrap turns every typed newline
+   into a <br>, so <br> and <p> must not look the same.
+   ═══════════════════════════════════════════════════════════════════ */
+.content {
+  max-width: min(var(--jm-measure), 100%);
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+  font-size: 1.125rem;
+  line-height: 1.9;
+  letter-spacing: -.004em;
+  color: var(--text-color);
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  font-variant-numeric: tabular-nums;
+}
+
+.content p,
+.content li {
+  text-wrap: pretty;
+}
+
+/* A typed newline (<br>) is one line apart; a blank line (<p>) is visibly more. */
+.content p { margin: 0 0 1.15em; }
+.content br { line-height: inherit; }
+
+/* Headings carry their weight with space, not rules. */
+.content h1,
+.content h2,
+.content h3,
+.content h4 {
+  color: var(--heading-color);
+  letter-spacing: -.028em;
+  line-height: 1.45;
+  text-wrap: balance;
+  word-break: keep-all;
+}
+.content h1 { margin: 3.4rem 0 1.1rem; font-size: 1.75rem; font-weight: 700; }
+.content h2 {
+  margin: 3.2rem 0 1rem;
+  padding-bottom: 0;
+  border-bottom: 0;
+  font-size: 1.42rem;
+  font-weight: 700;
+}
+.content h3 { margin: 2.4rem 0 .75rem; font-size: 1.2rem; font-weight: 700; }
+.content h4 { margin: 2rem 0 .6rem; font-size: 1.06rem; font-weight: 600; }
+.content > :first-child { margin-top: .2rem; }
+
+/* Underline sits away from Korean descenders instead of cutting through them. */
+.content a:not(.anchor) {
+  color: var(--link-color);
+  text-decoration-color: color-mix(in srgb, var(--link-color) 38%, transparent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: .22em;
+}
+.content a:not(.anchor):hover { text-decoration-color: currentcolor; }
+
+/* Pull quote, not a callout box. */
+.content blockquote:not(.prompt-tip):not(.prompt-info):not(.prompt-warning):not(.prompt-danger) {
+  margin: 2.2rem 0;
+  padding: .1rem 0 .1rem 1.4rem;
+  border-left: 3px solid var(--jm-accent);
+  border-radius: 0;
+  background: transparent;
+  color: var(--blockquote-text-color);
+  font-size: 1.06em;
+  line-height: 1.85;
+}
+.content blockquote p:last-child { margin-bottom: 0; }
+
+.content ul,
+.content ol { margin: 0 0 1.15em; padding-left: 1.35rem; }
+.content li { margin-bottom: .3rem; line-height: 1.85; }
+.content li::marker { color: var(--text-muted-color); }
+.content li > ul,
+.content li > ol { margin: .35rem 0 .2rem; }
+
+.content hr {
+  margin: 3rem auto;
+  width: 4.5rem;
+  border: 0;
+  border-top: 2px solid var(--main-border-color);
+  opacity: 1;
+}
+
+.content img { margin: 2.2rem auto; border-radius: 12px; }
+/* Chirpy renders `![alt](src)` followed by `_caption_` as img + em. */
+.content img + em {
+  display: block;
+  margin: -1.4rem 0 2.2rem;
+  color: var(--text-muted-color);
+  font-size: .84rem;
+  font-style: normal;
+  text-align: center;
+}
+
+.content pre { max-width: 100%; font-size: .86rem; line-height: 1.65; }
+.content code:not(pre code) { font-size: .9em; letter-spacing: 0; }
+.content table { font-variant-numeric: normal; }
+.content del { color: var(--text-muted-color); }
+.content mark { padding: .05em .2em; border-radius: 3px; background: rgb(233 178 63 / 30%); }
+
+/* Wide content scrolls inside itself; the page never scrolls sideways. */
+.content pre,
+.content table,
+.content .highlight { overflow-x: auto; }
+
+/* Tablet */
+@media (max-width: 1199.98px) {
+  .content { font-size: 1.08rem; }
+}
+
+/* Mobile — matches `body.post-page .content` specificity from _includes/head.html. */
+@media (max-width: 767.98px) {
+  body.post-page .content,
+  .content {
+    max-width: 100%;
+    padding-inline: 1.35rem;
+    font-size: 1.0625rem;
+    line-height: 1.86;
+  }
+  body.post-page .content p,
+  .content p { margin-bottom: 1.1em; }
+  body.post-page .content h1, .content h1 { margin-top: 2.6rem; font-size: 1.42rem; }
+  body.post-page .content h2, .content h2 { margin-top: 2.5rem; font-size: 1.28rem; border-bottom: 0; }
+  body.post-page .content h3, .content h3 { margin-top: 1.9rem; font-size: 1.12rem; }
+  body.post-page .content h4, .content h4 { margin-top: 1.6rem; font-size: 1rem; }
+  .content blockquote:not([class*='prompt-']) { margin: 1.7rem 0; padding-left: 1.1rem; font-size: 1.02em; }
+  .content ul, .content ol { padding-left: 1.2rem; }
+  .content img { margin: 1.6rem auto; border-radius: 10px; }
+  .content img + em { margin: -1rem 0 1.6rem; }
+  .content pre { font-size: .8rem; }
+  .content hr { margin: 2.2rem auto; }
+}
+
+@media (max-width: 400px) {
+  body.post-page .content,
+  .content { padding-inline: 1.15rem; font-size: 1.02rem; line-height: 1.84; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Layout safety
+
+   The post hero is full-bleed via `width:100vw`, which on desktop counts the
+   scrollbar and pushed the document ~7-15px wider than the viewport. Clipping
+   at the root removes the sideways scroll without the sticky-positioning
+   breakage that `overflow-x: hidden` would cause.
+   ═══════════════════════════════════════════════════════════════════ */
+html { overflow-x: clip; }
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   Home controls: filter chips (group + sub-category) and reader sorting
+   ═══════════════════════════════════════════════════════════════════ */
+.home-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 0 .3rem;
+}
+.home-controls .home-filter { margin-bottom: 0; }
+
+.home-sort {
+  display: flex;
+  flex: 0 0 auto;
+  gap: .1rem;
+  padding: .18rem;
+  border: 1px solid var(--main-border-color, var(--jm-line));
+  border-radius: 999px;
+  background: var(--card-bg, var(--jm-surface));
+}
+.home-sort button {
+  min-height: 32px;
+  padding: .28rem .72rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted-color);
+  font-size: .74rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.home-sort button.active { background: var(--jm-accent); color: #fff; }
+
+.home-filter-count {
+  margin-left: .3rem;
+  opacity: .62;
+  font-size: .92em;
+  font-variant-numeric: tabular-nums;
+}
+.home-subfilter {
+  display: flex;
+  gap: .4rem;
+  margin: 0 0 1.3rem;
+  padding: .1rem 0 .35rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.home-subfilter[hidden] { display: none; }
+.home-subfilter::-webkit-scrollbar { display: none; }
+.home-subfilter button {
+  flex: 0 0 auto;
+  min-height: 34px;
+  padding: .3rem .7rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted-color);
+  font-size: .76rem;
+  font-weight: 600;
+}
+.home-subfilter button[hidden] { display: none; }
+.home-subfilter button:hover { color: var(--jm-accent); }
+.home-subfilter button.active {
+  background: color-mix(in srgb, var(--jm-accent) 12%, transparent);
+  color: var(--jm-accent-strong);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   The lede
+
+   Brunch gives the opening paragraph a touch more presence, which is what
+   makes a piece feel like it "starts" rather than just beginning. Kept subtle
+   so a one-line opener does not turn into a headline.
+   ═══════════════════════════════════════════════════════════════════ */
+.content > p:first-of-type {
+  color: var(--heading-color);
+  font-size: 1.04em;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Quiet chrome while reading
+
+   The other half of why Brunch reads well: once you are in the text, almost
+   nothing competes with it. Anchors, the TOC rail and the tag pills stay
+   available but stop shouting until you reach for them.
+   ═══════════════════════════════════════════════════════════════════ */
+.content .anchor {
+  opacity: 0;
+  transition: opacity .15s ease;
+}
+.content h1:hover .anchor,
+.content h2:hover .anchor,
+.content h3:hover .anchor,
+.content h4:hover .anchor,
+.content .anchor:focus-visible { opacity: .45; }
+
+/* Long-form pages get more air under the last line before the author card. */
+.content > :last-child { margin-bottom: 2.5rem; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   Archives — month first, in English, so 09/03 can never be misread
+   ═══════════════════════════════════════════════════════════════════ */
+#archives .archive-row {
+  display: flex;
+  align-items: baseline;
+  gap: .5rem;
+}
+#archives .archive-month {
+  flex: 0 0 2.6rem;
+  color: var(--text-muted-color);
+  font-size: .78rem;
+  font-weight: 600;
+  letter-spacing: .02em;
+  text-align: right;
+  text-transform: uppercase;
+}
+#archives .archive-day {
+  flex: 0 0 1.5rem;
+  color: var(--heading-color);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+#archives .archive-row > a { flex: 1; min-width: 0; }
+
+@media (max-width: 767.98px) {
+  .home-controls { flex-wrap: wrap; gap: .5rem; }
+  .home-controls .home-filter { flex: 1 1 100%; }
+  .home-sort { margin-left: auto; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Post hero
+
+   The stock hero is a cold blue-grey, which reads as a different site once the
+   rest of the page went warm. These are sand → sage → deep forest, so a post
+   with no cover image still opens in the same room as everything else.
+   Selectors mirror _includes/head.html so they win on order, not !important.
+   ═══════════════════════════════════════════════════════════════════ */
+.post-hero { background: #2b2620; }
+
+.post-hero-default {
+  background: linear-gradient(135deg, #4c4a3a 0%, #35362c 58%, #232520 100%);
+}
+
+html[data-mode='light'] .post-hero-default,
+html[data-mode='light'] .post-hero-default.post-hero-default {
+  background: linear-gradient(135deg, #d9c9a6 0%, #a8ab8a 44%, #4f6553 100%);
+}
+
+@media (prefers-color-scheme: light) {
+  html:not([data-mode='dark']) .post-hero-default {
+    background: linear-gradient(135deg, #d9c9a6 0%, #a8ab8a 44%, #4f6553 100%);
+  }
 }

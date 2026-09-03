@@ -3,23 +3,13 @@
 {% include lang.html %}
 
 {% assign MAX_SIZE = 5 %}
-{% assign all_list = '' | split: '' %}
 
-{% for post in site.posts %}
-  {% if post.hidden == true %}{% continue %}{% endif %}
-  {% assign datetime = post.last_modified_at | default: post.date %}
-  {% capture elem %}
-    {{- datetime | date: "%Y%m%d%H%M%S" -}}::{{- forloop.index0 -}}
-  {% endcapture %}
-  {% assign all_list = all_list | push: elem %}
-{% endfor %}
-
-{% assign all_list = all_list | sort | reverse %}
-{% assign update_list = '' | split: '' %}
-
-{% for entry in all_list limit: MAX_SIZE %}
-  {% assign update_list = update_list | push: entry %}
-{% endfor %}
+<!--
+  발행일(post.date) 기준 내림차순 그대로 사용한다.
+  이전 구현은 last_modified_at(git 커밋 시각)으로 정렬해 놓고 화면에는 발행일을 찍어서
+  05/27이 03/13 아래에 오는 등 "최신글"이라는 이름과 순서가 어긋나 보였다.
+-->
+{% assign update_list = site.posts | where_exp: 'item', 'item.hidden != true' %}
 
 {% if update_list.size > 0 %}
   <section id="access-lastmod" class="sidebar-section">
@@ -27,12 +17,9 @@
       <i class="fas fa-bolt" style="color:#f59e0b;"></i> 최신글
     </h2>
     <ul class="content list-unstyled ps-0 pb-1 mt-2 sidebar-list">
-      {% for item in update_list %}
-        {% assign index = item | split: '::' | last | plus: 0 %}
-        {% assign post = site.posts[index] %}
-        {% assign url = post.url | relative_url %}
+      {% for post in update_list limit: MAX_SIZE %}
         <li class="sidebar-list-item">
-          <a href="{{ url }}" class="sidebar-link">
+          <a href="{{ post.url | relative_url }}" class="sidebar-link">
             <span class="sidebar-link-title">{{ post.title }}</span>
             <span class="sidebar-link-date">{{ post.date | date: "%m/%d" }}</span>
           </a>

@@ -879,6 +879,10 @@
 
   <script>
     /*
+      NOTE: `compress_html` strips newlines inside inline scripts, so a `//`
+      comment here would swallow the rest of the block and take the whole script
+      down with a SyntaxError. Block comments only.
+
       Chirpy's Theme.flip() cycles light → follow-the-OS → dark. Because the
       bootstrap above always leaves a stored mode, the first tap always landed on
       the middle state, which removes [data-mode] — two taps to reach dark.
@@ -899,7 +903,7 @@
         } catch (e) {
           /* ignore */
         }
-        // Theme-aware widgets (giscus, mermaid) listen for this.
+        /* Theme-aware widgets (giscus, mermaid) listen for this. */
         window.postMessage({ id: 'theme-mode' }, '*');
       };
     }

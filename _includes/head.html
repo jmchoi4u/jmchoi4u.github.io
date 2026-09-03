@@ -881,19 +881,16 @@
     /*
       Chirpy's Theme.flip() cycles light → follow-the-OS → dark. Because the
       bootstrap above always leaves a stored mode, the first tap always landed on
-      the middle state, which removes [data-mode] — and with it this site's warm
-      palette, dropping the page to the theme's stock white. Readers expect a
-      switch, so replace the node (which drops Chirpy's listener) and drive
-      data-mode directly.
+      the middle state, which removes [data-mode] — two taps to reach dark.
+
+      Override flip() itself rather than rebinding the button: Chirpy attaches its
+      own click handler on DOMContentLoaded, so anything we swap in earlier just
+      gets a second listener added back on top of it. Every caller — the sidebar
+      button and the post page's hero/floating toggles, which click it — goes
+      through flip(), so this is the one place that fixes all of them.
     */
-    document.addEventListener('DOMContentLoaded', function () {
-      var toggle = document.getElementById('mode-toggle');
-      if (!toggle || !toggle.parentNode) return;
-
-      var fresh = toggle.cloneNode(true);
-      toggle.parentNode.replaceChild(fresh, toggle);
-
-      fresh.addEventListener('click', function () {
+    if (window.Theme && typeof window.Theme.flip === 'function') {
+      window.Theme.flip = function () {
         var next =
           document.documentElement.getAttribute('data-mode') === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-mode', next);
@@ -904,8 +901,8 @@
         }
         // Theme-aware widgets (giscus, mermaid) listen for this.
         window.postMessage({ id: 'theme-mode' }, '*');
-      });
-    });
+      };
+    }
 
     /* Persist whatever the reader is actually looking at after each toggle. */
     window.addEventListener('message', function (event) {

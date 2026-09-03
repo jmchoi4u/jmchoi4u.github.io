@@ -13,10 +13,12 @@
    loads after the theme stylesheet, so equal-specificity rules here win.
    ═══════════════════════════════════════════════════════════════════ */
 
-/* `html[data-mode='light']` has to be in this list: Chirpy sets `--main-bg: white`
-   on exactly that selector, and the light bootstrap stamps the attribute on every
-   page, so a bare `:root` here loses on specificity and the warm ground never lands. */
+/* Both attribute selectors have to be in this list. Chirpy declares its stock
+   light palette on `html:not([data-mode])` and `html[data-mode='light']`, and
+   `:not()` carries the specificity of its argument — so both are (0,1,1) and a
+   bare `:root` (0,1,0) loses to them, leaving the page stock white. */
 :root,
+html:not([data-mode]),
 html[data-mode='light'] {
   --jm-accent: #2f7d5c;
   --jm-accent-strong: #1f6246;
@@ -763,6 +765,11 @@ html { overflow-x: clip; }
 .content h4:hover .anchor,
 .content .anchor:focus-visible { opacity: .45; }
 
+/* The theme auto-anchors every h2, including the home feed's own section
+   heading — which is page chrome, not article content, so its "#" was just
+   sitting next to "최근 기록" with nothing to link to. */
+.home-feed-head .anchor { display: none; }
+
 /* Long-form pages get more air under the last line before the author card. */
 .content > :last-child { margin-bottom: 2.5rem; }
 
@@ -821,4 +828,75 @@ html[data-mode='light'] .post-hero-default.post-hero-default {
   html:not([data-mode='dark']) .post-hero-default {
     background: linear-gradient(135deg, #d9c9a6 0%, #a8ab8a 44%, #4f6553 100%);
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Code blocks
+
+   Chirpy wraps a fenced block as `.highlight > code > table > tr > td > pre`,
+   so the block-level <code> is an *ancestor* of <pre>, not a descendant. The
+   inline-code rule `code:not(pre code)` therefore matched it and painted the
+   inline chip background across the whole block — 6,900px of it on /posts/2/.
+   Reset the block case explicitly rather than trying to out-clever the
+   selector.
+   ═══════════════════════════════════════════════════════════════════ */
+.content .highlight code,
+.content pre code,
+.content .highlighter-rouge code {
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  font-size: inherit;
+}
+
+/* The stock rouge theme hard-codes GitHub's cold #f6f8fa, which read as a grey
+   hole in a warm page. Kept as its own surface, just a warmer one. */
+.content .highlight,
+.content .highlight > pre,
+.content .highlighter-rouge .highlight {
+  background: var(--highlight-bg-color);
+}
+.content .highlighter-rouge {
+  border: 1px solid var(--language-border-color);
+  border-radius: 10px;
+}
+
+/* A prompt pasted in full can run for thousands of pixels and swallow the
+   article. Cap it and let the reader open it. */
+.content .highlighter-rouge[data-collapsible] .highlight {
+  max-height: 24rem;
+  overflow: hidden;
+}
+.content .highlighter-rouge[data-collapsible='open'] .highlight {
+  max-height: none;
+  overflow: auto;
+}
+.code-expand {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 2.6rem 0 .7rem;
+  border: 0;
+  background: linear-gradient(180deg, transparent, var(--highlight-bg-color) 62%);
+  color: var(--text-muted-color);
+  font: inherit;
+  font-size: .78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.content .highlighter-rouge[data-collapsible='open'] .code-expand {
+  padding-top: .7rem;
+  background: var(--highlight-bg-color);
+}
+.code-expand:hover { color: var(--jm-accent); }
+
+/* Leftover cold blue from the stock theme: the TOC rail and the author email
+   hover were still #3d7cff while everything around them had gone warm green. */
+body.post-page #panel-wrapper .floating-toc-item.is-active::before,
+body.post-page #panel-wrapper .floating-toc-link.is-active {
+  color: var(--toc-highlight);
+}
+.author-email-link:hover {
+  color: var(--jm-accent-strong);
+  border-bottom-color: color-mix(in srgb, var(--jm-accent) 40%, transparent);
 }

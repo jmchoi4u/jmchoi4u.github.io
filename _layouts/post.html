@@ -155,6 +155,8 @@ script_includes:
   </section>
 </article>
 
+<script defer src="{{ '/assets/js/blog-post.js' | relative_url }}?v={{ site.time | date: '%s' }}"></script>
+
 <!-- Subscribe Modal -->
 <div class="subscribe-overlay" id="subscribe-overlay" onclick="closeSubscribeModal()" role="presentation" aria-hidden="true">
   <div class="subscribe-modal" onclick="event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="subscribe-title" aria-describedby="subscribe-desc">

@@ -878,6 +878,35 @@
   <script src="{{ '/assets/js/dist/theme.min.js' | relative_url }}"></script>
 
   <script>
+    /*
+      Chirpy's Theme.flip() cycles light → follow-the-OS → dark. Because the
+      bootstrap above always leaves a stored mode, the first tap always landed on
+      the middle state, which removes [data-mode] — and with it this site's warm
+      palette, dropping the page to the theme's stock white. Readers expect a
+      switch, so replace the node (which drops Chirpy's listener) and drive
+      data-mode directly.
+    */
+    document.addEventListener('DOMContentLoaded', function () {
+      var toggle = document.getElementById('mode-toggle');
+      if (!toggle || !toggle.parentNode) return;
+
+      var fresh = toggle.cloneNode(true);
+      toggle.parentNode.replaceChild(fresh, toggle);
+
+      fresh.addEventListener('click', function () {
+        var next =
+          document.documentElement.getAttribute('data-mode') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-mode', next);
+        try {
+          sessionStorage.setItem('mode', next);
+        } catch (e) {
+          /* ignore */
+        }
+        // Theme-aware widgets (giscus, mermaid) listen for this.
+        window.postMessage({ id: 'theme-mode' }, '*');
+      });
+    });
+
     /* Persist whatever the reader is actually looking at after each toggle. */
     window.addEventListener('message', function (event) {
       if (!event.data || event.data.id !== 'theme-mode') return;

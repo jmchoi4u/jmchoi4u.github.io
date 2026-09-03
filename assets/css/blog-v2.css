@@ -774,30 +774,113 @@ html { overflow-x: clip; }
 .content > :last-child { margin-bottom: 2.5rem; }
 
 /* ═══════════════════════════════════════════════════════════════════
-   Archives — month first, in English, so 09/03 can never be misread
+   Archives
+
+   The theme draws a timeline out of pseudo-elements pinned at hard-coded pixel
+   offsets (a 4px rail at left:77px, a dot at left:71px, a 2.5rem title indent)
+   that only line up with its own markup, plus a `nth-child(odd)` band painted in
+   literal #ffffff — which ignored both the warm palette and dark mode. Switch
+   all of that off and draw the rail as a real border instead.
    ═══════════════════════════════════════════════════════════════════ */
+#archives .archive-year-label::before,
+#archives .archive-year-label::after,
+#archives .archive-row::before,
+#archives .archive-link::before {
+  content: none;
+}
+/* The zebra stripe is declared twice — once in the light theme, once in the dark
+   one scoped under html[data-mode='dark'] — so killing it needs every form the
+   theme uses, not just the bare selector. */
+#archives ul li:nth-child(odd),
+html:not([data-mode]) #archives ul li:nth-child(odd),
+html[data-mode='light'] #archives ul li:nth-child(odd),
+html[data-mode='dark'] #archives ul li:nth-child(odd) {
+  background: none;
+  background-image: none;
+}
+#archives ul li { line-height: inherit; }
+#archives .archive-link { margin-left: 0; top: 0; }
+
+#archives {
+  letter-spacing: 0;
+  padding-bottom: 1rem;
+}
+.archive-year + .archive-year { margin-top: 2.4rem; }
+
+/* Scoped under #archives so it clears Bootstrap's responsive `h2` sizing. */
+#archives .archive-year-label {
+  height: auto;
+  margin: 0 0 .6rem;
+  left: 0;
+  color: var(--text-muted-color);
+  font-size: .84rem;
+  font-weight: 700;
+  letter-spacing: .16em;
+  font-variant-numeric: tabular-nums;
+}
+
+.archive-list {
+  margin: 0;
+  padding-left: .9rem;
+  border-left: 2px solid var(--main-border-color);
+}
+
 #archives .archive-row {
+  display: grid;
+  grid-template-columns: 4.6rem minmax(0, 1fr);
+  align-items: baseline;
+  gap: .3rem 1rem;
+  padding: .62rem 0;
+  overflow: visible;
+  white-space: normal;
+}
+#archives .archive-row + .archive-row {
+  border-top: 1px solid color-mix(in srgb, var(--main-border-color) 60%, transparent);
+}
+
+.archive-date {
   display: flex;
   align-items: baseline;
-  gap: .5rem;
-}
-#archives .archive-month {
-  flex: 0 0 2.6rem;
+  gap: .38rem;
   color: var(--text-muted-color);
   font-size: .78rem;
-  font-weight: 600;
-  letter-spacing: .02em;
-  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+#archives .archive-month {
+  width: auto;
+  right: 0;
+  font-weight: 700;
+  letter-spacing: .04em;
   text-transform: uppercase;
 }
 #archives .archive-day {
-  flex: 0 0 1.5rem;
+  width: auto;
+  right: 0;
+  min-width: 1.1em;
   color: var(--heading-color);
+  font-family: inherit;
+  font-size: .9rem;
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
   text-align: right;
 }
-#archives .archive-row > a { flex: 1; min-width: 0; }
+
+#archives .archive-link {
+  color: var(--text-color);
+  font-size: 1rem;
+  line-height: 1.5;
+  text-decoration: none;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+#archives .archive-link:hover { color: var(--jm-accent-strong); text-decoration: underline; text-underline-offset: .2em; }
+
+@media (max-width: 575.98px) {
+  /* Stack the date above the title so a long Korean headline keeps the full width. */
+  #archives .archive-row { grid-template-columns: 1fr; gap: .12rem; padding: .68rem 0; }
+  .archive-list { padding-left: .75rem; }
+  #archives .archive-link { font-size: .96rem; }
+}
 
 @media (max-width: 767.98px) {
   .home-controls { flex-wrap: wrap; gap: .5rem; }

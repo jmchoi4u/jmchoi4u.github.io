@@ -2,37 +2,40 @@
 layout: page
 # The Archives of posts.
 #
-# Local override of the theme layout. Chirpy renders "03 / 09" (big day, numeric
-# month), which reads ambiguously to a Korean audience used to year-month-day.
-# This renders the month as an English abbreviation in English order — "Sep 3" —
-# so the two numbers can never be swapped by mistake.
+# Local override. Chirpy renders "03 / 09" — a big day next to a numeric month —
+# which reads ambiguously to an audience used to year-month-day. This renders the
+# month as an English abbreviation in English order ("Sep 3"), so the two numbers
+# can never be swapped by mistake.
 #
-# Dates are formatted server-side and the `data-ts`/`data-df` hooks are dropped on
-# purpose: the theme's dayjs pass would re-localise the month back to "9월".
+# Dates are formatted server-side and the theme's `data-ts`/`data-df` hooks are
+# dropped on purpose: its dayjs pass would re-localise the month back to "9월".
+#
+# The markup is a plain grid per row. blog-v2.css neutralises the theme's
+# timeline pseudo-elements, which position themselves at hard-coded pixel
+# offsets that only line up with the theme's own markup.
 ---
 
 {% include lang.html %}
 
 <div id="archives" class="pl-xl-3">
   {% assign visible_posts = site.posts | where_exp: 'item', 'item.hidden != true' %}
-  {% for post in visible_posts %}
-    {% assign cur_year = post.date | date: '%Y' %}
+  {% assign years = visible_posts | group_by_exp: 'post', 'post.date | date: "%Y"' %}
 
-    {% if cur_year != last_year %}
-      {% unless forloop.first %}</ul>{% endunless %}
+  {% for year in years %}
+    <section class="archive-year">
+      <h2 class="archive-year-label">{{ year.name }}</h2>
 
-      <time class="year lead d-block">{{ cur_year }}</time>
-      {{ '<ul class="list-unstyled">' }}
-
-      {% assign last_year = cur_year %}
-    {% endif %}
-
-    <li class="archive-row">
-      <span class="date month small text-muted archive-month">{{ post.date | date: '%b' }}</span>
-      <span class="date day archive-day">{{ post.date | date: '%-d' }}</span>
-      <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
-    </li>
-
-    {% if forloop.last %}</ul>{% endif %}
+      <ul class="archive-list list-unstyled">
+        {% for post in year.items %}
+          <li class="archive-row">
+            <span class="archive-date">
+              <span class="archive-month">{{ post.date | date: '%b' }}</span>
+              <span class="archive-day">{{ post.date | date: '%-d' }}</span>
+            </span>
+            <a class="archive-link" href="{{ post.url | relative_url }}">{{ post.title }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
   {% endfor %}
 </div>

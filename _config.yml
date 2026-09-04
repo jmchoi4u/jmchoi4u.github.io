@@ -18,8 +18,8 @@ title: James Choi # the main title
 
 tagline: 불완전한 우리를 사랑하기 위해 # it will display as the subtitle
 
-description: >- # used by seo meta and the atom feed
-  문제 해결 과정을 정리하는 개인 블로그입니다.
+description: >-
+  불완전한 우리를 사랑하기 위해
 
 # Fill in the protocol & hostname for your site.
 # E.g. 'https://username.github.io', note that it does not end with a '/'.
@@ -98,7 +98,7 @@ avatar: /assets/img/profile/ai_profile2.png
 
 # The URL of the site-wide social preview image used in SEO `og:image` meta tag.
 # It can be overridden by a customized `page.image` in front matter.
-social_preview_image: /assets/img/profile/ai_profile2.png # string, local or CORS resources
+social_preview_image: /assets/img/profile/ai_profile2.png
 
 # boolean type, the global switch for TOC in posts.
 toc: true

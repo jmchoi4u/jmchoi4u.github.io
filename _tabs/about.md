@@ -5,12 +5,12 @@ icon: fas fa-info-circle
 order: 3
 ---
 
-어쩌면 누군가의 시간을 아껴줄 수 있는 팁을 정리하는 공간입니다.
+불완전한 우리를 사랑하기 위해
 
 
 ## 좋아하는 것
 
-- 햄버거, 피자
+- 햄버거
 
 ## 싫어하는 것
 
@@ -18,7 +18,8 @@ order: 3
 
 ## 연락
 
-비슷한 고민이 있거나 같이 이야기하고 싶다면 편하게 연락 주세요.
+고민이 있거나 같이 이야기하고 싶다면 편하게 연락 주세요.
+언제나 도와드릴게요!
 
 - GitHub: [jmchoi4u](https://github.com/jmchoi4u)
 - LinkedIn: [jmchoi4u](https://www.linkedin.com/in/jmchoi4u)

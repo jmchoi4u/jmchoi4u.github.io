@@ -160,19 +160,35 @@
       });
     }
 
+    document.addEventListener('jm:view-counts-updated', function () {
+      if (activeSort === 'popular') reorder();
+    });
+
     /* Deep links: /#dev, /#writing, or /#dev/개발환경 open the feed already filtered,
        so a nav link or an outside link can point straight at a shelf. */
     function applyHash() {
-      var hash = decodeURIComponent(String(window.location.hash || '').replace(/^#/, ''));
+      var hash = String(window.location.hash || '').replace(/^#/, '');
       if (!hash) return;
       var parts = hash.split('/');
-      var group = normalize(parts[0]);
+      var group;
+      var sub;
+      try {
+        group = normalize(decodeURIComponent(parts[0]));
+        sub = parts[1] ? normalize(decodeURIComponent(parts.slice(1).join('/'))) : 'all';
+      } catch (error) {
+        return;
+      }
       var known = groupButtons.some(function (button) {
         return normalize(button.getAttribute('data-home-filter')) === group;
       });
       if (!known) return;
       activeGroup = group;
-      activeSub = parts[1] ? normalize(parts[1]) : 'all';
+      var knownSub = subButtons.some(function (button) {
+        var parent = normalize(button.getAttribute('data-home-parent'));
+        return (parent === 'all' || parent === group) &&
+          normalize(button.getAttribute('data-home-sub-filter')) === sub;
+      });
+      activeSub = knownSub ? sub : 'all';
       apply();
     }
 

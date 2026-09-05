@@ -56,6 +56,7 @@ function createHarness(fetchImpl, options = {}) {
     },
     documentElement: { getAttribute() { return null; } },
     addEventListener(type, handler) { eventHandlers.set(`document:${type}`, handler); },
+    dispatchEvent(event) { eventHandlers.get(`document:${event.type}`)?.(event); },
     querySelector(selector) {
       if (selector === '[data-reading-content]' && options.readingContent) {
         return options.readingContent;
@@ -99,6 +100,7 @@ function createHarness(fetchImpl, options = {}) {
 
   const sandbox = {
     AbortController,
+    CustomEvent,
     Date,
     Intl,
     JSON,
@@ -193,10 +195,16 @@ const cachedElement = createViewElement({
 });
 retryHarness.setViewElements([cachedElement]);
 retryHarness.analytics.setSiteId('jmchoi4u');
+const counterUpdates = [];
+retryHarness.document.addEventListener('jm:view-counts-updated', () => {
+  counterUpdates.push({ text: cachedElement.textContent, state: cachedElement.dataset.viewState });
+});
 await retryHarness.analytics.fillViewCounts(retryHarness.document);
 assert.equal(cachedElement.textContent, '9회');
 assert.equal(cachedElement.dataset.viewState, 'stale');
 assert.match(cachedElement.getAttribute('aria-label'), /최근 저장된 값/);
+assert.deepEqual(counterUpdates, [{ text: '9회', state: 'stale' }],
+  'view count updates must notify sorting consumers after the rendered values are ready');
 
 let notFoundCalls = 0;
 const notFoundHarness = createHarness(async () => {
@@ -208,6 +216,29 @@ assert.equal(notFoundCalls, 1, 'a never-recorded path must not be retried');
 assert.equal(notFound.ok, true);
 assert.equal(notFound.count, 0);
 assert.equal(notFound.status, 404);
+
+for (const invalidPayload of [{}, { count: null }, { count: 'unavailable' }, { count: -12 }]) {
+  let invalidCalls = 0;
+  const invalidHarness = createHarness(async () => {
+    invalidCalls += 1;
+    return new Response(JSON.stringify(invalidPayload), { status: 200 });
+  });
+  const invalid = await invalidHarness.analytics.fetchCountMeta('/posts/invalid/');
+  assert.equal(invalid.ok, false, 'invalid counter data must not become a successful zero');
+  assert.equal(invalidCalls, 3, 'invalid successful responses must be retried');
+  assert.equal(invalidHarness.storage.values.size, 0, 'invalid counts must not be persisted');
+}
+
+const malformedHarness = createHarness(async () =>
+  new Response(JSON.stringify({ count: '1,234' }), { status: 200 })
+);
+assert.equal((await malformedHarness.analytics.fetchCountMeta('/posts/malformed/')).count, 1234);
+malformedHarness.analytics.setSiteId('jmchoi4u');
+malformedHarness.setFetch(async () => new Response('{}', { status: 200 }));
+const malformedFallback = await malformedHarness.analytics.fetchCountMeta('/posts/malformed/');
+assert.equal(malformedFallback.ok, true);
+assert.equal(malformedFallback.stale, true);
+assert.equal(malformedFallback.count, 1234, 'invalid responses must preserve the last known count');
 
 let permanentFailureCalls = 0;
 const failedHarness = createHarness(async () => {

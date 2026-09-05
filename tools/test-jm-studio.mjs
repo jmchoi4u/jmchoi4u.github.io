@@ -484,7 +484,8 @@ assert.match(postLayout, /post-fab[^>]*inert/, 'hidden floating action buttons m
 assert.match(postLayout, /comments\.focus\(\{ preventScroll: true \}\)/, 'comment navigation must move keyboard focus');
 new Function(blogAnalytics);
 for (const icon of manifest.icons) {
-  const bytes = readFileSync(resolve(root, 'jm-studio', icon.src));
+  const bytes = readFileSync(new URL(icon.src, new URL('../jm-studio/', import.meta.url)));
+  assert.ok(serviceWorker.includes(icon.src), `${icon.src} must be included in the offline app shell`);
   assert.equal(bytes.subarray(1, 4).toString(), 'PNG', `${icon.src} must be a real PNG`);
   const [expectedWidth, expectedHeight] = icon.sizes.split('x').map(Number);
   assert.equal(bytes.readUInt32BE(16), expectedWidth, `${icon.src} width mismatch`);

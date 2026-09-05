@@ -25,7 +25,7 @@ layout: default
 <section class="home-intro" aria-labelledby="home-intro-title">
   <p class="home-eyebrow">{{ site.title }}</p>
   <h1 id="home-intro-title">{{ site.tagline }}</h1>
-  <p class="home-intro-copy">{{ site.description }}</p>
+  <p class="home-intro-copy"{% if site.tagline_en %} lang="en"{% endif %}>{{ site.tagline_en | default: site.description }}</p>
   <div class="home-intro-actions">
     <a class="home-primary-action" href="#latest-posts" data-analytics-event="home_latest" data-analytics-component="home_hero">최신 글 보기 <i class="fas fa-arrow-down" aria-hidden="true"></i></a>
     <a class="home-secondary-action" href="{{ '/browse/' | relative_url }}" data-analytics-event="home_browse" data-analytics-path="{{ '/browse/' | relative_url }}" data-analytics-component="home_hero">주제별 탐색</a>

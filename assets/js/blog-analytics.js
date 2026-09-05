@@ -165,9 +165,12 @@
   }
 
   function parseCount(value) {
-    if (typeof value === 'number') return Math.max(0, Math.floor(value));
-    var digits = String(value || '').replace(/[^0-9]/g, '');
-    return digits ? Math.max(0, parseInt(digits, 10) || 0) : 0;
+    if (typeof value === 'string') {
+      var digits = value.trim().replace(/[,\s]/g, '');
+      if (!/^\d+$/.test(digits)) return null;
+      value = Number(digits);
+    }
+    return Number.isSafeInteger(value) && value >= 0 ? value : null;
   }
 
   function waitForCounterRetry(delay) {
@@ -254,8 +257,14 @@
       }
 
       var payload = await response.json();
+      var count = parseCount(payload && payload.count);
+      // A valid HTTP response can still contain an error or incomplete data.
+      // Preserve the last good value and retry instead of caching a false zero.
+      if (count === null) {
+        return { count: 0, ok: false, stale: false, status: 502, path: path };
+      }
       return {
-        count: parseCount(payload && payload.count),
+        count: count,
         ok: true,
         stale: false,
         status: response.status,
@@ -415,6 +424,9 @@
           counterRecoveryTimer = null;
         }
         counterRecoveryCount = 0;
+      }
+      if (results.length) {
+        document.dispatchEvent(new CustomEvent('jm:view-counts-updated'));
       }
       return results;
     });

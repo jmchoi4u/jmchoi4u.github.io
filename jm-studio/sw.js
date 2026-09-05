@@ -1,12 +1,14 @@
-const CACHE_NAME = 'jm-studio-v4-20260713';
+const CACHE_NAME = 'jm-studio-v6-kindness-20260906-2';
 const APP_SHELL = [
   './',
-  'manifest.json',
-  '../assets/img/favicons/favicon.svg',
-  '../assets/img/favicons/apple-touch-icon.png',
-  '../assets/img/favicons/pwa-192.png',
-  '../assets/img/favicons/pwa-512.png',
-  '../assets/img/favicons/pwa-maskable-512.png',
+  'manifest.json?v=kindness-20260906-2',
+  '../assets/img/favicons/favicon-96x96.png?v=kindness-20260906-2',
+  '../assets/img/favicons/favicon.svg?v=kindness-20260906-2',
+  '../assets/img/favicons/favicon.ico?v=kindness-20260906-2',
+  '../assets/img/favicons/apple-touch-icon.png?v=kindness-20260906-2',
+  '../assets/img/favicons/pwa-192.png?v=kindness-20260906-2',
+  '../assets/img/favicons/pwa-512.png?v=kindness-20260906-2',
+  '../assets/img/favicons/pwa-maskable-512.png?v=kindness-20260906-2',
 ];
 
 self.addEventListener('install', (event) => {

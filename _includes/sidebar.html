@@ -2,12 +2,12 @@
 
 <aside aria-label="Sidebar" id="sidebar" class="d-flex flex-column align-items-end">
   <header class="profile-wrapper">
-    <a href="{{ '/' | relative_url }}" id="avatar" class="rounded-circle">
+    <a href="{{ '/' | relative_url }}" id="avatar" class="rounded-circle" aria-label="홈으로 이동">
       {%- if site.avatar != empty and site.avatar -%}
         {%- capture avatar_url -%}
           {% include media-url.html src=site.avatar %}
         {%- endcapture -%}
-        <img src="{{- avatar_url -}}" width="112" height="112" alt="avatar" onerror="this.style.display='none'">
+        <img src="{{- avatar_url -}}" width="112" height="112" alt="손을 흔드는 크림색 캐릭터" decoding="async" onerror="this.style.display='none'">
       {%- endif -%}
     </a>
 

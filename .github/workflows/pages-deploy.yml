@@ -47,6 +47,7 @@ jobs:
         run: |
           node tools/test-jm-studio.mjs
           node tools/test-blog-analytics.mjs
+          node tools/test-blog-home.mjs
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1

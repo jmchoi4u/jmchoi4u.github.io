@@ -146,9 +146,10 @@ script_includes:
         </div>
       </div>
       {% if site.avatar and site.avatar != empty %}
-        {% assign avatar_thumb = site.avatar | replace: '.png', '_thumb.png' | replace: '.jpg', '_thumb.jpg' %}
+        {% assign avatar_thumb = site.avatar_thumbnail | default: site.avatar %}
+        {% capture avatar_url %}{% include media-url.html src=avatar_thumb %}{% endcapture %}
         <a class="post-author-avatar-link" href="{{ '/' | relative_url }}" aria-label="홈으로 이동">
-          <span class="post-author-avatar" role="img" aria-label="{{ site.social.name }}" style="background-image:url('{{ avatar_thumb | relative_url }}');"></span>
+          <span class="post-author-avatar" role="img" aria-label="{{ site.social.name | escape }}" style="background-image:url('{{ avatar_url | strip }}');"></span>
         </a>
       {% endif %}
     </div>

@@ -5,7 +5,9 @@ icon: fas fa-info-circle
 order: 3
 ---
 
-불완전한 우리를 사랑하기 위해
+{{ site.tagline }}
+
+<span lang="en">{{ site.tagline_en }}</span>
 
 
 ## 좋아하는 것

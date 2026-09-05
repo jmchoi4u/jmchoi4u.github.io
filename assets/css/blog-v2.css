@@ -269,6 +269,13 @@ h1, h2, h3, h4, h5, h6,
   word-break: keep-all;
 }
 
+#sidebar .site-subtitle {
+  font-size: .8125rem;
+  letter-spacing: -.02em;
+  white-space: nowrap;
+  line-height: 1.7;
+}
+
 html { scroll-padding-top: 4.5rem; }
 body { text-rendering: optimizeLegibility; }
 button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
@@ -317,6 +324,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   line-height: 1.2;
   letter-spacing: -.055em;
   word-break: keep-all;
+  text-wrap: balance;
 }
 .home-intro-copy {
   max-width: 680px;

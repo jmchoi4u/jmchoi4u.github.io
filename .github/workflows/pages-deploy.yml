@@ -55,6 +55,9 @@ jobs:
           ruby-version: 3.3
           bundler-cache: true
 
+      - name: Test home category rendering
+        run: bundle exec ruby tools/test-home-categories.rb
+
       - name: Build site
         run: |
           bundle exec jekyll clean

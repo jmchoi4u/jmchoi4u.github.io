@@ -5,7 +5,9 @@ layout: default
 {% include lang.html %}
 
 <!--
-  Two categories only: `writing` (essays - the front door) and `dev` (technical notes).
+  Two feed groups: `writing` (essays - the front door) and `dev` (technical notes).
+  Only an explicit `dev` category selects the dev group. Single custom categories
+  and uncategorized posts belong to writing, as the editor allows both formats.
   Brunch-style: the feed opens on `writing`, and `dev` is one tap away. Every dev post is
   still rendered into the HTML (just `hidden`), so its link stays crawlable and search
   traffic lands on the post itself.
@@ -19,8 +21,15 @@ layout: default
 {% assign rest_posts = visible_posts | where_exp: 'item', 'item.pin != true' %}
 {% assign posts = pinned_posts | concat: rest_posts %}
 
-{% assign writing_posts = visible_posts | where_exp: 'item', 'item.categories contains "writing"' %}
-{% assign dev_posts = visible_posts | where_exp: 'item', 'item.categories contains "dev"' %}
+{% assign writing_posts = '' | split: '' %}
+{% assign dev_posts = '' | split: '' %}
+{% for post in visible_posts %}
+  {% if post.categories contains 'dev' %}
+    {% assign dev_posts = dev_posts | push: post %}
+  {% else %}
+    {% assign writing_posts = writing_posts | push: post %}
+  {% endif %}
+{% endfor %}
 
 <section class="home-intro" aria-labelledby="home-intro-title">
   <p class="home-eyebrow">{{ site.title }}</p>
@@ -46,15 +55,15 @@ layout: default
   <a href="{{ '/archives/' | relative_url }}">전체 아카이브 <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
 </section>
 
-<!-- Sub-categories are whatever authors put second in `categories:`, collected per group. -->
+<!-- The first category other than the reserved group names is the subcategory. -->
 {% assign writing_subs = '' | split: '' %}
 {% for post in writing_posts %}
-  {% assign sub = post.categories[1] %}
+  {% assign sub = post.categories | where_exp: 'category', 'category != "writing" and category != "dev"' | first %}
   {% if sub %}{% unless writing_subs contains sub %}{% assign writing_subs = writing_subs | push: sub %}{% endunless %}{% endif %}
 {% endfor %}
 {% assign dev_subs = '' | split: '' %}
 {% for post in dev_posts %}
-  {% assign sub = post.categories[1] %}
+  {% assign sub = post.categories | where_exp: 'category', 'category != "writing" and category != "dev"' | first %}
   {% if sub %}{% unless dev_subs contains sub %}{% assign dev_subs = dev_subs | push: sub %}{% endunless %}{% endif %}
 {% endfor %}
 
@@ -85,8 +94,9 @@ layout: default
 
 <div id="post-list" class="home-post-list flex-grow-1 px-xl-1" aria-live="polite">
   {% for post in posts %}
-    {% assign group = post.categories | first | default: 'writing' %}
-    {% assign sub = post.categories[1] %}
+    {% assign group = 'writing' %}
+    {% if post.categories contains 'dev' %}{% assign group = 'dev' %}{% endif %}
+    {% assign sub = post.categories | where_exp: 'category', 'category != "writing" and category != "dev"' | first %}
     <article class="card-wrapper card home-card{% unless post.image %} home-card-text{% endunless %}" data-home-post data-home-group="{{ group | escape }}" data-home-sub="{{ sub | escape }}" data-home-date="{{ post.date | date: '%s' }}" data-home-pin="{% if post.pin %}1{% else %}0{% endif %}"{% if group == 'dev' %} hidden{% endif %}>
       <a href="{{ post.url | relative_url }}" class="post-preview row g-0 flex-md-row-reverse" data-analytics-event="open_post" data-analytics-path="{{ post.url }}" data-analytics-category="{{ post.categories | first | escape }}" data-analytics-component="home_feed" data-analytics-title="{{ post.title | escape }}">
         {% assign card_body_col = '12' %}

@@ -16,11 +16,11 @@ timezone: Asia/Seoul
 
 title: James Choi # the main title
 
-tagline: 불완전한 우리끼리, 조금만 더 다정하게 # it will display as the subtitle
+tagline: 나의 실패 일기장, 나는 부끄러워져도, 누군가에겐 도움되겠지. # it will display as the subtitle
 tagline_en: A little more kindness, from one imperfect person to another.
 
 description: >-
-  불완전한 우리끼리, 조금만 더 다정하게
+  for humanity. and so, for you
   A little more kindness, from one imperfect person to another.
 
 # Fill in the protocol & hostname for your site.
@@ -100,7 +100,7 @@ avatar: /assets/img/profile/kindness-avatar.png
 
 # The URL of the site-wide social preview image used in SEO `og:image` meta tag.
 # It can be overridden by a customized `page.image` in front matter.
-social_preview_image: /assets/img/profile/kindness-character.png
+social_preview_image: /assets/img/profile/kindness-avatar.png
 
 # boolean type, the global switch for TOC in posts.
 toc: true

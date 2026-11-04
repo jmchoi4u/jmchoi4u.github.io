@@ -1,0 +1,2169 @@
+/* JM Blog — "하늘 노트": a quiet personal-blog skin over Chirpy.
+
+   White page, thin rules, one accent taken from the mascot's sky-blue paper.
+   A profile + category column on the left (a drawer on phones), the posts as
+   a plain list with the thumbnail on the right, and a post view built for
+   reading on a phone: 16px text, photos edge to edge, several photos in a
+   row turn into a swipeable slide (assets/js/blog-post.js). */
+
+/* ═══════════════════════════════════════════════════════════════════
+   1. Tokens
+
+   Our palette lives in --jm-*. Chirpy's own variables are pointed at it in
+   one block below, so theme components (search, TOC, code, prompts) follow
+   without being restyled one by one. Light and dark only swap --jm-*.
+   ═══════════════════════════════════════════════════════════════════ */
+:root {
+  --jm-bg: #fff;
+  --jm-bg-soft: #f4f7fa;
+  --jm-line: #e6eaef;
+  --jm-line-soft: #eef1f4;
+  --jm-title: #1b1f24;
+  --jm-text: #2b3138;
+  --jm-body: #3a414a;
+  --jm-sub: #5d6670;
+  --jm-meta: #6b7684;
+  --jm-faint: #c3cad3;
+  --jm-accent: #2f5d8a;
+  --jm-accent-line: #9fb7cf;
+  --jm-cover: #afc4d7;
+  --jm-photo-bg: #f1f3f5;
+  --jm-mark: #fff2a8;
+
+  --jm-font: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo',
+    'Malgun Gothic', '맑은 고딕', 'Noto Sans KR', 'Helvetica Neue', Arial,
+    sans-serif;
+  --jm-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, 'D2Coding',
+    monospace;
+  --jm-col: 44rem;
+  --jm-gutter: 20px;
+}
+
+html[data-mode='dark'] {
+  --jm-bg: #16181b;
+  --jm-bg-soft: #1e2227;
+  --jm-line: #2b3037;
+  --jm-line-soft: #23272d;
+  --jm-title: #eef1f4;
+  --jm-text: #d3d8de;
+  --jm-body: #c2c8cf;
+  --jm-sub: #a3acb6;
+  --jm-meta: #858e99;
+  --jm-faint: #4a515a;
+  --jm-accent: #8fb6dd;
+  --jm-accent-line: #4d6b88;
+  --jm-cover: #4f5f6e;
+  --jm-photo-bg: #1e2227;
+  --jm-mark: rgb(255 214 0 / 26%);
+}
+
+/* Only reached when storage is blocked and the light bootstrap in head.html
+   could not pin a mode, so the theme falls back to the OS setting. */
+@media (prefers-color-scheme: dark) {
+  html:not([data-mode]) {
+    --jm-bg: #16181b;
+    --jm-bg-soft: #1e2227;
+    --jm-line: #2b3037;
+    --jm-line-soft: #23272d;
+    --jm-title: #eef1f4;
+    --jm-text: #d3d8de;
+    --jm-body: #c2c8cf;
+    --jm-sub: #a3acb6;
+    --jm-meta: #858e99;
+    --jm-faint: #4a515a;
+    --jm-accent: #8fb6dd;
+    --jm-accent-line: #4d6b88;
+    --jm-cover: #4f5f6e;
+    --jm-photo-bg: #1e2227;
+    --jm-mark: rgb(255 214 0 / 26%);
+  }
+}
+
+/* Chirpy declares its palette on html:not([data-mode]) / html[data-mode=…],
+   which outranks a bare :root, so every form has to be listed here. */
+:root,
+html:not([data-mode]),
+html[data-mode='light'],
+html[data-mode='dark'] {
+  --main-bg: var(--jm-bg);
+  --main-border-color: var(--jm-line);
+  --text-color: var(--jm-text);
+  --text-muted-color: var(--jm-meta);
+  --text-muted-highlight-color: var(--jm-sub);
+  --heading-color: var(--jm-title);
+  --label-color: var(--jm-sub);
+  --link-color: var(--jm-accent);
+  --link-underline-color: var(--jm-line);
+  --blockquote-border-color: var(--jm-line);
+  --blockquote-text-color: var(--jm-sub);
+  --button-bg: var(--jm-bg);
+  --btn-border-color: var(--jm-line);
+  --btn-backtotop-color: var(--jm-sub);
+  --btn-backtotop-border-color: var(--jm-line);
+  --btn-patinator-text-color: var(--jm-sub);
+  --btn-paginator-hover-color: var(--jm-bg-soft);
+  --btn-share-color: var(--jm-meta);
+  --btn-share-hover-color: var(--jm-title);
+  --site-title-color: var(--jm-title);
+  --site-subtitle-color: var(--jm-sub);
+  --sidebar-bg: var(--jm-bg);
+  --sidebar-border-color: var(--jm-line);
+  --sidebar-muted-color: var(--jm-sub);
+  --sidebar-active-color: var(--jm-title);
+  --sidebar-hover-bg: var(--jm-bg-soft);
+  --sidebar-btn-bg: transparent;
+  --sidebar-btn-color: var(--jm-meta);
+  --avatar-border-color: var(--jm-line);
+  --topbar-bg: var(--jm-bg);
+  --topbar-text-color: var(--jm-title);
+  --search-border-color: var(--jm-line);
+  --search-icon-color: var(--jm-meta);
+  --input-focus-border-color: var(--jm-accent-line);
+  --post-list-text-color: var(--jm-sub);
+  --toc-highlight: var(--jm-accent);
+  --toc-popup-border-color: var(--jm-line);
+  --card-bg: var(--jm-bg);
+  --card-hover-bg: var(--jm-bg-soft);
+  --card-shadow: none;
+  --tb-odd-bg: transparent;
+  --tb-border-color: var(--jm-line);
+  --dash-color: var(--jm-line);
+  --inline-code-bg: var(--jm-bg-soft);
+  --highlight-bg-color: var(--jm-bg-soft);
+  --language-border-color: var(--jm-line);
+  --tag-border: var(--jm-line);
+  --tag-hover: var(--jm-bg-soft);
+  --tag-shadow: transparent;
+  --search-tag-bg: var(--jm-bg-soft);
+  --categories-border: var(--jm-line);
+  --categories-hover-bg: var(--jm-bg-soft);
+  --timeline-color: var(--jm-line);
+  --timeline-node-bg: var(--jm-faint);
+  --img-bg: var(--jm-photo-bg);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   2. Base
+
+   System fonts only: the blog renders in whatever the reader's phone ships
+   (Apple SD Gothic Neo, Malgun Gothic, Noto Sans KR).
+   ═══════════════════════════════════════════════════════════════════ */
+body,
+input,
+button,
+select,
+textarea {
+  font-family: var(--jm-font);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+#topbar-title,
+#sidebar .site-title {
+  font-family: inherit;
+  letter-spacing: -0.02em;
+  word-break: keep-all;
+}
+
+code,
+pre,
+kbd,
+samp {
+  font-family: var(--jm-mono);
+}
+
+html {
+  overflow-x: clip;
+  scroll-padding-top: 4rem;
+}
+
+body {
+  background: var(--jm-bg);
+  color: var(--jm-text);
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--jm-accent);
+  outline-offset: 2px;
+}
+
+/* Chirpy underlines every link inside .content with a border and turns it
+   orange (#d2603a, !important) on hover — including the lists on /browse/ and
+   /archives/, which also render inside .content. Links hover to the colour a
+   component names in --jm-hover, or to the heading colour. */
+.content a:not(.img-link) {
+  border-bottom: 0;
+}
+
+.content a:not(.img-link):hover,
+#search-results a:hover {
+  border-bottom: 0;
+  color: var(--jm-hover, var(--jm-title)) !important;
+}
+
+#topbar #breadcrumb a:hover {
+  border-bottom: 0;
+  color: var(--jm-title) !important;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.jm-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   3. Shell: sidebar, top bar, column, footer
+   ═══════════════════════════════════════════════════════════════════ */
+#sidebar.jm-side {
+  display: flex;
+  flex-direction: column;
+  padding: 2.4rem 1.6rem 1.4rem;
+  background: var(--jm-bg);
+  border-right: 1px solid var(--jm-line);
+}
+
+#sidebar .jm-profile {
+  padding-bottom: 1.4rem;
+  border-bottom: 1px solid var(--jm-line);
+}
+
+#sidebar .jm-profile-avatar {
+  display: block;
+  width: 84px;
+  height: 84px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--jm-cover);
+}
+
+#sidebar .jm-profile-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+#sidebar .jm-profile-name {
+  display: block;
+  margin: 0.95rem 0 0.3rem;
+  color: var(--jm-title);
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.35;
+  text-decoration: none;
+}
+
+#sidebar .jm-profile-intro {
+  margin: 0;
+  color: var(--jm-sub);
+  font-size: 0.8125rem;
+  line-height: 1.65;
+  word-break: keep-all;
+}
+
+#sidebar .jm-profile .jm-btn-row {
+  margin-top: 1rem;
+}
+
+#sidebar .jm-side-section {
+  padding: 1.25rem 0;
+  border-bottom: 1px solid var(--jm-line-soft);
+}
+
+#sidebar .jm-side-title {
+  margin: 0 0 0.65rem;
+  color: var(--jm-title);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+/* Chirpy colours every `#sidebar a` (an id selector), which outranks the
+   class rules for the shared tree and list below, so restate them here. */
+#sidebar .jm-cats a,
+#sidebar .jm-pop a {
+  color: var(--jm-text);
+}
+
+#sidebar .jm-cats ul a {
+  color: var(--jm-sub);
+}
+
+#sidebar .jm-cats a.is-current {
+  color: var(--jm-accent);
+}
+
+#sidebar .jm-side-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 1rem;
+}
+
+#sidebar .jm-side-menu a {
+  padding: 0.15rem 0;
+  color: var(--jm-sub);
+  font-size: 0.8125rem;
+  text-decoration: none;
+}
+
+#sidebar .jm-side-menu a:hover,
+#sidebar .jm-side-menu a.is-current {
+  color: var(--jm-title);
+}
+
+#sidebar .jm-side-menu a.is-current {
+  font-weight: 700;
+}
+
+.jm-visits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.9rem;
+  margin: 0;
+  color: var(--jm-meta);
+  font-size: 0.75rem;
+}
+
+.jm-visits b {
+  margin-left: 0.3rem;
+  color: var(--jm-title);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The visitor line only appears once the counter has answered. */
+.jm-visits:not(:has([data-view-state='loaded'], [data-view-state='stale'])) {
+  display: none;
+}
+
+#sidebar .sidebar-bottom {
+  gap: 0.95rem;
+  margin: auto 0 0;
+  padding: 1.25rem 0 0;
+}
+
+#sidebar .sidebar-bottom a,
+#sidebar .sidebar-bottom #mode-toggle {
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--jm-meta);
+  font-size: 0.95rem;
+}
+
+#sidebar .sidebar-bottom a:hover,
+#sidebar .sidebar-bottom #mode-toggle:hover {
+  background: none;
+  color: var(--jm-title);
+}
+
+#sidebar .sidebar-bottom i {
+  line-height: 1;
+}
+
+#sidebar .sidebar-bottom .icon-border {
+  display: none;
+}
+
+/* Top bar: on phones it is the blog's header line; on desktop it carries the
+   breadcrumb and search only, so it stays borderless there. */
+#topbar-wrapper {
+  background: var(--jm-bg);
+}
+
+#topbar #breadcrumb {
+  color: var(--jm-meta);
+  font-size: 0.8125rem;
+}
+
+#topbar #breadcrumb a {
+  color: var(--jm-sub);
+}
+
+#topbar-title {
+  color: var(--jm-title);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+#topbar-title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+#topbar #search {
+  border: 1px solid var(--jm-line);
+  border-radius: 6px;
+  background: var(--jm-bg);
+}
+
+#topbar #search-input {
+  font-size: 0.8125rem;
+}
+
+@media (max-width: 849.98px) {
+  #topbar-wrapper {
+    border-bottom: 1px solid var(--jm-line);
+  }
+}
+
+/* One centred column. The right-hand panel only stays for a post that has a
+   table of contents; everywhere else the reading column is the whole page. */
+@media (min-width: 1200px) {
+  #main-wrapper > .container > .row > main,
+  #main-wrapper > .container > .row > #tail-wrapper {
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  #panel-wrapper {
+    display: none;
+  }
+
+  #main-wrapper:has(#toc-wrapper) > .container > .row > main,
+  #main-wrapper:has(#toc-wrapper) > .container > .row > #tail-wrapper {
+    width: 75%;
+  }
+
+  #main-wrapper:has(#toc-wrapper) #panel-wrapper {
+    display: block;
+  }
+}
+
+#panel-wrapper .access {
+  display: none;
+}
+
+main[aria-label='Main Content'] > *,
+#tail-wrapper > * {
+  max-width: var(--jm-col);
+  margin-inline: auto;
+}
+
+#tail-wrapper > :not(script) {
+  margin-top: 0;
+}
+
+/* A phone gets a 20px reading margin; full-bleed blocks (cover, photos) step
+   back out of it with a matching negative margin. */
+@media (max-width: 767.98px) {
+  #main-wrapper > .container > .row > main,
+  #main-wrapper > .container > .row > #tail-wrapper {
+    padding-right: var(--jm-gutter);
+    padding-left: var(--jm-gutter);
+  }
+}
+
+footer.jm-footer {
+  height: auto;
+  margin-top: 3rem !important;
+  padding: 1.6rem 0 2.4rem;
+  border-top: 1px solid var(--jm-line);
+  background: none;
+  color: var(--jm-meta);
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+footer.jm-footer p {
+  margin: 0;
+}
+
+footer.jm-footer nav {
+  display: flex;
+  justify-content: center;
+  gap: 0.9rem;
+  margin-top: 0.45rem;
+}
+
+footer.jm-footer a {
+  color: var(--jm-sub);
+  text-decoration: none;
+}
+
+footer.jm-footer a:hover {
+  border-bottom: 0;
+  color: var(--jm-title) !important;
+  text-decoration: underline;
+}
+
+#back-to-top {
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--jm-line);
+  border-radius: 50%;
+  background: var(--jm-bg);
+  box-shadow: none;
+  color: var(--jm-sub);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   4. Shared pieces
+   ═══════════════════════════════════════════════════════════════════ */
+.jm-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  min-height: 36px;
+  padding: 0 0.9rem;
+  border: 1px solid var(--jm-line);
+  border-radius: 6px;
+  background: var(--jm-bg);
+  color: var(--jm-body);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.jm-btn:hover {
+  background: var(--jm-bg-soft);
+  color: var(--jm-title);
+}
+
+.jm-btn-follow {
+  border-color: var(--jm-accent);
+  color: var(--jm-accent);
+}
+
+.jm-btn-follow:hover {
+  background: var(--jm-bg-soft);
+  color: var(--jm-accent);
+}
+
+.jm-btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+/* Category tree, shared by the sidebar and /browse/. */
+.jm-cats,
+.jm-cats ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.jm-cats a {
+  display: flex;
+  align-items: baseline;
+  gap: 0.3rem;
+  padding: 0.3rem 0;
+  color: var(--jm-text);
+  font-size: 0.875rem;
+  line-height: 1.45;
+  text-decoration: none;
+}
+
+.jm-cats a:hover .jm-cat-name {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.jm-cats ul a {
+  padding-left: 0.85rem;
+  color: var(--jm-sub);
+  font-size: 0.8125rem;
+}
+
+.jm-cat-count {
+  color: var(--jm-meta);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.jm-cats a.is-current,
+.jm-cats a.is-current .jm-cat-count {
+  color: var(--jm-accent);
+}
+
+.jm-cats a.is-current {
+  font-weight: 700;
+}
+
+.jm-cats-all {
+  font-weight: 700;
+}
+
+/* "Popular / recent" list; blog-analytics.js reorders it by view count. */
+.jm-pop {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.jm-pop li[hidden] {
+  display: none;
+}
+
+.jm-pop a {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  padding: 0.3rem 0;
+  color: var(--jm-text);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  text-decoration: none;
+}
+
+.jm-pop a:hover .jm-pop-title {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.jm-pop-rank {
+  flex: 0 0 0.8rem;
+  color: var(--jm-meta);
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.jm-pop-rank.rank-1,
+.jm-pop-rank.rank-2,
+.jm-pop-rank.rank-3 {
+  color: var(--jm-accent);
+}
+
+.jm-pop-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jm-pop-views {
+  flex: 0 0 auto;
+  color: var(--jm-meta);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.jm-pop-views[hidden] {
+  display: none;
+}
+
+/* Post list rows: home, category and tag pages. */
+.jm-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+#post-list.jm-list {
+  margin-top: 0;
+}
+
+.jm-item {
+  border-bottom: 1px solid var(--jm-line-soft);
+}
+
+.jm-item:last-child {
+  border-bottom: 0;
+}
+
+.jm-item[hidden] {
+  display: none;
+}
+
+.jm-item-link {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.15rem 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.jm-item-link:hover {
+  color: inherit;
+}
+
+.jm-item-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.jm-item-title {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: var(--jm-title);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.45;
+  letter-spacing: -0.02em;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.jm-item-link:hover .jm-item-title {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.jm-item-desc {
+  display: -webkit-box;
+  margin: 0.4rem 0 0;
+  overflow: hidden;
+  color: var(--jm-sub);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.jm-item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 0.5rem 0 0;
+  color: var(--jm-meta);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.jm-item-meta > * + *::before {
+  content: '·';
+  margin: 0 0.35rem;
+}
+
+/* Hidden until the counter answers, so a failed fetch never shows "조회 —". */
+.jm-item-views:not(:has([data-view-state='loaded'], [data-view-state='stale'])) {
+  display: none;
+}
+
+.jm-item-thumb {
+  flex: 0 0 auto;
+  width: 84px;
+  height: 84px;
+  overflow: hidden;
+  border-radius: 6px;
+  background: var(--jm-photo-bg);
+}
+
+.jm-item-thumb .preview-img {
+  aspect-ratio: auto;
+  border-radius: 0;
+}
+
+.jm-item-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  object-fit: cover;
+}
+
+.jm-notice {
+  display: inline-block;
+  margin-right: 0.35rem;
+  padding: 0 0.3rem;
+  border: 1px solid var(--jm-accent);
+  border-radius: 3px;
+  color: var(--jm-accent);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1.5;
+  vertical-align: 2px;
+}
+
+.jm-empty {
+  margin: 0;
+  padding: 3rem 0;
+  color: var(--jm-meta);
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.jm-empty[hidden] {
+  display: none;
+}
+
+/* Section heading over a list: title on the left, a quiet link on the right. */
+.jm-board-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0 0 0.7rem;
+  border-bottom: 1px solid var(--jm-line);
+}
+
+.jm-board-head h2,
+.jm-board-head h1 {
+  margin: 0;
+  color: var(--jm-title);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.jm-board-head h2 b,
+.jm-board-head h1 b {
+  color: var(--jm-accent);
+}
+
+.jm-board-head > span,
+.jm-board-head > a {
+  color: var(--jm-meta);
+  font-size: 0.75rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.jm-board-head > a:hover {
+  color: var(--jm-title);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   5. Home
+   ═══════════════════════════════════════════════════════════════════ */
+.jm-home {
+  padding-bottom: 1rem;
+}
+
+.jm-cover {
+  aspect-ratio: 5 / 2;
+  margin-top: 1.5rem;
+  border-radius: 8px;
+  background-color: var(--jm-cover);
+  background-position: 50% 0;
+  background-size: cover;
+}
+
+html[data-mode='dark'] .jm-cover {
+  filter: brightness(0.82) saturate(0.9);
+}
+
+.jm-blog {
+  padding: 0 0 1.25rem;
+  border-bottom: 1px solid var(--jm-line);
+}
+
+.jm-blog-head {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.jm-blog-avatar {
+  flex: 0 0 auto;
+  width: 64px;
+  height: 64px;
+  margin-top: -26px;
+  border: 3px solid var(--jm-bg);
+  border-radius: 50%;
+  background-color: var(--jm-cover);
+  background-position: center;
+  background-size: cover;
+}
+
+.jm-blog-name {
+  margin: 0;
+  color: var(--jm-title);
+  font-size: 1.1875rem;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+}
+
+.jm-blog-stats {
+  margin: 0.15rem 0 0.25rem;
+  color: var(--jm-meta);
+  font-size: 0.75rem;
+}
+
+.jm-blog-intro {
+  margin: 0.9rem 0 0;
+  color: var(--jm-body);
+  font-size: 0.875rem;
+  line-height: 1.65;
+  word-break: keep-all;
+}
+
+.jm-blog .jm-btn-row {
+  flex-wrap: nowrap;
+  margin-top: 0.9rem;
+}
+
+.jm-blog .jm-btn {
+  flex: 1;
+  min-height: 44px;
+  font-size: 0.875rem;
+}
+
+/* On desktop the sidebar already shows the profile. */
+@media (min-width: 850px) {
+  .jm-blog {
+    display: none;
+  }
+}
+
+/* Category tabs: the writing shelf's sub-categories, then dev as one tab. */
+.jm-tabs {
+  display: flex;
+  gap: 1.25rem;
+  margin: 0;
+  padding: 0;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--jm-line);
+  list-style: none;
+  scrollbar-width: none;
+  white-space: nowrap;
+}
+
+.jm-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.jm-tabs a {
+  display: block;
+  padding: 0.85rem 0 0.7rem;
+  border-bottom: 2px solid transparent;
+  color: var(--jm-sub);
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.jm-tabs a:hover {
+  color: var(--jm-title);
+}
+
+.jm-tabs a.is-current {
+  border-bottom-color: var(--jm-accent);
+  color: var(--jm-title);
+  font-weight: 700;
+}
+
+.jm-tabs a.is-current .jm-cat-count {
+  color: var(--jm-accent);
+}
+
+.jm-tabs .jm-cat-count {
+  margin-left: 0.15rem;
+  color: inherit;
+  font-size: inherit;
+}
+
+.jm-sort {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.7rem;
+  padding: 0.75rem 0 0;
+}
+
+.jm-sort button {
+  padding: 0.2rem 0;
+  border: 0;
+  background: none;
+  color: var(--jm-meta);
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.jm-sort button.active {
+  color: var(--jm-title);
+  font-weight: 700;
+}
+
+@media (min-width: 768px) {
+  .jm-item-thumb {
+    width: 108px;
+    height: 108px;
+  }
+
+  .jm-item-title {
+    font-size: 1.0625rem;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .jm-cover {
+    margin: 0 calc(var(--jm-gutter) * -1);
+    border-radius: 0;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   6. Post
+   ═══════════════════════════════════════════════════════════════════ */
+.jm-post {
+  padding-top: 1.75rem;
+}
+
+.jm-post-cat {
+  margin: 0 0 0.5rem;
+  font-size: 0.8125rem;
+}
+
+.jm-post-cat a {
+  color: var(--jm-accent);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.jm-post-cat a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.jm-post-title {
+  margin: 0;
+  color: var(--jm-title);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: -0.03em;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+@media (min-width: 768px) {
+  .jm-post-title {
+    font-size: 1.75rem;
+  }
+}
+
+.jm-post-desc {
+  margin: 0.6rem 0 0;
+  color: var(--jm-sub);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.jm-byline {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--jm-line);
+}
+
+.jm-avatar {
+  display: block;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background-color: var(--jm-cover);
+  background-position: center;
+  background-size: cover;
+}
+
+.jm-byline-who {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.4;
+}
+
+.jm-byline-name {
+  color: var(--jm-title);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.jm-byline-date {
+  color: var(--jm-meta);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.jm-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--jm-sub);
+  cursor: pointer;
+}
+
+.jm-icon-btn:hover {
+  background: var(--jm-bg-soft);
+  color: var(--jm-title);
+}
+
+.jm-post-cover {
+  margin: 1.6rem 0 0;
+}
+
+.jm-post-cover img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Reading text. 16px on a phone, a touch larger on desktop; a typed newline
+   (<br>, from kramdown's hard_wrap) stays tight, a blank line opens a gap. */
+.jm-post .content {
+  margin-top: 1.8rem;
+  color: var(--jm-text);
+  font-size: 1rem;
+  line-height: 1.85;
+  letter-spacing: -0.005em;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+@media (min-width: 768px) {
+  .jm-post .content {
+    font-size: 1.0625rem;
+  }
+}
+
+.jm-post .content p {
+  margin: 0 0 1.3em;
+}
+
+.jm-post .content > :first-child {
+  margin-top: 0;
+}
+
+.jm-post .content > :last-child {
+  margin-bottom: 0;
+}
+
+.jm-post .content h1,
+.jm-post .content h2,
+.jm-post .content h3,
+.jm-post .content h4 {
+  color: var(--jm-title);
+  font-weight: 700;
+  line-height: 1.45;
+  letter-spacing: -0.025em;
+  word-break: keep-all;
+}
+
+.jm-post .content h1 {
+  margin: 2.4em 0 0.8em;
+  font-size: 1.4rem;
+}
+
+.jm-post .content h2 {
+  margin: 2.3em 0 0.75em;
+  font-size: 1.25rem;
+}
+
+.jm-post .content h3 {
+  margin: 2em 0 0.65em;
+  font-size: 1.125rem;
+}
+
+.jm-post .content h4 {
+  margin: 1.8em 0 0.6em;
+  font-size: 1rem;
+}
+
+.jm-post .content .anchor {
+  opacity: 0;
+}
+
+.jm-post .content h2:hover .anchor,
+.jm-post .content h3:hover .anchor,
+.jm-post .content .anchor:focus-visible {
+  opacity: 0.4;
+}
+
+.jm-post .content a:not(.anchor):not(.img-link) {
+  --jm-hover: var(--jm-accent);
+
+  color: var(--jm-accent);
+  text-decoration: underline;
+  text-decoration-color: var(--jm-accent-line);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.jm-post .content blockquote:not([class*='prompt-']) {
+  margin: 1.9em 0;
+  padding: 0.15rem 0 0.15rem 1.1rem;
+  border-left: 3px solid var(--jm-accent-line);
+  background: none;
+  color: var(--jm-body);
+}
+
+.jm-post .content blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+.jm-post .content hr {
+  width: 3rem;
+  margin: 2.6em auto;
+  border: 0;
+  border-top: 1px solid var(--jm-faint);
+  opacity: 1;
+}
+
+.jm-post .content ul,
+.jm-post .content ol {
+  margin: 0 0 1.3em;
+  padding-left: 1.3em;
+}
+
+.jm-post .content li {
+  margin: 0.25em 0;
+}
+
+.jm-post .content li::marker {
+  color: var(--jm-meta);
+}
+
+.jm-post .content table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+.jm-post .content th,
+.jm-post .content td {
+  padding: 0.5em 0.75em;
+  border: 1px solid var(--jm-line);
+}
+
+.jm-post .content th {
+  background: var(--jm-bg-soft);
+  color: var(--jm-title);
+  font-weight: 700;
+}
+
+.jm-post .content mark {
+  padding: 0 0.15em;
+  background: var(--jm-mark);
+  color: inherit;
+}
+
+.jm-post .content code:not(pre code) {
+  padding: 0.12em 0.35em;
+  border-radius: 4px;
+  background: var(--jm-bg-soft);
+  color: var(--jm-title);
+  font-size: 0.875em;
+}
+
+.jm-post .content del {
+  color: var(--jm-meta);
+}
+
+/* Photos. One photo takes the full width — edge to edge on a phone — and a
+   caption line written right under it (_like this_) sits small and centred. */
+.jm-post .content img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+  border-radius: 0;
+}
+
+.jm-post .content .img-link,
+.jm-post .content p > img:only-child {
+  display: block;
+  margin: 1.7em auto;
+}
+
+/* Chirpy centres a photo with left:50% + translateX(-50%) (on a selector worth
+   four classes). Ours are already full width — edge to edge on a phone — so
+   that only pushed them sideways. */
+.jm-post .content p > a.popup.img-link:not(.normal) {
+  left: auto;
+  transform: none;
+}
+
+/* The newline typed between a photo and its caption becomes a <br> (hard_wrap);
+   after a block-level photo it would only add an empty line. */
+.jm-post .content .img-link + br,
+.jm-post .content p > img + br {
+  display: none;
+}
+
+.jm-post .content .img-link + em,
+.jm-post .content img + em,
+.jm-post .content .img-link + br + em,
+.jm-post .content img + br + em {
+  display: block;
+  margin: -1.1em 0 1.7em;
+  color: var(--jm-meta);
+  font-size: 0.8125rem;
+  font-style: normal;
+  line-height: 1.5;
+  text-align: center;
+}
+
+@media (max-width: 767.98px) {
+  .jm-post .content .img-link,
+  .jm-post .content p > img:only-child {
+    margin-right: calc(var(--jm-gutter) * -1);
+    margin-left: calc(var(--jm-gutter) * -1);
+  }
+
+  .jm-post .content .img-link img {
+    width: 100%;
+  }
+}
+
+/* Several photos in one paragraph (one per line, no blank line between)
+   become a swipeable slide. blog-post.js builds the markup; the aspect ratio
+   comes from the first photo so the slide does not jump as the rest load. */
+.jm-slide {
+  position: relative;
+  margin: 1.7em 0;
+}
+
+.jm-slide-track {
+  display: flex;
+  aspect-ratio: var(--jm-slide-ratio, 4 / 3);
+  overflow-x: auto;
+  background: var(--jm-photo-bg);
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.jm-slide-track::-webkit-scrollbar {
+  display: none;
+}
+
+.jm-slide-item {
+  display: flex;
+  flex: 0 0 100%;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+}
+
+.jm-post .content .jm-slide-item .img-link,
+.jm-post .content .jm-slide-item > img {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+.jm-post .content .jm-slide-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.jm-slide-count {
+  position: absolute;
+  z-index: 2;
+  top: 0.6rem;
+  right: 0.6rem;
+  padding: 0.12rem 0.5rem;
+  border-radius: 4px;
+  background: rgb(0 0 0 / 55%);
+  color: #fff;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  pointer-events: none;
+}
+
+.jm-slide-dots {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+  margin-top: 0.35rem;
+}
+
+.jm-slide-dots button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.jm-slide-dots button::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--jm-faint);
+}
+
+.jm-slide-dots button[aria-current='true']::before {
+  background: var(--jm-title);
+}
+
+.jm-slide-nav {
+  position: absolute;
+  z-index: 2;
+  top: calc(50% - 0.9rem);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 88%);
+  color: #1b1f24;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 22%);
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.jm-slide-prev {
+  left: 0.6rem;
+}
+
+.jm-slide-next {
+  right: 0.6rem;
+}
+
+/* Arrows only where there is a mouse; on touch the slide is swiped. */
+@media (hover: hover) and (pointer: fine) {
+  .jm-slide:hover .jm-slide-nav:not([disabled]),
+  .jm-slide:focus-within .jm-slide-nav:not([disabled]) {
+    display: flex;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .jm-slide {
+    margin-right: calc(var(--jm-gutter) * -1);
+    margin-left: calc(var(--jm-gutter) * -1);
+  }
+}
+
+/* Bottom of the post: tags, then the action row. */
+.jm-post-foot {
+  margin-top: 2.6rem;
+}
+
+.jm-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.8rem;
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.jm-tags a {
+  color: var(--jm-accent);
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.jm-tags a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.jm-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.15rem 0;
+  border-top: 1px solid var(--jm-line);
+  border-bottom: 1px solid var(--jm-line);
+}
+
+.jm-actions-main {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.jm-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--jm-body);
+  font-size: 0.8125rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.jm-action:hover {
+  color: var(--jm-title);
+}
+
+.jm-action svg {
+  flex: 0 0 auto;
+}
+
+.jm-actions-views {
+  color: var(--jm-meta);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.jm-actions-views:not(:has([data-view-state='loaded'], [data-view-state='stale'])) {
+  visibility: hidden;
+}
+
+/* Tail: the category's other posts, prev / next, author, comments. */
+.jm-catposts {
+  margin-top: 2.4rem !important;
+  padding: 1rem 1rem 0.35rem;
+  border-radius: 8px;
+  background: var(--jm-bg-soft);
+}
+
+.jm-catposts h2 {
+  margin: 0 0 0.3rem;
+  color: var(--jm-title);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.jm-catposts h2 b {
+  color: var(--jm-accent);
+}
+
+.jm-catposts ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.jm-catposts li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.8rem;
+  border-bottom: 1px solid var(--jm-line);
+  font-size: 0.875rem;
+}
+
+.jm-catposts li:last-child {
+  border-bottom: 0;
+}
+
+.jm-catposts li a {
+  min-width: 0;
+  padding: 0.65rem 0;
+  overflow: hidden;
+  color: var(--jm-body);
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jm-catposts li a:hover {
+  color: var(--jm-title);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.jm-catposts li.is-current a {
+  color: var(--jm-title);
+  font-weight: 700;
+}
+
+.jm-catposts time,
+.jm-prevnext time {
+  flex: 0 0 auto;
+  color: var(--jm-meta);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.jm-catposts-more {
+  display: block;
+  padding: 0.6rem 0 0.4rem;
+  color: var(--jm-meta);
+  font-size: 0.75rem;
+  text-align: right;
+  text-decoration: none;
+}
+
+.jm-catposts-more:hover {
+  color: var(--jm-title);
+}
+
+.jm-prevnext {
+  margin-top: 1.4rem !important;
+  border-top: 1px solid var(--jm-line);
+}
+
+.jm-prevnext a {
+  display: flex;
+  align-items: baseline;
+  gap: 0.9rem;
+  padding: 0.8rem 0;
+  border-bottom: 1px solid var(--jm-line-soft);
+  color: var(--jm-body);
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.jm-prevnext a:hover strong {
+  color: var(--jm-title);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.jm-prevnext span {
+  flex: 0 0 auto;
+  color: var(--jm-meta);
+  font-size: 0.75rem;
+}
+
+.jm-prevnext strong {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jm-author {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  margin-top: 2.4rem !important;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--jm-line);
+}
+
+.jm-author .jm-avatar {
+  width: 52px;
+  height: 52px;
+}
+
+.jm-author-name {
+  margin: 0;
+  color: var(--jm-title);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.jm-author-name a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.jm-author-intro {
+  margin: 0.25rem 0 0;
+  color: var(--jm-sub);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  word-break: keep-all;
+}
+
+.jm-author .jm-btn-row {
+  margin-top: 0.8rem;
+}
+
+#disqus_thread {
+  margin-top: 2.4rem !important;
+}
+
+#disqus_thread > p {
+  color: var(--jm-meta);
+  font-size: 0.75rem;
+}
+
+/* The table of contents only exists beside a post on wide screens. */
+#toc-bar,
+#toc-solo-trigger {
+  display: none !important;
+}
+
+#toc-wrapper {
+  top: 4rem;
+  margin-top: 2rem;
+}
+
+#toc-wrapper .panel-heading {
+  color: var(--jm-meta);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+#toc .toc-link {
+  color: var(--jm-meta);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+#toc .toc-link:hover,
+#toc .is-active-link {
+  color: var(--jm-title);
+}
+
+.jm-toast {
+  position: fixed;
+  z-index: 1100;
+  bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  padding: 0.55rem 0.95rem;
+  border-radius: 6px;
+  background: rgb(27 31 36 / 90%);
+  color: #fff;
+  font-size: 0.8125rem;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 8px);
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
+}
+
+.jm-toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   7. Code blocks
+
+   Chirpy wraps a fenced block as `.highlight > code > table > … > pre`, so
+   the block-level <code> is an *ancestor* of <pre>; reset it explicitly or
+   the inline-code chip paints the whole block.
+   ═══════════════════════════════════════════════════════════════════ */
+.content .highlight code,
+.content pre code,
+.content .highlighter-rouge code {
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  font-size: inherit;
+}
+
+.content .highlighter-rouge {
+  border: 1px solid var(--jm-line);
+  border-radius: 6px;
+}
+
+.content .highlight,
+.content .highlight > pre,
+.content .highlighter-rouge .highlight {
+  background: var(--jm-bg-soft);
+}
+
+.content pre {
+  font-size: 0.84rem;
+  line-height: 1.65;
+}
+
+/* No fake window buttons on the code header. */
+.code-header::before {
+  display: none !important;
+}
+
+.code-header span {
+  margin-left: 0 !important;
+}
+
+/* A prompt pasted in full can run for thousands of pixels; cap it and let
+   the reader open it (see blog-post.js). */
+.content .highlighter-rouge[data-collapsible] .highlight {
+  max-height: 24rem;
+  overflow: hidden;
+}
+
+.content .highlighter-rouge[data-collapsible='open'] .highlight {
+  max-height: none;
+  overflow: auto;
+}
+
+.code-expand {
+  display: block;
+  width: 100%;
+  padding: 0.65rem 0;
+  border: 0;
+  border-top: 1px solid var(--jm-line);
+  background: var(--jm-bg);
+  color: var(--jm-sub);
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.code-expand:hover {
+  color: var(--jm-title);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   8. Pages: archives, browse, tags, category / tag lists, about, search
+   ═══════════════════════════════════════════════════════════════════ */
+h1.dynamic-title {
+  margin: 2rem 0 1.2rem;
+  color: var(--jm-title);
+  font-size: 1.375rem;
+  font-weight: 700;
+}
+
+.jm-archive-row {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.7rem 0;
+  border-bottom: 1px solid var(--jm-line-soft);
+}
+
+.jm-archive-row a {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--jm-text);
+  font-size: 0.9375rem;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jm-archive-row a:hover {
+  color: var(--jm-title);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.jm-archive-cat {
+  flex: 0 0 6rem;
+  overflow: hidden;
+  color: var(--jm-meta);
+  font-size: 0.75rem;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jm-archive-row time {
+  flex: 0 0 5.6rem;
+  color: var(--jm-meta);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.jm-archive-cols {
+  color: var(--jm-meta);
+  font-size: 0.75rem;
+}
+
+@media (max-width: 575.98px) {
+  .jm-archive-cat {
+    display: none;
+  }
+
+  .jm-archive-row a {
+    white-space: normal;
+  }
+}
+
+.jm-section + .jm-section {
+  margin-top: 2.6rem;
+}
+
+/* Chirpy indents every list inside .content; these lists are navigation. */
+.content .jm-cats,
+.content .jm-cats ul,
+.content .jm-taglist,
+.content .jm-archives ul {
+  padding-left: 0;
+}
+
+.content .jm-cats li,
+.content .jm-taglist li,
+.content .jm-archives li {
+  margin: 0;
+}
+
+.jm-browse .jm-cats {
+  margin-top: 0.2rem;
+}
+
+.jm-browse .jm-cats > li > a {
+  padding: 0.62rem 0;
+  border-bottom: 1px solid var(--jm-line-soft);
+  font-size: 0.9375rem;
+}
+
+.jm-browse .jm-cats ul a {
+  padding: 0.5rem 0 0.5rem 0.85rem;
+  border-bottom: 1px solid var(--jm-line-soft);
+  font-size: 0.875rem;
+}
+
+.jm-taglist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem 1.1rem;
+  margin: 0;
+  padding: 0.95rem 0 0;
+  list-style: none;
+}
+
+.jm-taglist a {
+  color: var(--jm-text);
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.jm-taglist a:hover {
+  color: var(--jm-title);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.jm-taglist small {
+  margin-left: 0.15rem;
+  color: var(--jm-meta);
+  font-size: 0.75rem;
+}
+
+.jm-listpage {
+  padding-top: 1.6rem;
+}
+
+.jm-notfound {
+  padding: 4rem 0 3rem;
+  text-align: center;
+}
+
+.jm-notfound h1 {
+  margin: 0 0 0.6rem;
+  color: var(--jm-title);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.jm-notfound p {
+  margin: 0 0 1.4rem;
+  color: var(--jm-sub);
+  font-size: 0.875rem;
+}
+
+/* About and any other plain page. */
+main > article > .content {
+  font-size: 1rem;
+  line-height: 1.8;
+  word-break: keep-all;
+}
+
+main > article > .content h2 {
+  margin: 2.2rem 0 0.7rem;
+  color: var(--jm-title);
+  font-size: 1.0625rem;
+  font-weight: 700;
+}
+
+#search-results article {
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--jm-line-soft);
+}
+
+#search-results h2 {
+  font-size: 1rem;
+}
+
+#search-results h2 a {
+  color: var(--jm-title);
+}
+
+#search-results p {
+  color: var(--jm-sub);
+  font-size: 0.875rem;
+}
+
+#search-hints .jm-side-title {
+  margin: 0 0 0.6rem;
+  color: var(--jm-title);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   9. Subscribe dialog
+   ═══════════════════════════════════════════════════════════════════ */
+.subscribe-overlay {
+  position: fixed;
+  z-index: 1200;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgb(0 0 0 / 45%);
+}
+
+.subscribe-overlay.open {
+  display: flex;
+}
+
+.subscribe-modal {
+  position: relative;
+  width: min(100%, 360px);
+  max-height: calc(100dvh - 2rem);
+  padding: 1.6rem 1.4rem 1.35rem;
+  overflow-y: auto;
+  border-radius: 10px;
+  background: var(--jm-bg);
+}
+
+.subscribe-close {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.5rem;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: none;
+  color: var(--jm-meta);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.subscribe-title {
+  margin: 0 0 0.4rem;
+  color: var(--jm-title);
+  font-size: 1.0625rem;
+  font-weight: 700;
+}
+
+.subscribe-desc {
+  margin: 0 0 1rem;
+  color: var(--jm-sub);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+}
+
+.subscribe-form {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.subscribe-email {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  padding: 0 0.75rem;
+  border: 1px solid var(--jm-line);
+  border-radius: 6px;
+  background: var(--jm-bg);
+  color: var(--jm-text);
+  font-size: 1rem;
+}
+
+.subscribe-email:focus {
+  border-color: var(--jm-accent);
+  outline: none;
+}
+
+.subscribe-submit {
+  height: 44px;
+  padding: 0 1rem;
+  border: 0;
+  border-radius: 6px;
+  background: var(--jm-accent);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+html[data-mode='dark'] .subscribe-submit {
+  color: #16181b;
+}
+
+.subscribe-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.subscribe-error {
+  min-height: 1.2rem;
+  margin: 0.5rem 0 0;
+  color: #c62828;
+  font-size: 0.75rem;
+}
+
+.subscribe-note {
+  margin: 0.15rem 0 0;
+  color: var(--jm-meta);
+  font-size: 0.75rem;
+}
+
+.subscribe-done[hidden],
+.subscribe-form[hidden] {
+  display: none;
+}
+
+.subscribe-done p {
+  margin: 0;
+  color: var(--jm-title);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+@media (max-width: 420px) {
+  .subscribe-form {
+    flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

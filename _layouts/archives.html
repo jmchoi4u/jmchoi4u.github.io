@@ -1,41 +1,27 @@
 ---
 layout: page
-# The Archives of posts.
-#
-# Local override. Chirpy renders "03 / 09" — a big day next to a numeric month —
-# which reads ambiguously to an audience used to year-month-day. This renders the
-# month as an English abbreviation in English order ("Sep 3"), so the two numbers
-# can never be swapped by mistake.
-#
-# Dates are formatted server-side and the theme's `data-ts`/`data-df` hooks are
-# dropped on purpose: its dayjs pass would re-localise the month back to "9월".
-#
-# The markup is a plain grid per row. blog-v2.css neutralises the theme's
-# timeline pseudo-elements, which position themselves at hard-coded pixel
-# offsets that only line up with the theme's own markup.
+# Every post as one board-style table: title, category, date — newest first.
+# Dates are formatted here rather than through the theme's data-ts/dayjs hook,
+# so they read the same as everywhere else on the site ("2026. 9. 3.").
+# No `#archives` id: Chirpy hangs its timeline rail, dots and zebra stripes
+# off that id, and they would land on these rows.
 ---
 
 {% include lang.html %}
 
-<div id="archives" class="pl-xl-3">
-  {% assign visible_posts = site.posts | where_exp: 'item', 'item.hidden != true' %}
-  {% assign years = visible_posts | group_by_exp: 'post', 'post.date | date: "%Y"' %}
-
-  {% for year in years %}
-    <section class="archive-year">
-      <h2 class="archive-year-label">{{ year.name }}</h2>
-
-      <ul class="archive-list list-unstyled">
-        {% for post in year.items %}
-          <li class="archive-row">
-            <span class="archive-date">
-              <span class="archive-month">{{ post.date | date: '%b' }}</span>
-              <span class="archive-day">{{ post.date | date: '%-d' }}</span>
-            </span>
-            <a class="archive-link" href="{{ post.url | relative_url }}">{{ post.title }}</a>
-          </li>
-        {% endfor %}
-      </ul>
-    </section>
-  {% endfor %}
+<div class="jm-archives">
+  <div class="jm-board-head">
+    <h2>전체글 <b>{{ site.posts | size }}</b></h2>
+    <span class="jm-archive-cols">분류 · 작성일</span>
+  </div>
+  <ul class="list-unstyled m-0">
+    {%- for post in site.posts %}
+      {%- assign sub = post.categories | where_exp: 'c', 'c != "writing" and c != "dev"' | first %}
+      <li class="jm-archive-row">
+        <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
+        <span class="jm-archive-cat">{{ sub | default: post.categories.first | default: '-' }}</span>
+        <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: '%Y. %-m. %-d.' }}</time>
+      </li>
+    {%- endfor %}
+  </ul>
 </div>

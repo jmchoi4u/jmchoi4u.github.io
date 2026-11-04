@@ -1,36 +1,21 @@
 ---
 layout: page
-# All the Tags of posts.
+# All tags with their post counts, as plain "#태그 (n)" links.
 ---
 
-<div id="tags" class="d-flex flex-wrap mx-xl-2">
-  {% assign tags = '' | split: '' %}
-  {% for t in site.tags %}
-    {% assign visible_count = 0 %}
-    {% for post in t[1] %}
-      {% unless post.hidden == true %}
-        {% assign visible_count = visible_count | plus: 1 %}
-      {% endunless %}
-    {% endfor %}
-    {% if visible_count > 0 %}
-      {% assign tags = tags | push: t[0] %}
-    {% endif %}
-  {% endfor %}
-
-  {% assign sorted_tags = tags | sort_natural %}
-
-  {% for t in sorted_tags %}
-    {% assign visible_count = 0 %}
-    {% for post in site.tags[t] %}
-      {% unless post.hidden == true %}
-        {% assign visible_count = visible_count | plus: 1 %}
-      {% endunless %}
-    {% endfor %}
-    <div>
-      <a class="tag" href="{{ t | slugify | url_encode | prepend: '/tags/' | append: '/' | relative_url }}">
-        {{ t -}}
-        <span class="text-muted">{{ visible_count }}</span>
-      </a>
-    </div>
-  {% endfor %}
+{%- comment -%} site.tags is a hash; `map` cannot pull its keys, so collect them. {%- endcomment -%}
+{%- assign sorted_tags = '' | split: '' -%}
+{%- for t in site.tags -%}{%- assign sorted_tags = sorted_tags | push: t[0] -%}{%- endfor -%}
+{%- assign sorted_tags = sorted_tags | sort_natural %}
+<div class="jm-tags-page">
+  <div class="jm-board-head">
+    <h2>태그 <b>{{ sorted_tags | size }}</b></h2>
+  </div>
+  <ul class="jm-taglist">
+    {%- for tag in sorted_tags %}
+      <li>
+        <a href="{{ tag | slugify | url_encode | prepend: '/tags/' | append: '/' | relative_url }}">#{{ tag }}<small>({{ site.tags[tag] | size }})</small></a>
+      </li>
+    {%- endfor %}
+  </ul>
 </div>

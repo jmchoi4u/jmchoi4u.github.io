@@ -1,30 +1,18 @@
 ---
 layout: page
-# The layout for Tag page
+# One tag's posts, as the same list rows the home page uses.
 ---
 
 {% include lang.html %}
 
-{% assign visible_posts = '' | split: '' %}
-{% for post in page.posts %}
-  {% unless post.hidden == true %}
-    {% assign visible_posts = visible_posts | push: post %}
-  {% endunless %}
-{% endfor %}
-
-<div id="page-tag">
-  <h1 class="ps-lg-2">
-    <i class="fa fa-tag fa-fw text-muted"></i>
-    {{ page.title }}
-    <span class="lead text-muted ps-2">{{ visible_posts | size }}</span>
-  </h1>
-  <ul class="content ps-0">
-    {% for post in visible_posts %}
-      <li class="d-flex justify-content-between px-md-3">
-        <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
-        <span class="dash flex-grow-1"></span>
-        {% include datetime.html date=post.date class='text-muted small text-nowrap' lang=lang %}
-      </li>
+<div id="page-tag" class="jm-listpage">
+  <div class="jm-board-head">
+    <h1><b>#{{ page.title }}</b> 태그 글 {{ page.posts | size }}</h1>
+    <a href="{{ '/tags/' | relative_url }}">전체 태그</a>
+  </div>
+  <ul class="jm-list">
+    {% for post in page.posts %}
+      {% include post-item.html post=post component='tag_page' %}
     {% endfor %}
   </ul>
 </div>

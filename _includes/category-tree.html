@@ -1,0 +1,73 @@
+{%- comment -%}
+  Category tree: 전체보기, then the two shelves (writing / dev) with their
+  sub-categories and post counts.
+
+  Only an explicit `dev` category puts a post on the dev shelf. A single
+  custom category, or none at all, counts as writing — the editor allows both.
+  A post's sub-category is its first category that is not a shelf name.
+
+  Every link targets the home feed's hash filter (/#writing/에세이), which
+  blog-home.js applies in place on the home page and on arrival from any
+  other page. Sub-categories are listed most recently used first.
+
+  include.group / include.sub: entry to mark as current (post pages).
+{%- endcomment -%}
+{%- assign _home = '/' | relative_url -%}
+{%- assign _w_total = 0 -%}
+{%- assign _d_total = 0 -%}
+{%- assign _w_subs = '' | split: '' -%}
+{%- assign _d_subs = '' | split: '' -%}
+{%- for _p in site.posts -%}
+  {%- assign _s = _p.categories | where_exp: 'c', 'c != "writing" and c != "dev"' | first -%}
+  {%- if _p.categories contains 'dev' -%}
+    {%- assign _d_total = _d_total | plus: 1 -%}
+    {%- if _s -%}{%- unless _d_subs contains _s -%}{%- assign _d_subs = _d_subs | push: _s -%}{%- endunless -%}{%- endif -%}
+  {%- else -%}
+    {%- assign _w_total = _w_total | plus: 1 -%}
+    {%- if _s -%}{%- unless _w_subs contains _s -%}{%- assign _w_subs = _w_subs | push: _s -%}{%- endunless -%}{%- endif -%}
+  {%- endif -%}
+{%- endfor -%}
+<ul class="jm-cats">
+  <li>
+    <a class="jm-cats-all" href="{{ _home }}#all" data-cat-link data-cat-group="all" data-cat-sub="all">
+      <span class="jm-cat-name">전체보기</span>
+      <span class="jm-cat-count">({{ site.posts | size }})</span>
+    </a>
+  </li>
+  {%- for _shelf in (1..2) -%}
+    {%- if _shelf == 1 -%}
+      {%- assign _g = 'writing' -%}{%- assign _g_total = _w_total -%}{%- assign _subs = _w_subs -%}
+    {%- else -%}
+      {%- assign _g = 'dev' -%}{%- assign _g_total = _d_total -%}{%- assign _subs = _d_subs -%}
+    {%- endif -%}
+    {%- if _g_total > 0 %}
+  <li>
+    <a href="{{ _home }}#{{ _g }}" data-cat-link data-cat-group="{{ _g }}" data-cat-sub="all"
+      {%- if include.group == _g and include.sub == nil %} class="is-current"{% endif %}>
+      <span class="jm-cat-name">{% if _g == 'dev' %}개발{% else %}글{% endif %}</span>
+      <span class="jm-cat-count">({{ _g_total }})</span>
+    </a>
+    {%- if _subs.size > 0 %}
+    <ul>
+      {%- for _sub in _subs -%}
+        {%- assign _n = 0 -%}
+        {%- for _p in site.posts -%}
+          {%- assign _pg = 'writing' -%}
+          {%- if _p.categories contains 'dev' -%}{%- assign _pg = 'dev' -%}{%- endif -%}
+          {%- assign _ps = _p.categories | where_exp: 'c', 'c != "writing" and c != "dev"' | first -%}
+          {%- if _pg == _g and _ps == _sub -%}{%- assign _n = _n | plus: 1 -%}{%- endif -%}
+        {%- endfor %}
+      <li>
+        <a href="{{ _home }}#{{ _g }}/{{ _sub | replace: ' ', '%20' | escape }}" data-cat-link data-cat-group="{{ _g }}" data-cat-sub="{{ _sub | escape }}"
+          {%- if include.group == _g and include.sub == _sub %} class="is-current"{% endif %}>
+          <span class="jm-cat-name">{{ _sub }}</span>
+          <span class="jm-cat-count">({{ _n }})</span>
+        </a>
+      </li>
+      {%- endfor %}
+    </ul>
+    {%- endif %}
+  </li>
+    {%- endif -%}
+  {%- endfor %}
+</ul>

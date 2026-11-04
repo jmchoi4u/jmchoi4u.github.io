@@ -1,42 +1,5 @@
-<!-- 최신글 (override update-list) -->
-
-{% include lang.html %}
-
-{% assign MAX_SIZE = 5 %}
-
-<!--
-  발행일(post.date) 기준 내림차순 그대로 사용한다.
-  이전 구현은 last_modified_at(git 커밋 시각)으로 정렬해 놓고 화면에는 발행일을 찍어서
-  05/27이 03/13 아래에 오는 등 "최신글"이라는 이름과 순서가 어긋나 보였다.
--->
-{% assign update_list = site.posts | where_exp: 'item', 'item.hidden != true' %}
-
-{% if update_list.size > 0 %}
-  <section id="access-lastmod" class="sidebar-section">
-    <h2 class="panel-heading sidebar-heading">
-      <i class="fas fa-bolt" style="color:#f59e0b;"></i> 최신글
-    </h2>
-    <ul class="content list-unstyled ps-0 pb-1 mt-2 sidebar-list">
-      {% for post in update_list limit: MAX_SIZE %}
-        <li class="sidebar-list-item">
-          <a href="{{ post.url | relative_url }}" class="sidebar-link">
-            <span class="sidebar-link-title">{{ post.title }}</span>
-            <span class="sidebar-link-date">{{ post.date | date: "%m/%d" }}</span>
-          </a>
-        </li>
-      {% endfor %}
-    </ul>
-  </section>
-{% endif %}
-
-<style>
-  .sidebar-section{margin-bottom:1.2rem}
-  .sidebar-heading{font-size:1rem;font-weight:700;color:var(--heading-color);margin-bottom:0.4rem;padding-bottom:0.4rem;border-bottom:2px solid var(--border-color,#e9ecef)}
-  .sidebar-heading i{margin-right:5px}
-  .sidebar-list{font-size:0.85rem;margin:0;padding:0}
-  .sidebar-list-item{margin:0;padding:0}
-  .sidebar-link{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:6px 8px;border-radius:6px;text-decoration:none!important;color:var(--text-color);transition:background 0.15s,transform 0.1s}
-  .sidebar-link:hover{background:var(--btn-border-color,rgba(0,0,0,0.05));transform:translateX(2px);color:var(--link-color,#0056b3)!important}
-  .sidebar-link-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
-  .sidebar-link-date{font-size:0.7rem;color:var(--text-muted-color,#868e96);white-space:nowrap;flex-shrink:0}
-</style>
+{%- comment -%}
+  Chirpy puts "recently updated" in the right-hand panel. The panel is gone
+  except for a post's table of contents, and recent posts already lead the
+  home list and the sidebar, so this renders nothing.
+{%- endcomment -%}

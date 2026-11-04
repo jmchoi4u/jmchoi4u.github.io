@@ -1,0 +1,58 @@
+{%- comment -%}
+  One row of a post list: title, two lines of text, category · date · views,
+  and the cover image on the right when the post has one.
+
+  Usage: {% include post-item.html post=post component='home_feed' %}
+  The data-home-* attributes drive the home feed's filter and sort.
+{%- endcomment -%}
+{%- assign post = include.post -%}
+{%- assign _group = 'writing' -%}
+{%- if post.categories contains 'dev' -%}{%- assign _group = 'dev' -%}{%- endif -%}
+{%- assign _sub = post.categories | where_exp: 'c', 'c != "writing" and c != "dev"' | first -%}
+{%- capture _summary -%}{% include post-summary.html %}{%- endcapture -%}
+{%- assign _summary = _summary | strip | truncate: 180 -%}
+<li
+  class="jm-item"
+  data-home-post
+  data-home-group="{{ _group }}"
+  data-home-sub="{{ _sub | escape }}"
+  data-home-date="{{ post.date | date: '%s' }}"
+  data-home-pin="{% if post.pin %}1{% else %}0{% endif %}"
+>
+  <a
+    class="jm-item-link"
+    href="{{ post.url | relative_url }}"
+    data-analytics-event="open_post"
+    data-analytics-path="{{ post.url }}"
+    data-analytics-category="{{ post.categories | first | escape }}"
+    data-analytics-component="{{ include.component | default: 'post_list' }}"
+    data-analytics-title="{{ post.title | escape }}"
+  >
+    <div class="jm-item-body">
+      <strong class="jm-item-title">
+        {%- if post.pin -%}<span class="jm-notice">공지</span>{%- endif -%}
+        {{- post.title -}}
+      </strong>
+      {%- if _summary != '' %}
+        <p class="jm-item-desc">{{ _summary }}</p>
+      {%- endif %}
+      <p class="jm-item-meta">
+        <span class="jm-item-cat">{{ _sub | default: _group }}</span>
+        <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: '%Y. %-m. %-d.' }}</time>
+        <span class="jm-item-views">조회 <span data-view-count data-view-path="{{ post.url }}" data-view-label="{{ post.title | escape }} 조회 {count}회"></span></span>
+      </p>
+    </div>
+    {%- if post.image -%}
+      {%- assign _src = post.image.path | default: post.image -%}
+      {%- if post.media_subpath -%}
+        {%- unless _src contains '://' -%}
+          {%- assign _src = post.media_subpath | append: '/' | append: _src | replace: '///', '/' | replace: '//', '/' -%}
+        {%- endunless -%}
+      {%- endif -%}
+      {%- unless _src contains '://' -%}{%- assign _src = _src | relative_url -%}{%- endunless %}
+      <div class="jm-item-thumb">
+        <img src="{{ _src }}" alt="" loading="lazy" decoding="async" style="object-position:{{ post.card_image_position | default: post.image_position | default: '50% 50%' }}">
+      </div>
+    {%- endif %}
+  </a>
+</li>

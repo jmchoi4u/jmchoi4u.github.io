@@ -1,63 +1,27 @@
-<!-- 조회 데이터가 있으면 인기순, 없으면 최신순으로 유지되는 글 목록 -->
-
-{% include lang.html %}
-
-<section class="sidebar-section" data-popular-root data-popular-limit="3">
-  <h2 class="panel-heading sidebar-heading">
-    <i class="fas fa-clock popular-heading-icon" data-popular-icon aria-hidden="true"></i>
-    <span data-popular-heading>최근 글</span>
-  </h2>
-
-  <ol class="content list-unstyled ps-0 pb-1 mt-2 sidebar-list" data-popular-list>
-    {% assign popular_candidate_count = 0 %}
-    {% for post in site.posts limit: 30 %}
-      {% if post.hidden != true %}
-        {% assign popular_candidate_count = popular_candidate_count | plus: 1 %}
-        <li
-          class="sidebar-list-item popular-candidate"
-          data-popular-item
-          data-view-path="{{ post.url }}"
-          data-published="{{ post.date | date_to_xmlschema }}"
-          {% if popular_candidate_count > 3 %}hidden{% endif %}
+{%- comment -%}
+  Chirpy shows this under the search box before anything is typed (and in the
+  right-hand panel, which is hidden). It lists the most-read posts, falling
+  back to the newest while there are no view counts; blog-analytics.js does
+  the reordering.
+{%- endcomment -%}
+<section data-popular-root data-popular-limit="5" aria-labelledby="search-popular-title">
+  <h2 class="jm-side-title" id="search-popular-title" data-popular-heading>최근 글</h2>
+  <ol class="jm-pop" data-popular-list>
+    {%- for post in site.posts limit: 30 %}
+      <li data-popular-item data-view-path="{{ post.url }}" data-published="{{ post.date | date_to_xmlschema }}"{% if forloop.index > 5 %} hidden{% endif %}>
+        <a
+          href="{{ post.url | relative_url }}"
+          data-analytics-event="popular-post-open"
+          data-analytics-path="{{ post.url }}"
+          data-analytics-category="{{ post.categories | first | escape }}"
+          data-analytics-component="popular_search"
+          data-analytics-title="인기 글에서 {{ post.title | escape }} 열기"
         >
-          <a
-            href="{{ post.url | relative_url }}"
-            class="sidebar-link popular-link"
-            data-analytics-event="popular-post-open"
-            data-analytics-path="{{ post.url }}"
-            data-analytics-category="{{ post.categories | first | escape }}"
-            data-analytics-component="popular_sidebar"
-            data-analytics-title="인기 글에서 {{ post.title | escape }} 열기"
-          >
-            <span
-              class="rank-badge rank-{{ popular_candidate_count | at_most: 3 }}"
-              data-popular-rank
-              aria-hidden="true"
-            >{{ popular_candidate_count }}</span>
-            <span class="sidebar-link-title">{{ post.title }}</span>
-            <span
-              class="sidebar-link-date popular-view-count"
-              data-view-count
-              data-view-path="{{ post.url }}"
-              data-view-suffix="회"
-              data-view-label="{{ post.title | escape }} 조회 {count}회"
-              hidden
-            >—</span>
-          </a>
-        </li>
-      {% endif %}
-    {% endfor %}
+          <span class="jm-pop-rank" data-popular-rank>{{ forloop.index }}</span>
+          <span class="jm-pop-title">{{ post.title }}</span>
+          <span class="jm-pop-views" data-view-count data-view-path="{{ post.url }}" data-view-label="{{ post.title | escape }} 조회 {count}회" hidden></span>
+        </a>
+      </li>
+    {%- endfor %}
   </ol>
 </section>
-
-<style>
-  .popular-heading-icon{color:#b45335}
-  .popular-candidate[hidden],.popular-view-count[hidden]{display:none!important}
-  .rank-badge{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;font-size:.68rem;font-weight:750;line-height:1;flex:0 0 22px;margin-right:4px;font-variant-numeric:tabular-nums}
-  .rank-1{background:#d99b54;color:#24170f}
-  .rank-2{background:#d6d0c8;color:#29231e}
-  .rank-3{background:#a65b42;color:#fffaf3}
-  .popular-link{font-weight:550;min-height:36px}
-  .popular-view-count{font-variant-numeric:tabular-nums}
-  [data-popular-root][aria-busy="true"] .popular-view-count{opacity:.62}
-</style>

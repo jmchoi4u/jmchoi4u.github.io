@@ -1,59 +1,80 @@
-<!-- The Side Bar -->
+<!-- The Side Bar: profile, categories, popular posts, menu, visitor count -->
 
-<aside aria-label="Sidebar" id="sidebar" class="d-flex flex-column align-items-end">
-  <header class="profile-wrapper">
-    <a href="{{ '/' | relative_url }}" id="avatar" class="rounded-circle" aria-label="홈으로 이동">
+{%- capture avatar_url -%}{% include media-url.html src=site.avatar %}{%- endcapture -%}
+
+{%- assign cur_group = '' -%}
+{%- assign cur_sub = nil -%}
+{%- if page.layout == 'post' -%}
+  {%- assign cur_group = 'writing' -%}
+  {%- if page.categories contains 'dev' -%}{%- assign cur_group = 'dev' -%}{%- endif -%}
+  {%- assign cur_sub = page.categories | where_exp: 'c', 'c != "writing" and c != "dev"' | first -%}
+{%- endif -%}
+
+<aside aria-label="Sidebar" id="sidebar" class="jm-side">
+  <header class="jm-profile">
+    <a class="jm-profile-avatar" href="{{ '/' | relative_url }}" aria-label="블로그 홈">
       {%- if site.avatar != empty and site.avatar -%}
-        {%- capture avatar_url -%}
-          {% include media-url.html src=site.avatar %}
-        {%- endcapture -%}
-        <img src="{{- avatar_url -}}" width="112" height="112" alt="손을 흔드는 크림색 캐릭터" decoding="async" onerror="this.style.display='none'">
+        <img src="{{ avatar_url | strip }}" width="88" height="88" alt="" decoding="async" onerror="this.style.display='none'">
       {%- endif -%}
     </a>
-
-    <a class="site-title d-block" href="{{ '/' | relative_url }}">{{ site.title }}</a>
-    <p class="site-subtitle fst-italic mb-0">{{ site.tagline }}</p>
+    <a class="jm-profile-name site-title" href="{{ '/' | relative_url }}">{{ site.title }}</a>
+    <p class="jm-profile-intro">{{ site.tagline }}</p>
+    <div class="jm-btn-row">
+      <button type="button" class="jm-btn jm-btn-follow" data-subscribe-open data-analytics-event="subscribe_open" data-analytics-component="sidebar_profile">+ 새 글 알림 받기</button>
+      <a class="jm-btn" href="{{ '/about/' | relative_url }}">소개</a>
+    </div>
   </header>
-  <!-- .profile-wrapper -->
 
-  <nav class="flex-column flex-grow-1 w-100 ps-0">
-    <ul class="nav">
-      <!-- home -->
-      <li class="nav-item{% if page.layout == 'home' %}{{ " active" }}{% endif %}">
-        <a href="{{ '/' | relative_url }}" class="nav-link">
-          <i class="fa-fw fas fa-home"></i>
-          <span>{{ site.data.locales[include.lang].tabs.home | upcase }}</span>
-        </a>
-      </li>
-
-      {%- assign sidebar_tabs = site.tabs
-        | where_exp: 'item', "item.url != '/categories/' and item.url != '/tags/'"
-      -%}
-
-      <!-- the real tabs -->
-      {% for tab in sidebar_tabs %}
-        <li class="nav-item{% if tab.url == page.url %}{{ " active" }}{% endif %}">
-          <a href="{{ tab.url | relative_url }}" class="nav-link">
-            <i class="fa-fw {{ tab.icon }}"></i>
-            {% capture tab_name %}{{ tab.url | split: '/' }}{% endcapture %}
-
-            <span>{{ site.data.locales[include.lang].tabs.[tab_name] | default: tab.title | upcase }}</span>
-          </a>
-        </li>
-        <!-- .nav-item -->
-      {% endfor %}
-    </ul>
+  <nav class="jm-side-section" aria-label="카테고리">
+    <h2 class="jm-side-title">카테고리</h2>
+    {% include category-tree.html group=cur_group sub=cur_sub %}
   </nav>
 
-  <div class="sidebar-bottom d-flex flex-wrap  align-items-center w-100">
+  {%- comment -%}
+    blog-analytics.js reorders this by view count and renames the heading to
+    "인기 글" once any post has views; until then it is simply the newest five.
+  {%- endcomment -%}
+  <section class="jm-side-section" data-popular-root data-popular-limit="5" aria-labelledby="side-popular-title">
+    <h2 class="jm-side-title" id="side-popular-title" data-popular-heading>최근 글</h2>
+    <ol class="jm-pop" data-popular-list>
+      {%- for post in site.posts limit: 30 %}
+        <li data-popular-item data-view-path="{{ post.url }}" data-published="{{ post.date | date_to_xmlschema }}"{% if forloop.index > 5 %} hidden{% endif %}>
+          <a
+            href="{{ post.url | relative_url }}"
+            data-analytics-event="popular-post-open"
+            data-analytics-path="{{ post.url }}"
+            data-analytics-category="{{ post.categories | first | escape }}"
+            data-analytics-component="popular_sidebar"
+            data-analytics-title="인기 글에서 {{ post.title | escape }} 열기"
+          >
+            <span class="jm-pop-rank" data-popular-rank>{{ forloop.index }}</span>
+            <span class="jm-pop-title">{{ post.title }}</span>
+            <span class="jm-pop-views" data-view-count data-view-path="{{ post.url }}" data-view-label="{{ post.title | escape }} 조회 {count}회" hidden></span>
+          </a>
+        </li>
+      {%- endfor %}
+    </ol>
+  </section>
+
+  <nav class="jm-side-section jm-side-menu" aria-label="메뉴">
+    <a href="{{ '/' | relative_url }}"{% if page.layout == 'home' %} class="is-current"{% endif %}>홈</a>
+    {%- for tab in site.tabs -%}
+      {%- if tab.url == '/categories/' -%}{%- continue -%}{%- endif -%}
+      {%- capture tab_name -%}{{ tab.url | split: '/' }}{%- endcapture %}
+      <a href="{{ tab.url | relative_url }}"{% if tab.url == page.url %} class="is-current"{% endif %}>{{ site.data.locales[include.lang].tabs.[tab_name] | default: tab.title }}</a>
+    {%- endfor %}
+  </nav>
+
+  <p class="jm-side-section jm-visits" aria-label="방문자 수">
+    <span>오늘<b data-view-count data-view-path="TOTAL" data-view-range="today" data-view-error-text="-">-</b></span>
+    <span>전체<b data-view-count data-view-path="TOTAL" data-view-error-text="-">-</b></span>
+  </p>
+
+  <div class="sidebar-bottom d-flex flex-wrap align-items-center w-100">
     {% unless site.theme_mode %}
-      <button type="button" class="btn btn-link nav-link" aria-label="Switch Mode" id="mode-toggle">
+      <button type="button" class="btn btn-link nav-link" aria-label="다크 모드 전환" id="mode-toggle">
         <i class="fas fa-adjust"></i>
       </button>
-
-      {% if site.data.contact.size > 0 %}
-        <span class="icon-border"></span>
-      {% endif %}
     {% endunless %}
 
     {% for entry in site.data.contact %}
@@ -105,6 +126,7 @@
       {% endif %}
     {% endfor %}
   </div>
-  <!-- .sidebar-bottom -->
 </aside>
 <!-- #sidebar -->
+
+{% include subscribe-modal.html %}

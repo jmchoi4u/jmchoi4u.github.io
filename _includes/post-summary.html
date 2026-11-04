@@ -1,16 +1,30 @@
-{% assign summary_source = post.summary | default: post.description | default: post.excerpt %}
 {%- comment -%}
-  Line breaks have to become spaces *before* strip_html, otherwise `strip_html` deletes
-  the <br /> that hard_wrap produced and glues the two sentences together ("싶다.꽁치").
+  Plain-text preview of `post`: its description if it has one, otherwise the
+  start of the body — the way a blog list previews the first lines of a post.
+
+  Block ends and <br> have to become spaces *before* strip_html, otherwise
+  strip_html deletes the <br /> that hard_wrap produced and glues the two
+  sentences together ("싶다.꽁치"). Code blocks are dropped: a post that opens
+  with a pasted prompt should not preview as code.
 {%- endcomment -%}
-{% assign summary_text = summary_source
+{%- assign summary_source = post.summary | default: post.description -%}
+{%- unless summary_source -%}
+  {%- assign summary_source = post.content | split: '<div class="language-' | first -%}
+{%- endunless -%}
+{%- assign summary_text = summary_source
   | replace: '<br />', ' '
   | replace: '<br>', ' '
   | replace: '</p>', ' '
   | replace: '</li>', ' '
+  | replace: '</h2>', ' '
+  | replace: '</h3>', ' '
+  | replace: '</h4>', ' '
+  | replace: '</blockquote>', ' '
   | strip_html
   | replace: '&nbsp;', ' '
   | newline_to_br
   | replace: '<br />', ' '
-  | strip_newlines %}
-{{ summary_text | replace: '  ', ' ' | replace: '  ', ' ' | strip }}
+  | strip_newlines
+  | truncate: 400, ''
+-%}
+{{- summary_text | replace: '  ', ' ' | replace: '  ', ' ' | strip -}}

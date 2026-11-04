@@ -173,7 +173,14 @@ textarea.editor-input{min-height:42dvh;font-family:'Cascadia Code','D2Coding',mo
 .preview-content code{font-family:'Cascadia Code','D2Coding',monospace;font-size:.88em}
 .preview-content blockquote{margin:1.9rem 0;padding:.1rem 0 .1rem 1.2rem;border-left:3px solid var(--point);color:var(--muted);background:transparent;border-radius:0;font-size:1.04em;line-height:1.85}
 .preview-content blockquote p:last-child{margin-bottom:0}
-.preview-content img{max-width:100%;border-radius:8px}
+.preview-content img{display:block;max-width:100%;height:auto;margin:0 auto}
+.preview-content p>img:only-child{margin:1.6em auto}
+/* Several photos in one paragraph: shown as the swipeable slide the blog
+   builds from them (see buildPreviewSlides and assets/js/blog-post.js). */
+.pv-slide{display:flex;margin:1.6em -18px 0;overflow-x:auto;background:#f1f3f5;scroll-snap-type:x mandatory;scrollbar-width:none}
+.pv-slide::-webkit-scrollbar{display:none}
+.pv-slide img{flex:0 0 100%;width:100%;max-height:70vh;margin:0;object-fit:contain;scroll-snap-align:center}
+.pv-slide-note{margin:.4em 0 1.6em;color:var(--muted);font-size:.72rem;text-align:center}
 .preview-content table{width:100%;border-collapse:collapse;font-size:.85rem}
 .preview-content th,.preview-content td{padding:6px 10px;border:1px solid var(--line);text-align:left}
 .preview-content th{background:var(--bg);font-weight:600}
@@ -574,10 +581,10 @@ textarea.editor-input{min-height:42dvh;font-family:'Cascadia Code','D2Coding',mo
           <button type="button" onclick="wrap('`','`')" title="코드" aria-label="인라인 코드">&lt;/&gt;</button>
           <button type="button" onclick="insert('```\n\n```')" title="코드블록" aria-label="코드 블록">{ }</button>
           <button type="button" onclick="wrap('[','](https://)')" title="링크" aria-label="링크 삽입">&#128279;</button>
-          <button type="button" onclick="triggerBodyImage()" title="이미지" aria-label="본문 이미지 삽입">&#128247;</button>
+          <button type="button" onclick="triggerBodyImage()" title="사진 (여러 장 고르면 슬라이드)" aria-label="본문에 사진 넣기, 여러 장 고르면 슬라이드">&#128247;</button>
         </div>
         <textarea class="editor-input" id="ed-body" placeholder="마크다운으로 작성하세요. 엔터로 친 줄바꿈은 글에도 그대로 나옵니다." oninput="autoSave()"></textarea>
-        <p class="editor-hint">엔터 한 번 = 줄바꿈, 엔터 두 번 = 새 문단. 쓴 그대로 발행됩니다.</p>
+        <p class="editor-hint">엔터 한 번 = 줄바꿈, 엔터 두 번 = 새 문단. 쓴 그대로 발행됩니다.<br>사진은 여러 장을 한 번에 고르면 옆으로 넘겨 보는 슬라이드가 돼요. 붙여넣기·끌어다 놓기도 되고, 큰 사진은 올리기 전에 자동으로 줄여요.</p>
         <div class="editor-meta">
           <span id="editor-stats">0자 · 0단어</span>
           <span id="autosave-status">자동저장 대기</span>
@@ -1196,12 +1203,16 @@ window.addEventListener('DOMContentLoaded', function() {
       e.preventDefault();
       edBody.style.borderColor = '';
       edBody.style.background = '';
-      var file = e.dataTransfer.files[0];
-      if (file && file.type.startsWith('image/')) {
-        await uploadImageFile(file, function(path) {
-          insertText('![image](' + path + ')');
-        });
-      }
+      await insertPhotos(Array.prototype.slice.call(e.dataTransfer.files || []));
+    });
+    /* A screenshot or a copied photo pasted into the body is uploaded like a picked one. */
+    edBody.addEventListener('paste', function(e) {
+      var files = Array.prototype.slice.call((e.clipboardData && e.clipboardData.files) || []).filter(function(file) {
+        return String(file.type || '').startsWith('image/');
+      });
+      if (!files.length) return;
+      e.preventDefault();
+      insertPhotos(files);
     });
   }
 });
@@ -3043,16 +3054,125 @@ function triggerBodyImage() {
     var inp = document.createElement('input');
     inp.type = 'file';
     inp.accept = 'image/*';
+    inp.multiple = true;
     inp.onchange = async function() {
-      if (!inp.files[0]) return;
-      await uploadImageFile(inp.files[0], function(path) {
-        insertText('![image](' + path + ')');
-      });
+      var files = Array.prototype.slice.call(inp.files || []);
       inp.value = '';
+      await insertPhotos(files);
     };
     S.bodyImageInput = inp;
   }
   S.bodyImageInput.click();
+}
+
+/*
+ * Photos are shrunk in the browser before they are uploaded: a phone photo is
+ * 3-5 MB at 4000px, which is slow to load on a phone and far more than the
+ * blog column can show. Width is what the column uses, so photos are capped at
+ * 1600px wide (sharp on a 3x phone and a 2x desktop) with a generous height cap
+ * for panoramas, and re-encoded as JPEG. GIFs keep their animation and
+ * screenshots keep their PNG sharpness.
+ */
+var PHOTO_MAX_WIDTH = 1600;
+var PHOTO_MAX_HEIGHT = 3200;
+var PHOTO_JPEG_QUALITY = 0.82;
+var PHOTO_KEEP_BELOW = 600 * 1024;
+
+function decodeImageFile(file) {
+  return new Promise(function(resolve, reject) {
+    var url = URL.createObjectURL(file);
+    var img = new Image();
+    img.onload = function() { URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = function() { URL.revokeObjectURL(url); reject(new Error('decode failed')); };
+    img.src = url;
+  });
+}
+
+function canvasToBlob(canvas, type, quality) {
+  return new Promise(function(resolve) { canvas.toBlob(resolve, type, quality); });
+}
+
+async function prepareImageForUpload(file) {
+  var type = String(file.type || '').toLowerCase();
+  if (type === 'image/gif' || type === 'image/svg+xml') return file;
+
+  var img;
+  try {
+    img = await decodeImageFile(file);
+  } catch (e) {
+    if (/hei[cf]/.test(type)) {
+      throw new Error('HEIC 사진은 이 브라우저에서 바꿀 수 없어요. 사진 앱에서 JPG로 내보내 올려 주세요.');
+    }
+    return file;
+  }
+
+  var width = img.naturalWidth;
+  var height = img.naturalHeight;
+  var scale = Math.min(1, PHOTO_MAX_WIDTH / width, PHOTO_MAX_HEIGHT / height);
+  var isScreenshot = type === 'image/png' && file.size < 3 * 1024 * 1024;
+  if (scale === 1 && file.size <= PHOTO_KEEP_BELOW && !/hei[cf]/.test(type)) return file;
+
+  var canvas = document.createElement('canvas');
+  canvas.width = Math.round(width * scale);
+  canvas.height = Math.round(height * scale);
+  var ctx = canvas.getContext('2d');
+  var outType = isScreenshot ? 'image/png' : 'image/jpeg';
+  if (outType === 'image/jpeg') {
+    /* JPEG has no transparency: paint white first, not black. */
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+  var blob = await canvasToBlob(canvas, outType, PHOTO_JPEG_QUALITY);
+  if (!blob || (blob.size >= file.size && !/hei[cf]/.test(type))) return file;
+
+  var stamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14);
+  var name = 'photo-' + stamp + '-' + Math.random().toString(36).slice(2, 6) + (outType === 'image/png' ? '.png' : '.jpg');
+  return new File([blob], name, { type: outType });
+}
+
+function uploadImagePath(file) {
+  return new Promise(function(resolve) {
+    var done = false;
+    uploadImageFile(file, function(path) { done = true; resolve(path); }).then(function() {
+      if (!done) resolve(null);
+    }, function() { resolve(null); });
+  });
+}
+
+/* Each photo goes on its own line inside one paragraph, set apart from the
+   text around it by blank lines. On the blog, one photo shows full width and
+   several in the same paragraph become a swipeable slide. */
+function insertImageBlock(paths) {
+  var area = document.getElementById('ed-body');
+  var start = area.selectionStart;
+  var before = area.value.slice(0, start);
+  var after = area.value.slice(area.selectionEnd);
+  var block = paths.map(function(path) { return '![](' + path + ')'; }).join('\n');
+  var lead = !before || before.endsWith('\n\n') ? '' : (before.endsWith('\n') ? '\n' : '\n\n');
+  var tail = after.startsWith('\n\n') ? '' : (after.startsWith('\n') ? '\n' : '\n\n');
+  area.value = before + lead + block + tail + after;
+  var caret = (before + lead + block + tail).length;
+  area.focus();
+  area.setSelectionRange(caret, caret);
+  autoSave();
+}
+
+async function insertPhotos(files) {
+  var photos = (files || []).filter(function(file) { return String(file.type || '').startsWith('image/'); });
+  if (!photos.length) return;
+  if (S.saving || S.loadingPost) return toast('진행 중인 작업이 끝난 뒤 사진을 올려 주세요.', 'info');
+
+  var paths = [];
+  for (var i = 0; i < photos.length; i++) {
+    if (photos.length > 1) toast('사진 올리는 중 ' + (i + 1) + '/' + photos.length, 'info');
+    var path = await uploadImagePath(photos[i]);
+    if (path) paths.push(path);
+  }
+  if (!paths.length) return;
+  insertImageBlock(paths);
+  if (paths.length > 1) toast('사진 ' + paths.length + '장을 슬라이드로 넣었어요', 'success');
 }
 
 async function uploadImageFile(file, onSuccess) {
@@ -3060,16 +3180,24 @@ async function uploadImageFile(file, onSuccess) {
   if (!file || !String(file.type || '').startsWith('image/')) {
     return toast('이미지 파일만 업로드할 수 있습니다', 'error');
   }
-  if (file.size > 12 * 1024 * 1024) {
-    return toast('이미지는 12MB 이하로 줄인 뒤 업로드해 주세요', 'error');
-  }
   var titleSlug = document.getElementById('ed-title').value.trim().replace(/[^a-zA-Z0-9가-힣_-]/g, '-').toLowerCase() || 'upload';
   var folder = 'assets/img/posts/' + titleSlug;
-  var fileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '-');
-  var path = folder + '/' + fileName;
 
   setSavingState(true);
   try {
+    try {
+      file = await prepareImageForUpload(file);
+    } catch (prepareError) {
+      toast(prepareError.message, 'error');
+      return;
+    }
+    if (file.size > 12 * 1024 * 1024) {
+      toast('이미지는 12MB 이하로 줄인 뒤 업로드해 주세요', 'error');
+      return;
+    }
+    var fileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '-');
+    var path = folder + '/' + fileName;
+
     var reader = new FileReader();
     var base64 = await new Promise(function(resolve, reject) {
       reader.onload = function() { resolve(reader.result.split(',')[1]); };
@@ -3170,10 +3298,47 @@ function togglePreview() {
 
   var bodyWrap = document.createElement('div');
   bodyWrap.innerHTML = renderMarkdown(body || '');
+  buildPreviewSlides(bodyWrap);
   preview.appendChild(bodyWrap);
 
   showView('preview');
   setTopbar('미리보기', true);
+}
+
+/*
+ * Preview photos the way the blog will show them. Uploaded photos are read
+ * from GitHub directly, since the site only serves them after the next deploy;
+ * a paragraph holding only photos (2+) becomes a swipeable strip, as the blog
+ * turns it into a slide.
+ */
+function buildPreviewSlides(root) {
+  Array.prototype.forEach.call(root.querySelectorAll('img'), function(img) {
+    var src = img.getAttribute('src') || '';
+    if (src.indexOf('/assets/') === 0) {
+      img.setAttribute('src', 'https://raw.githubusercontent.com/' + OWNER + '/' + REPO + '/main' + src);
+    }
+  });
+
+  Array.prototype.forEach.call(root.querySelectorAll('p'), function(p) {
+    var photos = [];
+    var onlyPhotos = Array.prototype.every.call(p.childNodes, function(node) {
+      if (node.nodeType === 3) return !node.textContent.trim();
+      if (node.nodeType !== 1) return true;
+      if (node.tagName === 'BR') return true;
+      if (node.tagName === 'IMG') { photos.push(node); return true; }
+      return false;
+    });
+    if (!onlyPhotos || photos.length < 2) return;
+
+    var strip = document.createElement('div');
+    strip.className = 'pv-slide';
+    photos.forEach(function(photo) { strip.appendChild(photo); });
+    var note = document.createElement('p');
+    note.className = 'pv-slide-note';
+    note.textContent = '사진 ' + photos.length + '장 · 옆으로 넘겨 보세요';
+    p.parentNode.replaceChild(strip, p);
+    strip.parentNode.insertBefore(note, strip.nextSibling);
+  });
 }
 
 /* ═══════ Markdown Toolbar ═══════ */

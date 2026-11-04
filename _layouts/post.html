@@ -12,88 +12,53 @@ script_includes:
 
 {% include toc-status.html %}
 
-<article class="px-1" data-toc="{{ enable_toc }}" data-reading-article>
-  <header>
-    <!-- ═══ Brunch-style Full Hero ═══ -->
-    <div id="post-hero-wrapper" class="post-hero{% unless page.image %} post-hero-default{% endunless %}">
-      {% if page.image %}
-        {% assign hero_src = page.image.path | default: page.image %}
-        {% assign hero_position = page.hero_image_position | default: page.image_position | default: '50% 50%' %}
-        <div class="post-hero-bg" aria-hidden="true" style="background-image:url('{{ hero_src | relative_url }}'); background-position:{{ hero_position }};"></div>
-      {% endif %}
-      <div class="post-hero-overlay"></div>
+{%- assign post_group = 'writing' -%}
+{%- if page.categories contains 'dev' -%}{%- assign post_group = 'dev' -%}{%- endif -%}
+{%- assign post_sub = page.categories | where_exp: 'c', 'c != "writing" and c != "dev"' | first -%}
+{%- capture category_href -%}
+  {{ '/' | relative_url }}#{{ post_group }}{% if post_sub %}/{{ post_sub | replace: ' ', '%20' }}{% endif %}
+{%- endcapture -%}
+{%- capture category_label -%}{% if post_sub %}{{ post_sub }}{% elsif post_group == 'dev' %}개발{% else %}글{% endif %}{%- endcapture -%}
+{%- capture avatar_url -%}{% include media-url.html src=site.avatar %}{%- endcapture -%}
 
-      <!-- 왼쪽 위 메뉴 버튼 -->
-      <button class="hero-action-btn hero-menu-btn" id="hero-menu" type="button" aria-label="메뉴">
-        <i class="fas fa-bars"></i>
-      </button>
+<!--
+  Post view: category, title and a byline, then the text, then tags and the
+  comment / share / subscribe row. The category's other posts, prev / next,
+  the author box and comments follow in the tail (_includes/post-nav.html).
 
-      <!-- 상단 우측 액션 버튼 -->
-      <div class="hero-actions">
-        <button class="hero-action-btn" id="hero-theme-toggle" type="button" aria-label="흑백 모드 전환"><i class="fas fa-adjust"></i></button>
-        <a class="hero-action-btn hero-action-link" href="https://ctee.kr/place/jmchoi4u" target="_blank" rel="noopener noreferrer" aria-label="Support">
-          <i class="fas fa-dollar-sign"></i>
-        </a>
-        <button class="hero-action-btn" id="hero-comment-btn" type="button" aria-label="댓글"><i class="fas fa-comment-dots"></i></button>
-        <button class="hero-action-btn" id="hero-share" type="button" aria-label="공유"><i class="fas fa-share-alt"></i></button>
+  Avatars are background images on purpose: refactor-content.html wraps every
+  <img> in this layout in a lightbox link, which is right for photos in the
+  text and wrong for a profile picture.
+-->
+<article class="jm-post" data-toc="{{ enable_toc }}" data-reading-article>
+  <header class="jm-post-head">
+    <p class="jm-post-cat"><a href="{{ category_href | strip }}">{{ category_label }}</a></p>
+    <h1 class="jm-post-title" data-toc-skip>{{ page.title }}</h1>
+    {%- if page.description %}
+      <p class="jm-post-desc">{{ page.description }}</p>
+    {%- endif %}
+
+    <div class="jm-byline">
+      <a class="jm-avatar" href="{{ '/' | relative_url }}" aria-label="블로그 홈" style="background-image:url('{{ avatar_url | strip }}')"></a>
+      <div class="jm-byline-who">
+        <a class="jm-byline-name" href="{{ '/' | relative_url }}">{{ site.title }}</a>
+        <time class="jm-byline-date" datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: '%Y. %-m. %-d. %H:%M' }}</time>
       </div>
-
-      <!-- 제목+설명: 중앙 -->
-      <div class="post-hero-center">
-        <div class="post-hero-copy">
-          <h1 data-toc-skip>{{ page.hero_title | default: page.title | newline_to_br }}</h1>
-          {% if page.description %}
-            <p class="post-hero-desc">{{ page.description }}</p>
-          {% endif %}
-        </div>
-      </div>
-
-      <div class="post-hero-footer">
-        {% if page.categories.size > 0 or page.tags.size > 0 %}
-          <div class="post-hero-taxonomy">
-            {% if page.categories.size > 0 %}
-              <span class="post-hero-folder">
-                <i class="far fa-folder-open" aria-hidden="true"></i>
-                {% for category in page.categories %}
-                  <a href="{{ category | slugify | url_encode | prepend: '/categories/' | append: '/' | relative_url }}" class="post-hero-tag-pill">{{ category }}</a>
-                {% endfor %}
-              </span>
-            {% endif %}
-            {% if page.tags.size > 0 %}
-              <span class="post-hero-tags">
-                <button class="post-hero-tag-toggle" id="tag-toggle" type="button" aria-label="태그 {{ page.tags.size }}개 보기" aria-expanded="false" aria-controls="tag-list">
-                  <i class="fa fa-tags" aria-hidden="true"></i>
-                  <span class="tag-toggle-count">{{ page.tags.size }}</span>
-                </button>
-                <span class="post-hero-tag-list" id="tag-list">
-                  {% for tag in page.tags %}
-                    <a href="{{ site.baseurl }}/tags/{{ tag | slugify | url_encode }}/" class="post-hero-tag-pill">{{ tag }}</a>
-                  {% endfor %}
-                </span>
-              </span>
-            {% endif %}
-          </div>
-        {% endif %}
-
-        <!-- 작가+날짜: 맨 아래 -->
-        <div class="post-hero-bottom">
-          <span class="post-hero-meta-pill">by {{ site.social.name }}</span>
-          <span class="post-hero-meta-pill">{{ page.date | date: "%Y.%m.%d" }}</span>
-          <span class="post-hero-meta-pill" id="hero-views">
-            <i class="fas fa-eye" aria-hidden="true"></i> <span data-view-count data-view-path="{{ page.url }}" data-view-suffix="회" data-view-error-text="—">—</span>
-          </span>
-          <span class="post-hero-meta-pill"><i class="far fa-clock" aria-hidden="true"></i> {% include reading-time.html content=page.content %}</span>
-        </div>
-      </div>
-
-      <!-- 스크롤 화살표: 우측 하단 -->
-      <button class="post-hero-arrow" onclick="window.scrollTo({top:document.getElementById('post-hero-wrapper').offsetHeight,behavior:'smooth'})" aria-label="아래로 스크롤">
-        <i class="fas fa-arrow-down"></i>
+      <button type="button" class="jm-icon-btn" data-share data-share-title="{{ page.title | escape }}" data-share-text="{{ page.description | default: page.title | escape }}" aria-label="공유하기">
+        <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3v10M6 7l4-4 4 4M4 12v4h12v-4"/></svg>
       </button>
     </div>
   </header>
 
+  {% if page.image %}
+    {%- assign cover_src = page.image.path | default: page.image -%}
+    <figure class="jm-post-cover">
+      <img src="{{ cover_src }}" alt="{{ page.image.alt | default: page.title | escape }}">
+    </figure>
+  {% endif %}
+
   {% if enable_toc %}
+    <!-- Chirpy's TOC script expects these; the phone TOC is hidden in CSS. -->
     <div id="toc-bar" class="d-flex align-items-center justify-content-between invisible">
       <span class="label text-truncate">{{ page.title }}</span>
       <button type="button" class="toc-trigger btn me-1">
@@ -121,516 +86,34 @@ script_includes:
     {{ content }}
   </div>
 
-  <section class="post-author-card" aria-label="작성자 소개">
-    <div class="post-author-inner">
-      <div class="post-author-copy">
-        <p class="post-author-eyebrow">About</p>
-        <a class="post-author-home-link" href="{{ '/' | relative_url }}" aria-label="홈으로 이동">
-          <h2 class="post-author-name">{{ site.social.name }}</h2>
+  <!-- Not a <footer>: Chirpy's Disqus include inserts the thread before the
+       first <footer> on the page, which must stay the site footer. -->
+  <div class="jm-post-foot">
+    {%- if page.tags.size > 0 %}
+      <ul class="jm-tags" aria-label="태그">
+        {%- for tag in page.tags %}
+          <li><a href="{{ tag | slugify | url_encode | prepend: '/tags/' | append: '/' | relative_url }}">#{{ tag }}</a></li>
+        {%- endfor %}
+      </ul>
+    {%- endif %}
+
+    <div class="jm-actions">
+      <div class="jm-actions-main">
+        <a class="jm-action" href="#comments" data-goto-comments>
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 4.5h13v9h-7l-4 3v-3h-2z"/></svg>댓글
         </a>
-        <p class="post-author-tagline">{{ site.tagline }}</p>
-        <div class="post-author-actions">
-          <a class="author-email-link" href="mailto:{{ site.social.email }}">{{ site.social.email }}</a>
-          <a href="https://ctee.kr/place/jmchoi4u" target="_blank" rel="noopener noreferrer" class="author-support-btn">
-            <i class="fas fa-dollar-sign"></i>
-            <span>후원하기</span>
-          </a>
-          <a href="https://buymeacoffee.com/jmchoi4u" target="_blank" rel="noopener noreferrer" class="author-support-btn author-support-btn-alt">
-            <i class="fas fa-dollar-sign"></i>
-            <span>Support</span>
-          </a>
-          <button type="button" class="author-subscribe-btn" onclick="openSubscribeModal(this)" data-analytics-event="subscribe_open" data-analytics-component="article_subscription">
-            <i class="fas fa-bell"></i>
-            <span>새 글 알림</span>
-          </button>
-        </div>
+        <button type="button" class="jm-action" data-share data-share-title="{{ page.title | escape }}" data-share-text="{{ page.description | default: page.title | escape }}">
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3v10M6 7l4-4 4 4M4 12v4h12v-4"/></svg>공유
+        </button>
+        <button type="button" class="jm-action" data-subscribe-open data-analytics-event="subscribe_open" data-analytics-component="article_actions">
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a4 4 0 0 1 8 0c0 4 1.5 5 1.5 5h-11S6 12 6 8zM8.5 16a1.6 1.6 0 0 0 3 0"/></svg>새 글 알림
+        </button>
       </div>
-      {% if site.avatar and site.avatar != empty %}
-        {% assign avatar_thumb = site.avatar_thumbnail | default: site.avatar %}
-        {% capture avatar_url %}{% include media-url.html src=avatar_thumb %}{% endcapture %}
-        <a class="post-author-avatar-link" href="{{ '/' | relative_url }}" aria-label="홈으로 이동">
-          <span class="post-author-avatar" role="img" aria-label="{{ site.social.name | escape }}" style="background-image:url('{{ avatar_url | strip }}');"></span>
-        </a>
-      {% endif %}
+      <span class="jm-actions-views">조회 <span data-view-count data-view-path="{{ page.url }}"></span></span>
     </div>
-  </section>
+  </div>
+
+  <div class="jm-toast" data-toast role="status" aria-live="polite"></div>
 </article>
 
 <script defer src="{{ '/assets/js/blog-post.js' | relative_url }}?v={{ site.time | date: '%s' }}"></script>
-
-<!-- Subscribe Modal -->
-<div class="subscribe-overlay" id="subscribe-overlay" onclick="closeSubscribeModal()" role="presentation" aria-hidden="true">
-  <div class="subscribe-modal" onclick="event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="subscribe-title" aria-describedby="subscribe-desc">
-    <button type="button" class="subscribe-close" onclick="closeSubscribeModal()" aria-label="닫기">&times;</button>
-    <div class="subscribe-icon"><i class="fas fa-bell"></i></div>
-    <h3 class="subscribe-title" id="subscribe-title">새 글 알림 받기</h3>
-    <p class="subscribe-desc" id="subscribe-desc">새로운 글이 발행되면 이메일로 알려드립니다.</p>
-    <form class="subscribe-form" id="subscribe-form" onsubmit="return handleSubscribe(event)">
-      <input type="email" class="subscribe-email" id="subscribe-email" placeholder="이메일 주소" required autocomplete="email">
-      <button type="submit" class="subscribe-submit" id="subscribe-submit">구독하기</button>
-    </form>
-    <p class="subscribe-error" id="subscribe-error" role="alert" aria-live="assertive"></p>
-    <p class="subscribe-note">언제든 구독을 취소할 수 있습니다.</p>
-    <div class="subscribe-done" id="subscribe-done" style="display:none" tabindex="-1">
-      <div class="subscribe-check">&#10003;</div>
-      <p>확인 이메일을 보냈습니다. 이메일의 링크를 누르면 구독이 시작됩니다.</p>
-    </div>
-  </div>
-</div>
-
-<div id="post-floating-topbar" class="post-floating-topbar" aria-hidden="true" inert>
-  <div class="post-floating-topbar-inner">
-    <div class="post-floating-topbar-left">
-      <button class="post-floating-icon-btn" id="floating-menu" type="button" aria-label="메뉴">
-        <i class="fas fa-bars"></i>
-      </button>
-    </div>
-    <div class="post-floating-topbar-title" title="{{ page.title | escape }}">{{ page.title }}</div>
-    <div class="post-floating-topbar-actions">
-      <button class="post-floating-icon-btn" id="floating-theme-toggle" type="button" aria-label="흑백 모드 전환">
-        <i class="fas fa-adjust"></i>
-      </button>
-      <a class="post-floating-icon-link" href="https://ctee.kr/place/jmchoi4u" target="_blank" rel="noopener noreferrer" aria-label="Support">
-        <i class="fas fa-dollar-sign"></i>
-      </a>
-      <button class="post-floating-icon-btn" id="floating-comment-btn" type="button" aria-label="댓글">
-        <i class="fas fa-comment-dots"></i>
-      </button>
-      <button class="post-floating-icon-btn" id="floating-share" type="button" aria-label="공유">
-        <i class="fas fa-share-alt"></i>
-      </button>
-      <button class="post-floating-icon-btn" id="floating-top" type="button" aria-label="맨 위로">
-        <i class="fas fa-arrow-up"></i>
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ Floating Action Bar (scrolled) ═══ -->
-<div id="post-fab" class="post-fab" aria-hidden="true" inert>
-  <button class="fab-btn" id="fab-toc" type="button" aria-label="바로가기"><i class="fas fa-list-ul"></i></button>
-  <button class="fab-btn" id="fab-share" type="button" aria-label="공유"><i class="fas fa-share-alt"></i></button>
-  <button class="fab-btn" id="fab-comment" type="button" aria-label="댓글"><i class="fas fa-comment"></i></button>
-  <button class="fab-btn" id="fab-top" type="button" aria-label="맨 위로"><i class="fas fa-arrow-up"></i></button>
-</div>
-<div id="link-copy-toast" class="link-copy-toast" aria-live="polite">링크를 복사했습니다</div>
-
-<script>
-/* Subscribe Modal */
-var subscribeReturnFocus=null;
-function openSubscribeModal(trigger){
-  var overlay=document.getElementById('subscribe-overlay');
-  subscribeReturnFocus=trigger||document.activeElement;
-  overlay.classList.add('open');
-  overlay.setAttribute('aria-hidden','false');
-  document.getElementById('subscribe-error').textContent='';
-  document.getElementById('subscribe-done').style.display='none';
-  document.getElementById('subscribe-form').style.display='';
-  setTimeout(function(){document.getElementById('subscribe-email').focus()},100);
-}
-function closeSubscribeModal(){
-  var overlay=document.getElementById('subscribe-overlay');
-  overlay.classList.remove('open');
-  overlay.setAttribute('aria-hidden','true');
-  if(subscribeReturnFocus&&typeof subscribeReturnFocus.focus==='function')subscribeReturnFocus.focus();
-}
-async function handleSubscribe(e){
-  e.preventDefault();
-  var email=document.getElementById('subscribe-email').value.trim();
-  if(!email)return false;
-  var btn=document.getElementById('subscribe-submit');
-  var error=document.getElementById('subscribe-error');
-  error.textContent='';
-  btn.disabled=true;btn.textContent='처리 중...';
-  try{
-    var response=await fetch('https://jm-studio-auth.jmchoi4u.workers.dev/subscribe',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      credentials:'omit',
-      body:JSON.stringify({email:email})
-    });
-    var data={};
-    try{data=await response.json()}catch(parseError){}
-    if(!response.ok||data.ok!==true)throw new Error(data.error||'지금은 구독을 처리할 수 없습니다. 잠시 후 다시 시도해 주세요.');
-    document.getElementById('subscribe-form').style.display='none';
-    document.getElementById('subscribe-done').style.display='block';
-    document.getElementById('subscribe-done').focus();
-    document.getElementById('subscribe-email').value='';
-    if(window.JMBlogAnalytics)window.JMBlogAnalytics.trackEvent('subscribe_success',{includePath:false,component:'article_subscription',title:'새 글 알림 구독'});
-  }catch(fetchError){
-    error.textContent=fetchError.message||'구독 처리에 실패했습니다. 네트워크 연결을 확인해 주세요.';
-  }finally{
-    btn.disabled=false;btn.textContent='구독하기';
-  }
-  return false;
-}
-document.addEventListener('keydown',function(e){
-  var o=document.getElementById('subscribe-overlay');
-  if(!o||!o.classList.contains('open'))return;
-  if(e.key==='Escape'){closeSubscribeModal();return}
-  if(e.key==='Tab'){
-    var focusable=Array.prototype.slice.call(o.querySelectorAll('button:not([disabled]),input:not([disabled]),a[href],[tabindex]:not([tabindex="-1"])'))
-      .filter(function(node){return node.offsetParent!==null});
-    if(!focusable.length){e.preventDefault();return}
-    var first=focusable[0],last=focusable[focusable.length-1];
-    if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}
-    else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}
-  }
-});
-</script>
-
-<script>
-(function(){
-  document.body.classList.add('post-page');
-
-  /* Reading progress */
-  var bar = document.getElementById('reading-progress');
-  if (bar) {
-    window.addEventListener('scroll', function() {
-      var top = window.scrollY || document.documentElement.scrollTop;
-      var h = document.documentElement.scrollHeight - window.innerHeight;
-      bar.style.width = (h > 0 ? Math.min(top / h * 100, 100) : 0) + '%';
-    }, { passive: true });
-  }
-
-  /* Hero scroll detection */
-  var heroEl = document.getElementById('post-hero-wrapper');
-  var heroCenter = document.querySelector('.post-hero-center');
-  var heroCopy = document.querySelector('.post-hero-copy');
-  var heroBottom = document.querySelector('.post-hero-bottom');
-  var arrow = heroEl ? heroEl.querySelector('.post-hero-arrow') : null;
-  var fab = document.getElementById('post-fab');
-  var floatingTocHeadings = [];
-  var tocEndAnchor = document.querySelector('.post-author-card') || document.querySelector('.post-bottom-nav') || document.getElementById('tail-wrapper');
-
-  function slugifyHeading(text) {
-    return (text || '')
-      .toLowerCase()
-      .trim()
-      .replace(/[^\w\s\-가-힣]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/\-+/g, '-');
-  }
-
-  function ensureHeadingId(heading, index) {
-    if (heading.id) return heading.id;
-    var baseId = slugifyHeading(heading.textContent) || ('section-' + index);
-    var nextId = baseId;
-    var seq = 2;
-    while (document.getElementById(nextId)) {
-      nextId = baseId + '-' + seq;
-      seq += 1;
-    }
-    heading.id = nextId;
-    return nextId;
-  }
-
-  function getPanelWrapper() {
-    return document.getElementById('panel-wrapper');
-  }
-
-  function getFloatingTocContainer() {
-    var panelWrapper = getPanelWrapper();
-    if (!panelWrapper) return null;
-    var tocWrapper = panelWrapper.querySelector('#toc-wrapper');
-    if (!tocWrapper) return null;
-
-    var themeToc = tocWrapper.querySelector('#toc');
-    if (themeToc) {
-      themeToc.style.display = 'none';
-    }
-
-    var container = tocWrapper.querySelector('#floating-rail-toc');
-    if (!container) {
-      container = document.createElement('div');
-      container.id = 'floating-rail-toc';
-      if (themeToc && themeToc.parentNode === tocWrapper) {
-        tocWrapper.insertBefore(container, themeToc.nextSibling);
-      } else {
-        tocWrapper.appendChild(container);
-      }
-    }
-
-    return container;
-  }
-
-  function buildFloatingToc() {
-    var floatingToc = getFloatingTocContainer();
-    if (!floatingToc || window.innerWidth < 1200) return;
-    var articleContent = document.querySelector('article .content');
-    var headings = articleContent ? Array.prototype.slice.call(articleContent.querySelectorAll('h2, h3, h4')) : [];
-    floatingTocHeadings = headings;
-    floatingToc.innerHTML = '';
-    if (!headings.length) return;
-
-    var list = document.createElement('ol');
-    list.className = 'floating-toc-list';
-
-    headings.forEach(function(heading, index) {
-      var level = parseInt(heading.tagName.replace('H', ''), 10);
-      var item = document.createElement('li');
-      item.className = 'floating-toc-item level-' + level;
-
-      var link = document.createElement('a');
-      link.className = 'floating-toc-link';
-      link.href = '#' + ensureHeadingId(heading, index + 1);
-      link.textContent = heading.textContent.trim();
-      link.addEventListener('click', function(e) {
-        e.preventDefault();
-        heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      });
-
-      item.appendChild(link);
-      list.appendChild(item);
-    });
-
-    floatingToc.appendChild(list);
-    updateFloatingTocActive();
-  }
-
-  function updateFloatingTocActive() {
-    if (!floatingTocHeadings.length) return;
-    var activeId = floatingTocHeadings[0].id;
-    floatingTocHeadings.forEach(function(heading) {
-      if (heading.getBoundingClientRect().top <= 180) activeId = heading.id;
-    });
-    Array.prototype.slice.call(document.querySelectorAll('.floating-toc-link')).forEach(function(link) {
-      var isActive = link.getAttribute('href') === '#' + activeId;
-      link.classList.toggle('is-active', isActive);
-      if (link.parentElement) link.parentElement.classList.toggle('is-active', isActive);
-    });
-  }
-
-  buildFloatingToc();
-  window.addEventListener('resize', buildFloatingToc);
-  window.addEventListener('load', function() {
-    buildFloatingToc();
-    window.dispatchEvent(new Event('scroll'));
-  });
-
-  if (heroEl) {
-    function handleHeroScroll() {
-      var y = window.scrollY || document.documentElement.scrollTop;
-      var heroH = heroEl.offsetHeight;
-      var heroRect = heroEl.getBoundingClientRect();
-      var titleLift = Math.min(y / (heroH * 0.5), 1) * 26;
-      var revealUi = heroRect.bottom <= 64;
-      var endToc = false;
-
-      if (tocEndAnchor) {
-        endToc = tocEndAnchor.getBoundingClientRect().top <= window.innerHeight - 140;
-      }
-
-      /* Fade out hero content on scroll (brunch style) */
-      var fadeProgress = Math.min(y / (heroH * 0.4), 1);
-      var heroFooter = document.querySelector('.post-hero-footer');
-      if (heroCenter) {
-        heroCenter.style.opacity = String(1 - fadeProgress);
-        heroCenter.style.transform = 'translate3d(0,' + (-titleLift) + 'px,0)';
-      }
-      if (heroFooter) {
-        heroFooter.style.opacity = String(1 - fadeProgress);
-      }
-
-      if (revealUi) {
-        document.body.classList.add('scrolled-past-hero');
-      } else {
-        document.body.classList.remove('scrolled-past-hero');
-      }
-      var floatingTopbar = document.getElementById('post-floating-topbar');
-      if (floatingTopbar) {
-        floatingTopbar.setAttribute('aria-hidden', revealUi ? 'false' : 'true');
-        if (revealUi) floatingTopbar.removeAttribute('inert');
-        else floatingTopbar.setAttribute('inert', '');
-      }
-
-      document.body.classList.toggle('post-toc-visible', revealUi && !endToc && floatingTocHeadings.length > 0);
-
-      if (arrow) arrow.style.opacity = Math.max(0, 1 - y / (heroH * 0.28));
-
-      if (fab) {
-        var revealFab = y > heroH * 0.72;
-        fab.classList.toggle('fab-visible', revealFab);
-        fab.setAttribute('aria-hidden', revealFab ? 'false' : 'true');
-        if (revealFab) fab.removeAttribute('inert');
-        else fab.setAttribute('inert', '');
-      }
-
-      updateFloatingTocActive();
-    }
-    window.addEventListener('scroll', handleHeroScroll, { passive: true });
-    window.addEventListener('resize', handleHeroScroll);
-    handleHeroScroll();
-  }
-
-  /* FAB actions */
-  var fabTop = document.getElementById('fab-top');
-  var floatingTop = document.getElementById('floating-top');
-  var fabComment = document.getElementById('fab-comment');
-  var fabShare = document.getElementById('fab-share');
-  var floatingShare = document.getElementById('floating-share');
-  var floatingCommentBtn = document.getElementById('floating-comment-btn');
-  var copyToast = document.getElementById('link-copy-toast');
-  var copyToastTimer = null;
-
-  function scrollToComments() {
-    var comments = document.getElementById('comments') || document.getElementById('disqus_thread') || document.getElementById('utterances') || document.getElementById('giscus') || document.querySelector('.comment');
-    if (!comments) {
-      var tail = document.getElementById('tail-wrapper');
-      if (tail) tail.scrollIntoView({ behavior: 'smooth' });
-      return;
-    }
-    comments.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    setTimeout(function() {
-      if (typeof comments.focus === 'function') comments.focus({ preventScroll: true });
-    }, 450);
-  }
-
-  if (fabTop) fabTop.addEventListener('click', function() { window.scrollTo({ top: 0, behavior: 'smooth' }); });
-  if (floatingTop) floatingTop.addEventListener('click', function() { window.scrollTo({ top: 0, behavior: 'smooth' }); });
-  if (fabComment) fabComment.addEventListener('click', scrollToComments);
-
-  function showCopyToast() {
-    if (!copyToast) return;
-    copyToast.classList.add('show');
-    if (copyToastTimer) clearTimeout(copyToastTimer);
-    copyToastTimer = setTimeout(function() { copyToast.classList.remove('show'); }, 1400);
-  }
-  async function sharePage() {
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: document.title, text: {{ page.description | default: page.title | jsonify }}, url: window.location.href });
-        if (window.JMBlogAnalytics) window.JMBlogAnalytics.trackEvent('share_native', { component: 'article_share', title: document.title });
-        return;
-      } catch (error) {
-        if (error && error.name === 'AbortError') return;
-      }
-    }
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      showCopyToast();
-      if (window.JMBlogAnalytics) window.JMBlogAnalytics.trackEvent('share_copy', { component: 'article_share', title: document.title });
-    } catch (error) {
-      window.prompt('아래 링크를 복사해 주세요.', window.location.href);
-    }
-  }
-  var heroShare = document.getElementById('hero-share');
-  if (heroShare) heroShare.addEventListener('click', sharePage);
-  if (fabShare) fabShare.addEventListener('click', sharePage);
-  if (floatingShare) floatingShare.addEventListener('click', sharePage);
-
-  var heroCommentBtn = document.getElementById('hero-comment-btn');
-  if (heroCommentBtn) heroCommentBtn.addEventListener('click', scrollToComments);
-  if (floatingCommentBtn) floatingCommentBtn.addEventListener('click', scrollToComments);
-
-  /* Hide default back-to-top */
-  var btt = document.getElementById('back-to-top');
-  if (btt) btt.style.display = 'none';
-
-  /* Menu button (sidebar toggle) */
-  var heroMenu = document.getElementById('hero-menu');
-  var floatingMenu = document.getElementById('floating-menu');
-  var sidebar = document.getElementById('sidebar');
-  var mainWrapper = document.getElementById('main-wrapper');
-  function applySidebarState() {
-    var isOpen = document.body.hasAttribute('sidebar-display');
-    if (sidebar) {
-      sidebar.style.setProperty('transform', isOpen ? 'translateX(0)' : 'translateX(-100%)', 'important');
-      sidebar.style.setProperty('z-index', isOpen ? '260' : '220', 'important');
-    }
-    if (mainWrapper && window.innerWidth >= 850) {
-      mainWrapper.style.setProperty('margin-left', isOpen ? '260px' : '0', 'important');
-    }
-  }
-  function toggleSidebar() {
-    if (document.body.hasAttribute('sidebar-display')) {
-      document.body.removeAttribute('sidebar-display');
-    } else {
-      document.body.setAttribute('sidebar-display', '');
-    }
-    applySidebarState();
-  }
-  function closeSidebar() {
-    if (!document.body.hasAttribute('sidebar-display')) return;
-    document.body.removeAttribute('sidebar-display');
-    applySidebarState();
-  }
-  if (heroMenu) {
-    heroMenu.addEventListener('click', function(e) {
-      e.stopPropagation();
-      toggleSidebar();
-    });
-  }
-  if (floatingMenu) {
-    floatingMenu.addEventListener('click', function(e) {
-      e.stopPropagation();
-      toggleSidebar();
-    });
-  }
-  document.addEventListener('click', function(e) {
-    if (!document.body.hasAttribute('sidebar-display')) return;
-    var sidebar = document.getElementById('sidebar');
-    var sidebarBtn = document.getElementById('sidebar-trigger');
-    if (heroMenu && heroMenu.contains(e.target)) return;
-    if (floatingMenu && floatingMenu.contains(e.target)) return;
-    if (sidebar && sidebar.contains(e.target)) return;
-    if (sidebarBtn && sidebarBtn.contains(e.target)) return;
-    closeSidebar();
-  });
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeSidebar();
-  });
-  window.addEventListener('resize', applySidebarState);
-  applySidebarState();
-
-  /* Theme toggle (dark/light) */
-  var themeToggle = document.getElementById('hero-theme-toggle');
-  var floatingThemeToggle = document.getElementById('floating-theme-toggle');
-  function triggerThemeToggle() {
-    var chirpyToggle = document.getElementById('mode-toggle') || document.querySelector('[data-mode-toggle]') || document.querySelector('.mode-toggle');
-    if (chirpyToggle) {
-      chirpyToggle.click();
-    } else {
-      var html = document.documentElement;
-      var current = html.getAttribute('data-mode');
-      if (current === 'dark') {
-        html.setAttribute('data-mode', 'light');
-      } else {
-        html.setAttribute('data-mode', 'dark');
-      }
-    }
-  }
-  if (themeToggle) themeToggle.addEventListener('click', triggerThemeToggle);
-  if (floatingThemeToggle) floatingThemeToggle.addEventListener('click', triggerThemeToggle);
-
-  /* Tag toggle */
-  var tagToggle = document.getElementById('tag-toggle');
-  var tagList = document.getElementById('tag-list');
-  if (tagToggle && tagList) {
-    tagToggle.addEventListener('click', function(e) {
-      e.stopPropagation();
-      tagList.classList.toggle('open');
-      tagToggle.classList.toggle('active');
-      tagToggle.setAttribute('aria-expanded', tagList.classList.contains('open') ? 'true' : 'false');
-    });
-    document.addEventListener('click', function(e) {
-      if (!tagList.contains(e.target) && e.target !== tagToggle) {
-        tagList.classList.remove('open');
-        tagToggle.classList.remove('active');
-        tagToggle.setAttribute('aria-expanded', 'false');
-      }
-    });
-  }
-
-  /* FAB TOC button */
-  var fabToc = document.getElementById('fab-toc');
-  if (fabToc) {
-    fabToc.addEventListener('click', function() {
-      var tocTrigger = document.getElementById('toc-solo-trigger');
-      if (tocTrigger) { tocTrigger.click(); return; }
-      var tocPopup = document.getElementById('toc-popup');
-      if (tocPopup && tocPopup.showModal) tocPopup.showModal();
-    });
-  }
-})();
-</script>

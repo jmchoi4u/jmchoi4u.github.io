@@ -1,0 +1,23 @@
+<!--
+  New-post email subscription. Rendered once per page from sidebar.html, at
+  body level: inside #sidebar the drawer's slide transform would turn this
+  fixed overlay into an absolutely positioned box. Any element with
+  [data-subscribe-open] opens it (assets/js/blog-subscribe.js).
+-->
+<div class="subscribe-overlay" id="subscribe-overlay" role="presentation" aria-hidden="true">
+  <div class="subscribe-modal" role="dialog" aria-modal="true" aria-labelledby="subscribe-title" aria-describedby="subscribe-desc">
+    <button type="button" class="subscribe-close" data-subscribe-close aria-label="닫기">&times;</button>
+    <h2 class="subscribe-title" id="subscribe-title">새 글 알림 받기</h2>
+    <p class="subscribe-desc" id="subscribe-desc">새 글이 올라오면 메일로 알려드릴게요.</p>
+    <form class="subscribe-form" id="subscribe-form" novalidate>
+      <input type="email" class="subscribe-email" id="subscribe-email" placeholder="이메일 주소" required autocomplete="email" aria-label="이메일 주소">
+      <button type="submit" class="subscribe-submit" id="subscribe-submit">구독하기</button>
+    </form>
+    <p class="subscribe-error" id="subscribe-error" role="alert" aria-live="assertive"></p>
+    <p class="subscribe-note">구독은 언제든 취소할 수 있어요.</p>
+    <div class="subscribe-done" id="subscribe-done" tabindex="-1" hidden>
+      <p>확인 메일을 보냈어요. 메일 속 링크를 누르면 구독이 시작됩니다.</p>
+    </div>
+  </div>
+</div>
+<script defer src="{{ '/assets/js/blog-subscribe.js' | relative_url }}?v={{ site.time | date: '%s' }}"></script>

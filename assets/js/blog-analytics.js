@@ -130,12 +130,23 @@
     return raw || '/';
   }
 
+  function seoulToday() {
+    try {
+      /* en-CA formats as YYYY-MM-DD. */
+      return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul' }).format(new Date());
+    } catch (_) {
+      return new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    }
+  }
+
   function normalizeCounterOptions(value) {
     var input = typeof value === 'string' ? { start: value } : value || {};
     var start = String(input.start || input.range || '').trim().toLowerCase();
     var end = String(input.end || '').trim().toLowerCase();
 
     if (start === 'all' || start === 'lifetime' || start === 'total') start = '';
+    /* "Today" is the visitor's calendar day in Seoul, where the blog lives. */
+    if (start === 'today') start = seoulToday();
 
     var relativePeriod = /^(week|month|year)$/;
     var isoDate = /^\d{4}-\d{2}-\d{2}$/;

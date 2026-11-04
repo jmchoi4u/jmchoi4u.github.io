@@ -5,162 +5,103 @@ layout: default
 {% include lang.html %}
 
 <!--
-  Two feed groups: `writing` (essays - the front door) and `dev` (technical notes).
-  Only an explicit `dev` category selects the dev group. Single custom categories
-  and uncategorized posts belong to writing, as the editor allows both formats.
-  Brunch-style: the feed opens on `writing`, and `dev` is one tap away. Every dev post is
-  still rendered into the HTML (just `hidden`), so its link stays crawlable and search
-  traffic lands on the post itself.
+  Blog front page: cover, profile, category tabs, then every post as a list
+  row with the thumbnail on the right.
 
-  Pagination is deliberately not used here - the paginator slices `site.posts` before we
-  can split by category, which would leave pages that are entirely `dev` looking empty.
-  The full list lives at /archives/ and /browse/.
+  Categories filter in place through the URL hash (/#writing/에세이). The same
+  links sit in the sidebar of every page, so arriving from a post lands on the
+  filtered list directly, and a filtered list can be shared as a link.
+  Every post stays in the HTML when filtered out (`hidden` only affects
+  rendering), so all of them remain crawlable.
+
+  Pagination is deliberately not used: the paginator slices site.posts before a
+  category is chosen, which would leave filtered pages empty. The full list
+  also lives at /archives/.
 -->
-{% assign visible_posts = site.posts | where_exp: 'item', 'item.hidden != true' %}
-{% assign pinned_posts = visible_posts | where_exp: 'item', 'item.pin == true' %}
-{% assign rest_posts = visible_posts | where_exp: 'item', 'item.pin != true' %}
+{% assign pinned_posts = site.posts | where: 'pin', true %}
+{% assign rest_posts = site.posts | where_exp: 'item', 'item.pin != true' %}
 {% assign posts = pinned_posts | concat: rest_posts %}
+{%- capture avatar_url -%}{% include media-url.html src=site.avatar %}{%- endcapture -%}
+{%- assign first_post = site.posts | last -%}
 
-{% assign writing_posts = '' | split: '' %}
-{% assign dev_posts = '' | split: '' %}
-{% for post in visible_posts %}
-  {% if post.categories contains 'dev' %}
-    {% assign dev_posts = dev_posts | push: post %}
-  {% else %}
-    {% assign writing_posts = writing_posts | push: post %}
-  {% endif %}
-{% endfor %}
+{%- comment -%}
+  Tabs: every sub-category of the writing shelf (most recently used first),
+  then the dev shelf as a single tab. Only an explicit `dev` category puts a
+  post on the dev shelf; see _includes/category-tree.html.
+{%- endcomment -%}
+{%- assign w_subs = '' | split: '' -%}
+{%- assign dev_count = 0 -%}
+{%- for p in site.posts -%}
+  {%- if p.categories contains 'dev' -%}
+    {%- assign dev_count = dev_count | plus: 1 -%}
+  {%- else -%}
+    {%- assign s = p.categories | where_exp: 'c', 'c != "writing" and c != "dev"' | first -%}
+    {%- if s -%}{%- unless w_subs contains s -%}{%- assign w_subs = w_subs | push: s -%}{%- endunless -%}{%- endif -%}
+  {%- endif -%}
+{%- endfor -%}
 
-<section class="home-intro" aria-labelledby="home-intro-title">
-  <p class="home-eyebrow">{{ site.title }}</p>
-  <h1 id="home-intro-title">{{ site.tagline }}</h1>
-  <p class="home-intro-copy"{% if site.tagline_en %} lang="en"{% endif %}>{{ site.tagline_en | default: site.description }}</p>
-  <div class="home-intro-actions">
-    <a class="home-primary-action" href="#latest-posts" data-analytics-event="home_latest" data-analytics-component="home_hero">최신 글 보기 <i class="fas fa-arrow-down" aria-hidden="true"></i></a>
-    <a class="home-secondary-action" href="{{ '/browse/' | relative_url }}" data-analytics-event="home_browse" data-analytics-path="{{ '/browse/' | relative_url }}" data-analytics-component="home_hero">주제별 탐색</a>
-    <button class="home-secondary-action" type="button" data-home-search data-analytics-event="home_search" data-analytics-component="home_hero">검색</button>
-  </div>
-  <dl class="home-proof" aria-label="블로그 현황">
-    <div><dt>글</dt><dd>{{ writing_posts | size }}</dd></div>
-    <div><dt>개발</dt><dd>{{ dev_posts | size }}</dd></div>
-    <div><dt>누적 조회</dt><dd data-view-count data-view-path="TOTAL" data-view-format="compact" data-view-error-text="—">—</dd></div>
-  </dl>
-</section>
+<div class="jm-home">
+  <h1 class="jm-sr">{{ site.title }}</h1>
 
-<section class="home-feed-head" id="latest-posts" aria-labelledby="latest-posts-title">
-  <div>
-    <p class="home-feed-kicker">RECENT NOTES</p>
-    <h2 id="latest-posts-title">최근 기록</h2>
-  </div>
-  <a href="{{ '/archives/' | relative_url }}">전체 아카이브 <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
-</section>
+  <div class="jm-cover" aria-hidden="true" style="background-image:url('{{ '/assets/img/profile/blog-cover.jpg' | relative_url }}')"></div>
 
-<!-- The first category other than the reserved group names is the subcategory. -->
-{% assign writing_subs = '' | split: '' %}
-{% for post in writing_posts %}
-  {% assign sub = post.categories | where_exp: 'category', 'category != "writing" and category != "dev"' | first %}
-  {% if sub %}{% unless writing_subs contains sub %}{% assign writing_subs = writing_subs | push: sub %}{% endunless %}{% endif %}
-{% endfor %}
-{% assign dev_subs = '' | split: '' %}
-{% for post in dev_posts %}
-  {% assign sub = post.categories | where_exp: 'category', 'category != "writing" and category != "dev"' | first %}
-  {% if sub %}{% unless dev_subs contains sub %}{% assign dev_subs = dev_subs | push: sub %}{% endunless %}{% endif %}
-{% endfor %}
+  <section class="jm-blog" aria-label="블로그 소개">
+    <div class="jm-blog-head">
+      <span class="jm-blog-avatar" aria-hidden="true" style="background-image:url('{{ avatar_url | strip }}')"></span>
+      <div>
+        <p class="jm-blog-name">{{ site.title }}</p>
+        <p class="jm-blog-stats">글 {{ site.posts | size }}{% if first_post %} · {{ first_post.date | date: '%Y년 %-m월' }}부터 기록 중{% endif %}</p>
+      </div>
+    </div>
+    <p class="jm-blog-intro">{{ site.tagline }}</p>
+    <div class="jm-btn-row">
+      <button type="button" class="jm-btn jm-btn-follow" data-subscribe-open data-analytics-event="subscribe_open" data-analytics-component="home_profile">+ 새 글 알림 받기</button>
+      <a class="jm-btn" href="{{ '/about/' | relative_url }}">소개</a>
+    </div>
+  </section>
 
-<div class="home-controls">
-  <div class="home-filter" role="toolbar" aria-label="분류로 글 필터링">
-    <button class="active" type="button" data-home-filter="writing" aria-pressed="true">writing <span class="home-filter-count">{{ writing_posts | size }}</span></button>
-    {% if dev_posts.size > 0 %}
-      <button type="button" data-home-filter="dev" aria-pressed="false">dev <span class="home-filter-count">{{ dev_posts | size }}</span></button>
-    {% endif %}
-    <button type="button" data-home-filter="all" aria-pressed="false">전체</button>
-  </div>
+  <nav aria-label="카테고리">
+    <ul class="jm-tabs" id="post-list-head">
+      <li>
+        <a href="#all" data-cat-link data-cat-group="all" data-cat-sub="all">
+          <span class="jm-cat-name">전체</span><span class="jm-cat-count">{{ site.posts | size }}</span>
+        </a>
+      </li>
+      {%- for s in w_subs -%}
+        {%- assign n = 0 -%}
+        {%- for p in site.posts -%}
+          {%- unless p.categories contains 'dev' -%}
+            {%- assign ps = p.categories | where_exp: 'c', 'c != "writing" and c != "dev"' | first -%}
+            {%- if ps == s -%}{%- assign n = n | plus: 1 -%}{%- endif -%}
+          {%- endunless -%}
+        {%- endfor %}
+      <li>
+        <a href="#writing/{{ s | replace: ' ', '%20' | escape }}" data-cat-link data-cat-group="writing" data-cat-sub="{{ s | escape }}">
+          <span class="jm-cat-name">{{ s }}</span><span class="jm-cat-count">{{ n }}</span>
+        </a>
+      </li>
+      {%- endfor -%}
+      {%- if dev_count > 0 %}
+      <li>
+        <a href="#dev" data-cat-link data-cat-group="dev" data-cat-sub="all">
+          <span class="jm-cat-name">개발</span><span class="jm-cat-count">{{ dev_count }}</span>
+        </a>
+      </li>
+      {%- endif %}
+    </ul>
+  </nav>
 
-  <div class="home-sort" role="group" aria-label="글 정렬">
+  <div class="jm-sort" role="group" aria-label="글 정렬">
     <button class="active" type="button" data-home-sort="recent" aria-pressed="true">최신순</button>
     <button type="button" data-home-sort="popular" aria-pressed="false">인기순</button>
   </div>
+
+  <ul class="jm-list" id="post-list" aria-label="글 목록">
+    {% for post in posts %}
+      {% include post-item.html post=post component='home_feed' %}
+    {% endfor %}
+  </ul>
+  <p class="jm-empty" data-home-empty hidden>이 카테고리에는 아직 글이 없어요.</p>
 </div>
-
-<div class="home-subfilter" role="toolbar" aria-label="세부 분류로 글 필터링" data-home-subfilter>
-  <button class="active" type="button" data-home-sub-filter="all" data-home-parent="all" aria-pressed="true">전체</button>
-  {% for sub in writing_subs %}
-    <button type="button" data-home-sub-filter="{{ sub | escape }}" data-home-parent="writing" aria-pressed="false">{{ sub }}</button>
-  {% endfor %}
-  {% for sub in dev_subs %}
-    <button type="button" data-home-sub-filter="{{ sub | escape }}" data-home-parent="dev" aria-pressed="false" hidden>{{ sub }}</button>
-  {% endfor %}
-</div>
-
-<div id="post-list" class="home-post-list flex-grow-1 px-xl-1" aria-live="polite">
-  {% for post in posts %}
-    {% assign group = 'writing' %}
-    {% if post.categories contains 'dev' %}{% assign group = 'dev' %}{% endif %}
-    {% assign sub = post.categories | where_exp: 'category', 'category != "writing" and category != "dev"' | first %}
-    <article class="card-wrapper card home-card{% unless post.image %} home-card-text{% endunless %}" data-home-post data-home-group="{{ group | escape }}" data-home-sub="{{ sub | escape }}" data-home-date="{{ post.date | date: '%s' }}" data-home-pin="{% if post.pin %}1{% else %}0{% endif %}"{% if group == 'dev' %} hidden{% endif %}>
-      <a href="{{ post.url | relative_url }}" class="post-preview row g-0 flex-md-row-reverse" data-analytics-event="open_post" data-analytics-path="{{ post.url }}" data-analytics-category="{{ post.categories | first | escape }}" data-analytics-component="home_feed" data-analytics-title="{{ post.title | escape }}">
-        {% assign card_body_col = '12' %}
-
-        {% if post.image %}
-          {% assign src = post.image.path | default: post.image %}
-          {% if post.media_subpath %}
-            {% unless src contains '://' %}
-              {% assign src = post.media_subpath | append: '/' | append: src | replace: '///', '/' | replace: '//', '/' %}
-            {% endunless %}
-          {% endif %}
-          {% assign alt = post.image.alt | default: post.title | xml_escape %}
-
-          <div class="col-md-5">
-            <div class="preview-img home-preview-img">
-              <img src="{{ src }}" alt="{{ alt }}" loading="lazy" style="object-position:{{ post.card_image_position | default: post.image_position | default: '50% 50%' }};">
-            </div>
-          </div>
-          {% assign card_body_col = '7' %}
-        {% endif %}
-
-        <div class="col-md-{{ card_body_col }}">
-          <div class="card-body d-flex flex-column">
-            {% if post.categories.size > 0 %}
-              <div class="home-card-category">{{ sub | default: group }}</div>
-            {% endif %}
-            <h3 class="card-title">{{ post.title }}</h3>
-
-            <div class="card-text home-card-summary">
-              <p>{% include post-summary.html %}</p>
-            </div>
-
-            <div class="post-meta home-card-meta">
-              <div>
-                <i class="far fa-calendar fa-fw me-1"></i>
-                {% include datetime.html date=post.date lang=lang %}
-                <i class="far fa-clock fa-fw me-1"></i>
-                {% include reading-time.html content=post.content %}
-                <i class="far fa-eye fa-fw me-1"></i>
-                <span data-view-count data-view-path="{{ post.url }}" data-view-suffix="회" data-view-error-text="—">—</span>
-              </div>
-              {% if post.pin %}
-                <div class="pin ms-1">
-                  <i class="fas fa-thumbtack fa-fw"></i>
-                  <span>{{ site.data.locales[lang].post.pin_prompt }}</span>
-                </div>
-              {% endif %}
-            </div>
-
-            {% if post.tags.size > 0 %}
-              <div class="post-tags home-card-tags">
-                {% for tag in post.tags limit: 3 %}
-                  <span class="post-tag-pill">{{ tag }}</span>
-                {% endfor %}
-              </div>
-            {% endif %}
-          </div>
-          <!-- .card-body -->
-        </div>
-      </a>
-    </article>
-  {% endfor %}
-  <p class="home-filter-empty" data-home-filter-empty hidden>이 분류에는 아직 글이 없습니다.</p>
-</div>
-<!-- #post-list -->
 
 <script defer src="{{ '/assets/js/blog-home.js' | relative_url }}?v={{ site.time | date: '%s' }}"></script>

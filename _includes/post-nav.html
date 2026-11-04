@@ -1,224 +1,86 @@
-<!-- Post bottom navigation: 좌측 관련글 + 우측 최신글 -->
+{%- comment -%}
+  Tail of a post: up to five posts from the same category with this one
+  marked, the next / previous post, and the author box. Comments are inserted
+  after this by the Disqus include, just before the footer.
 
-{% include lang.html %}
+  The category list shows a window around the current post so it is always in
+  view. A category with nothing else in it falls back to the latest posts.
+{%- endcomment -%}
+{%- assign _group = 'writing' -%}
+{%- if page.categories contains 'dev' -%}{%- assign _group = 'dev' -%}{%- endif -%}
+{%- assign _sub = page.categories | where_exp: 'c', 'c != "writing" and c != "dev"' | first -%}
+{%- capture _label -%}{% if _sub %}{{ _sub }}{% elsif _group == 'dev' %}개발{% else %}글{% endif %}{%- endcapture -%}
 
-{% assign filtered_latest = '' | split: '' %}
-{% assign related_same_cat_tag = '' | split: '' %}
-{% assign related_same_cat = '' | split: '' %}
-{% assign related_shared_tag = '' | split: '' %}
-{% for p in site.posts %}
-  {% if p.hidden == true or p.url == page.url %}{% continue %}{% endif %}
-  {% assign filtered_latest = filtered_latest | push: p %}
+{%- assign _same = '' | split: '' -%}
+{%- for _p in site.posts -%}
+  {%- assign _pg = 'writing' -%}
+  {%- if _p.categories contains 'dev' -%}{%- assign _pg = 'dev' -%}{%- endif -%}
+  {%- assign _ps = _p.categories | where_exp: 'c', 'c != "writing" and c != "dev"' | first -%}
+  {%- if _pg == _group and _ps == _sub -%}{%- assign _same = _same | push: _p -%}{%- endif -%}
+{%- endfor -%}
 
-  {% assign has_same_category = false %}
-  {% for c in p.categories %}
-    {% if page.categories contains c %}
-      {% assign has_same_category = true %}
-      {% break %}
-    {% endif %}
-  {% endfor %}
+{%- if _same.size > 1 -%}
+  {%- assign _list = _same -%}
+  {%- capture _heading -%}<b>{{ _label }}</b> 카테고리의 다른 글{%- endcapture -%}
+  {%- capture _more_href -%}{{ '/' | relative_url }}#{{ _group }}{% if _sub %}/{{ _sub | replace: ' ', '%20' }}{% endif %}{%- endcapture -%}
+{%- else -%}
+  {%- assign _list = site.posts -%}
+  {%- capture _heading -%}최근 글{%- endcapture -%}
+  {%- assign _more_href = '/' | relative_url -%}
+{%- endif -%}
 
-  {% assign has_shared_tag = false %}
-  {% for t in p.tags %}
-    {% if page.tags contains t %}
-      {% assign has_shared_tag = true %}
-      {% break %}
-    {% endif %}
-  {% endfor %}
+{%- assign _index = 0 -%}
+{%- for _p in _list -%}
+  {%- if _p.url == page.url -%}{%- assign _index = forloop.index0 -%}{%- break -%}{%- endif -%}
+{%- endfor -%}
+{%- assign _start = _index | minus: 2 | at_least: 0 -%}
+{%- assign _max_start = _list.size | minus: 5 | at_least: 0 -%}
+{%- assign _start = _start | at_most: _max_start -%}
 
-  {% if has_same_category and has_shared_tag %}
-    {% assign related_same_cat_tag = related_same_cat_tag | push: p %}
-  {% elsif has_same_category %}
-    {% assign related_same_cat = related_same_cat | push: p %}
-  {% elsif has_shared_tag %}
-    {% assign related_shared_tag = related_shared_tag | push: p %}
-  {% endif %}
-{% endfor %}
+<section class="jm-catposts" aria-labelledby="catposts-title">
+  <h2 id="catposts-title">{{ _heading }}</h2>
+  <ul>
+    {%- for _p in _list offset: _start limit: 5 %}
+      <li{% if _p.url == page.url %} class="is-current"{% endif %}>
+        <a href="{{ _p.url | relative_url }}"{% if _p.url == page.url %} aria-current="page"{% endif %}>{{ _p.title }}</a>
+        <time datetime="{{ _p.date | date_to_xmlschema }}">{{ _p.date | date: '%Y. %-m. %-d.' }}</time>
+      </li>
+    {%- endfor %}
+  </ul>
+  {%- if _list.size > 5 %}
+    <a class="jm-catposts-more" href="{{ _more_href | strip }}">전체 보기</a>
+  {%- endif %}
+</section>
 
-{% assign latest_pick = filtered_latest | first %}
-{% assign latest_url = latest_pick.url %}
-{% assign fallback_related = latest_pick %}
-{% for p in filtered_latest offset:1 limit:1 %}
-  {% assign fallback_related = p %}
-{% endfor %}
-
-{% assign related_href = '__NONE__' %}
-{% assign related_title = '' %}
-{% assign related_date = '' %}
-
-{% for candidate in related_same_cat_tag %}
-  {% if latest_url != '__NONE__' and candidate.url == latest_url %}{% continue %}{% endif %}
-  {% assign related_href = candidate.url | relative_url %}
-  {% assign related_title = candidate.title %}
-  {% assign related_date = candidate.date | date: "%Y.%m.%d" %}
-  {% break %}
-{% endfor %}
-{% if related_href == '__NONE__' %}
-  {% for candidate in related_same_cat %}
-    {% if latest_url != '__NONE__' and candidate.url == latest_url %}{% continue %}{% endif %}
-    {% assign related_href = candidate.url | relative_url %}
-    {% assign related_title = candidate.title %}
-    {% assign related_date = candidate.date | date: "%Y.%m.%d" %}
-    {% break %}
-  {% endfor %}
-{% endif %}
-{% if related_href == '__NONE__' %}
-  {% for candidate in related_shared_tag %}
-    {% if latest_url != '__NONE__' and candidate.url == latest_url %}{% continue %}{% endif %}
-    {% assign related_href = candidate.url | relative_url %}
-    {% assign related_title = candidate.title %}
-    {% assign related_date = candidate.date | date: "%Y.%m.%d" %}
-    {% break %}
-  {% endfor %}
-{% endif %}
-{% if related_href == '__NONE__' and fallback_related %}
-  {% assign related_href = fallback_related.url | relative_url %}
-  {% assign related_title = fallback_related.title %}
-  {% assign related_date = fallback_related.date | date: "%Y.%m.%d" %}
-{% endif %}
-
-<div class="post-floating-bottom" aria-hidden="true">
-  <div class="post-floating-bottom-inner">
-    {% if related_href != '__NONE__' %}
-    <a id="floating-related" class="post-floating-bottom-link left" href="{{ related_href }}">
-      <span class="post-floating-bottom-caption">관련글</span>
-      <span class="post-floating-bottom-title" id="floating-related-title">{{ related_title }}</span>
+{%- if page.previous or page.next %}
+<nav class="jm-prevnext" aria-label="다음 글과 이전 글">
+  {%- if page.next %}
+    <a href="{{ page.next.url | relative_url }}" rel="next">
+      <span>다음글</span>
+      <strong>{{ page.next.title }}</strong>
+      <time datetime="{{ page.next.date | date_to_xmlschema }}">{{ page.next.date | date: '%Y. %-m. %-d.' }}</time>
     </a>
-    {% endif %}
-
-    {% if latest_pick %}
-      <a class="post-floating-bottom-link right" href="{{ latest_pick.url | relative_url }}">
-        <span class="post-floating-bottom-caption">최신글</span>
-        <span class="post-floating-bottom-title">{{ latest_pick.title }}</span>
-      </a>
-    {% endif %}
-  </div>
-</div>
-
-<nav class="post-bottom-nav mt-4 mb-3" aria-label="Post Bottom Navigation">
-  <div class="post-bottom-nav-grid">
-    {% if related_href != '__NONE__' %}
-    <a id="related-card" class="post-bottom-card post-bottom-card-left" href="{{ related_href }}">
-      <span class="post-bottom-label">관련글</span>
-      <strong id="related-card-title" class="post-bottom-title">{{ related_title }}</strong>
-      <span id="related-card-date" class="post-bottom-date">{{ related_date }}</span>
+  {%- endif %}
+  {%- if page.previous %}
+    <a href="{{ page.previous.url | relative_url }}" rel="prev">
+      <span>이전글</span>
+      <strong>{{ page.previous.title }}</strong>
+      <time datetime="{{ page.previous.date | date_to_xmlschema }}">{{ page.previous.date | date: '%Y. %-m. %-d.' }}</time>
     </a>
-    {% endif %}
-
-    {% if latest_pick %}
-      <a class="post-bottom-card post-bottom-card-right" href="{{ latest_pick.url | relative_url }}">
-        <span class="post-bottom-label">최신글</span>
-        <strong class="post-bottom-title">{{ latest_pick.title }}</strong>
-        <span class="post-bottom-date">{{ latest_pick.date | date: "%Y.%m.%d" }}</span>
-      </a>
-    {% endif %}
-  </div>
+  {%- endif %}
 </nav>
+{%- endif %}
 
-
-<style>
-  .post-bottom-nav{
-    border-top:1px solid var(--main-border-color,#e9ecef);
-    padding-top:1.4rem;
-    max-width:760px;
-    margin:0 auto;
-  }
-  .post-bottom-nav-grid{
-    display:grid;
-    grid-template-columns:repeat(2,minmax(0,1fr));
-    gap:1rem;
-  }
-  .post-bottom-card{
-    display:flex;
-    flex-direction:column;
-    gap:0.35rem;
-    min-height:106px;
-    padding:1rem 1.1rem;
-    border:1px solid rgba(95,124,186,0.22);
-    border-radius:16px;
-    background:var(--card-bg,#fff);
-    color:var(--text-color);
-    text-decoration:none;
-    box-shadow:0 14px 30px rgba(15,23,42,0.07);
-    transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
-  }
-  .post-bottom-card:hover{
-    transform:translateY(-2px);
-    box-shadow:0 18px 36px rgba(15,23,42,0.11);
-    border-color:rgba(61,124,255,0.34);
-    color:var(--text-color);
-  }
-  .post-bottom-card-left{
-    text-align:left;
-  }
-  .post-bottom-card-right{
-    text-align:right;
-  }
-  .post-bottom-label{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    width:max-content;
-    min-height:28px;
-    padding:0.22rem 0.7rem;
-    border-radius:999px;
-    font-size:0.74rem;
-    font-weight:700;
-    letter-spacing:-0.01em;
-    color:#79a8e8;
-    background:rgba(121,168,232,0.12);
-    border:1px solid rgba(121,168,232,0.22);
-  }
-  .post-bottom-card-right .post-bottom-label{
-    margin-left:auto;
-    color:#d9b76e;
-    background:rgba(217,183,110,0.12);
-    border-color:rgba(217,183,110,0.24);
-  }
-  .post-bottom-title{
-    font-size:1.08rem;
-    line-height:1.55;
-    font-weight:700;
-    color:var(--heading-color);
-    display:-webkit-box;
-    overflow:hidden;
-    -webkit-line-clamp:2;
-    -webkit-box-orient:vertical;
-  }
-  .post-bottom-date{
-    font-size:0.78rem;
-    color:var(--text-muted-color,#8b8b8b);
-    margin-top:auto;
-  }
-  @media(max-width:768px){
-    .post-bottom-nav-grid{
-      grid-template-columns:repeat(2,minmax(0,1fr));
-      gap:0.7rem;
-    }
-    .post-bottom-card-right{
-      text-align:right;
-    }
-    .post-bottom-card{
-      min-height:96px;
-      padding:0.85rem 0.82rem;
-      border-radius:14px;
-    }
-    .post-bottom-title{
-      font-size:0.95rem;
-      line-height:1.45;
-    }
-    .post-bottom-date,
-    .post-bottom-label{
-      font-size:0.72rem;
-    }
-  }
-  @media(max-width:420px){
-    .post-bottom-card{
-      min-height:90px;
-      padding:0.78rem 0.72rem;
-    }
-    .post-bottom-title{
-      font-size:0.9rem;
-    }
-  }
-</style>
+{%- capture _avatar -%}{% include media-url.html src=site.avatar %}{%- endcapture %}
+<section class="jm-author" aria-label="글쓴이">
+  <a class="jm-avatar" href="{{ '/' | relative_url }}" aria-label="블로그 홈" style="background-image:url('{{ _avatar | strip }}')"></a>
+  <div>
+    <p class="jm-author-name"><a href="{{ '/' | relative_url }}">{{ site.title }}</a></p>
+    <p class="jm-author-intro">{{ site.tagline }}</p>
+    <div class="jm-btn-row">
+      <button type="button" class="jm-btn jm-btn-follow" data-subscribe-open data-analytics-event="subscribe_open" data-analytics-component="article_author">+ 새 글 알림 받기</button>
+      <a class="jm-btn" href="https://ctee.kr/place/jmchoi4u" target="_blank" rel="noopener noreferrer">후원하기</a>
+      <a class="jm-btn" href="https://buymeacoffee.com/jmchoi4u" target="_blank" rel="noopener noreferrer">Buy me a coffee</a>
+    </div>
+  </div>
+</section>

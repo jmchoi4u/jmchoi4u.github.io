@@ -23,6 +23,11 @@
       <button type="button" class="jm-btn jm-btn-follow" data-subscribe-open data-analytics-event="subscribe_open" data-analytics-component="sidebar_profile">+ 새 글 알림 받기</button>
       <a class="jm-btn" href="{{ '/about/' | relative_url }}">소개</a>
     </div>
+    {%- comment -%} Writer's shortcuts; shown only where Studio is signed in (assets/js/blog-owner.js). {%- endcomment %}
+    <div class="jm-owner-row" data-owner-only>
+      <a class="jm-btn jm-btn-write" href="{{ '/jm-studio/' | relative_url }}?new=1">새 글 쓰기</a>
+      <a class="jm-btn" href="{{ '/jm-studio/' | relative_url }}">Studio</a>
+    </div>
   </header>
 
   <nav class="jm-side-section" aria-label="카테고리">
@@ -130,3 +135,4 @@
 <!-- #sidebar -->
 
 {% include subscribe-modal.html %}
+<script defer src="{{ '/assets/js/blog-owner.js' | relative_url }}?v={{ site.time | date: '%s' }}"></script>

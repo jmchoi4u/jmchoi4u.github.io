@@ -1,0 +1,21 @@
+---
+# Short, memorable way into the editor: jmchoi4u.github.io/write
+# Studio itself stays at /jm-studio/ — its GitHub sign-in callback and the
+# installed home-screen app are both registered at that address.
+permalink: /write/
+layout: null
+sitemap: false
+---
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<meta http-equiv="refresh" content="0; url={{ '/jm-studio/' | relative_url }}">
+<title>Blog Studio</title>
+<script>location.replace('{{ '/jm-studio/' | relative_url }}' + location.search + location.hash);</script>
+</head>
+<body>
+<p><a href="{{ '/jm-studio/' | relative_url }}">Blog Studio 열기</a></p>
+</body>
+</html>

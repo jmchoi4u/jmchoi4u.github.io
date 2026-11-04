@@ -567,6 +567,57 @@ footer.jm-footer a:hover {
   gap: 0.45rem;
 }
 
+/* Writer's shortcuts (새 글 쓰기 / Studio / 수정): hidden for readers,
+   revealed by assets/js/blog-owner.js on a device signed in to Studio. */
+[data-owner-only] {
+  display: none !important;
+}
+
+.jm-owner [data-owner-only] {
+  display: flex !important;
+}
+
+.jm-owner .jm-edit-link[data-owner-only] {
+  display: inline-flex !important;
+}
+
+.jm-owner-row {
+  gap: 0.45rem;
+  margin-top: 0.45rem;
+}
+
+.jm-btn-write {
+  border-color: var(--jm-accent);
+  background: var(--jm-accent);
+  color: #fff;
+}
+
+.jm-btn-write:hover {
+  background: var(--jm-accent);
+  color: #fff;
+  opacity: 0.9;
+}
+
+html[data-mode='dark'] .jm-btn-write,
+html[data-mode='dark'] .jm-btn-write:hover {
+  color: #16181b;
+}
+
+.jm-edit-link {
+  align-items: center;
+  min-height: 44px;
+  padding: 0 0.6rem;
+  color: var(--jm-accent);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.jm-edit-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 /* Category tree, shared by the sidebar and /browse/. */
 .jm-cats,
 .jm-cats ul {

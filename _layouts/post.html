@@ -44,6 +44,7 @@ script_includes:
         <a class="jm-byline-name" href="{{ '/' | relative_url }}">{{ site.title }}</a>
         <time class="jm-byline-date" datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: '%Y. %-m. %-d. %H:%M' }}</time>
       </div>
+      <a class="jm-edit-link" href="{{ '/jm-studio/' | relative_url }}?edit={{ page.path | url_encode }}" data-owner-only>수정</a>
       <button type="button" class="jm-icon-btn" data-share data-share-title="{{ page.title | escape }}" data-share-text="{{ page.description | default: page.title | escape }}" aria-label="공유하기">
         <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3v10M6 7l4-4 4 4M4 12v4h12v-4"/></svg>
       </button>

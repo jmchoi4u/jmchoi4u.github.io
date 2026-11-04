@@ -594,6 +594,7 @@ textarea.editor-input{min-height:42dvh;font-family:'Cascadia Code','D2Coding',mo
       <div class="editor-actions">
         <button class="btn btn-primary" style="flex:1" data-save-action type="button" onclick="savePost()">저장</button>
         <button class="btn" onclick="togglePreview()">미리보기</button>
+        <a class="btn" id="ed-view-link" href="#" target="_blank" rel="noopener noreferrer" style="display:none">블로그에서 보기</a>
         <button class="btn btn-danger btn-sm" id="ed-delete-btn" style="display:none" onclick="deletePost()">삭제</button>
       </div>
     </div>
@@ -677,7 +678,7 @@ textarea.editor-input{min-height:42dvh;font-family:'Cascadia Code','D2Coding',mo
         <div class="setting-item" style="align-items:flex-start">
           <div>
             <div class="setting-label">빠른 설정</div>
-            <div class="setting-sub">블로그 기본 정보만 빠르게 수정합니다.</div>
+            <div class="setting-sub">블로그 이름·소개·프로필 사진·커버 사진을 바꿉니다.</div>
           </div>
           <button class="btn btn-primary btn-sm" onclick="saveQuickSettings()">빠른 설정 저장</button>
         </div>
@@ -691,14 +692,33 @@ textarea.editor-input{min-height:42dvh;font-family:'Cascadia Code','D2Coding',mo
           <label class="editor-label" style="grid-column:1/-1">블로그 설명
             <input class="editor-input" id="qs-description" type="text" placeholder="문제 해결 과정을 정리하는 개인 블로그입니다.">
           </label>
-          <label class="editor-label">프로필 이미지 경로
-            <input class="editor-input" id="qs-avatar" type="text" placeholder="/assets/img/profile/ai_profile2.png" oninput="updateAvatarPreview()">
+          <label class="editor-label">프로필 사진
+            <input class="editor-input" id="qs-avatar" type="text" placeholder="/assets/img/profile/kindness-avatar.png" oninput="updateAvatarPreview()">
           </label>
           <div class="soft-card" style="display:flex;align-items:center;gap:12px">
-            <img id="qs-avatar-preview" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="아바타 미리보기" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:1px solid var(--line);display:none">
-            <div class="setting-sub">프로필 이미지 미리보기</div>
+            <img id="qs-avatar-preview" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="프로필 사진 미리보기" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:1px solid var(--line);display:none">
+            <button class="btn btn-sm" type="button" onclick="pickSettingsImage('avatar')">사진 올리기</button>
+          </div>
+          <label class="editor-label">커버 사진 (홈 맨 위 배너)
+            <input class="editor-input" id="qs-cover" type="text" placeholder="비워두면 기본 마스코트 커버" oninput="updateCoverPreview()">
+          </label>
+          <div class="soft-card" style="display:flex;align-items:center;gap:12px">
+            <img id="qs-cover-preview" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="커버 사진 미리보기" style="width:120px;height:48px;border-radius:6px;object-fit:cover;border:1px solid var(--line);display:none">
+            <button class="btn btn-sm" type="button" onclick="pickSettingsImage('cover')">사진 올리기</button>
           </div>
         </div>
+        <p class="editor-hint">사진을 올린 뒤 "빠른 설정 저장"을 눌러야 블로그에 반영돼요.</p>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <div class="setting-item" style="align-items:flex-start">
+          <div>
+            <div class="setting-label">소개 페이지</div>
+            <div class="setting-sub">블로그 "소개"에 나오는 글이에요. 글 쓰듯 고치면 됩니다.</div>
+          </div>
+          <button class="btn btn-primary btn-sm" type="button" onclick="saveAboutPage()">소개 저장</button>
+        </div>
+        <textarea class="editor-input" id="about-body" style="min-height:220px;margin-top:12px" placeholder="소개 글"></textarea>
       </div>
 
       <div class="card" style="margin-top:12px">
@@ -1131,6 +1151,8 @@ window.addEventListener('DOMContentLoaded', function() {
     }
   });
 
+  captureStudioIntent();
+
   /* Check for OAuth callback */
   var params = new URLSearchParams(window.location.search);
   var code = params.get('code');
@@ -1448,6 +1470,7 @@ function onLoginSuccess(options) {
   document.getElementById('sidebar-user').textContent = S.user.login;
   setAuthenticatedShell(true);
   updateTrustedLoginUI();
+  setBlogOwnerFlag(true);
   window.history.replaceState({ jmStudioView: 'list' }, '', window.location.pathname);
   showView('list', { skipHistory: true });
   refreshAutosaveBanner();
@@ -1531,6 +1554,7 @@ async function doLogout() {
   S.token = '';
   S.user = null;
   localStorage.removeItem(CRYPT_KEY);
+  setBlogOwnerFlag(false);
   await clearTrustedSession();
   setAuthenticatedShell(false);
   showView('auth');
@@ -1538,6 +1562,7 @@ async function doLogout() {
 
 async function changeToken() {
   flushAutosave();
+  setBlogOwnerFlag(false);
   await clearTrustedSession();
   S.token = '';
   S.user = null;
@@ -2032,6 +2057,32 @@ var RAW_FILES = {
   about: '_tabs/about.md'
 };
 
+/* The 소개 page edited as plain text: only the body changes, its front matter
+   (title, icon, order) is kept exactly as it is in the repository. */
+async function loadAboutPage() {
+  if (!requireAuth('소개 페이지', { silent: true })) return;
+  try {
+    var file = await ghReadTextFile(RAW_FILES.about);
+    document.getElementById('about-body').value = extractBody(file.content).replace(/^\s*\n/, '');
+  } catch (e) {
+    toast('소개 페이지 불러오기 실패: ' + e.message, 'error');
+  }
+}
+
+async function saveAboutPage() {
+  if (!requireAuth('소개 저장')) return;
+  try {
+    var file = await ghReadTextFile(RAW_FILES.about);
+    var match = file.content.match(/^---\r?\n[\s\S]*?\r?\n---[ \t]*(?:\r?\n|$)/);
+    var frontMatter = match ? match[0].replace(/\r?\n?$/, '\n') : '';
+    var body = document.getElementById('about-body').value.replace(/\s+$/, '');
+    await ghPutFile(RAW_FILES.about, frontMatter + '\n' + body + '\n', file.sha, 'update about page');
+    toast('소개 페이지를 저장했어요', 'success');
+  } catch (e) {
+    toast('소개 저장 실패: ' + e.message, 'error');
+  }
+}
+
 async function loadRaw(kind) {
   if (!requireAuth('설정 파일', { silent: true })) return;
   S.rawKind = kind || S.rawKind || 'config';
@@ -2056,20 +2107,82 @@ function loadQuickSettings(yaml) {
   document.getElementById('qs-title').value = get('title');
   document.getElementById('qs-tagline').value = get('tagline');
   document.getElementById('qs-avatar').value = get('avatar');
+  document.getElementById('qs-cover').value = get('cover_image');
   var descMatch = yaml.match(/^description:\s*>-?\s*(?:#.*)?\n([\s\S]*?)(?=\n\S|\n*$)/m);
   document.getElementById('qs-description').value = descMatch ? descMatch[1].trim() : get('description');
   updateAvatarPreview();
+  updateCoverPreview();
+}
+
+/* A site path for a photo that may have been uploaded seconds ago: the site
+   only serves it after the next deploy, GitHub has it right away. */
+function settingsImageUrl(value) {
+  var path = String(value || '').trim();
+  if (path.indexOf('/assets/') === 0) return 'https://raw.githubusercontent.com/' + OWNER + '/' + REPO + '/main' + path;
+  return path;
 }
 
 function updateAvatarPreview() {
   var img = document.getElementById('qs-avatar-preview');
   var val = document.getElementById('qs-avatar').value.trim();
   if (val) {
-    img.src = val;
+    img.src = settingsImageUrl(val);
     img.style.display = 'block';
   } else {
     img.style.display = 'none';
   }
+}
+
+function updateCoverPreview() {
+  var img = document.getElementById('qs-cover-preview');
+  var val = document.getElementById('qs-cover').value.trim();
+  if (val) {
+    img.src = settingsImageUrl(val);
+    img.style.display = 'block';
+  } else {
+    img.style.display = 'none';
+  }
+}
+
+/* Profile and cover photos go to assets/img/profile/. A profile photo never
+   shows larger than ~90px, so it is shrunk much further than a post photo. */
+function pickSettingsImage(kind) {
+  if (!requireAuth('사진 올리기')) return;
+  var input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = async function() {
+    var file = input.files && input.files[0];
+    if (!file) return;
+    await uploadImageFile(file, function(path) {
+      document.getElementById(kind === 'cover' ? 'qs-cover' : 'qs-avatar').value = path;
+      if (kind === 'cover') updateCoverPreview();
+      else updateAvatarPreview();
+      toast('사진을 올렸어요. "빠른 설정 저장"을 누르면 블로그에 반영돼요.', 'success');
+    }, { folder: 'assets/img/profile', maxWidth: kind === 'cover' ? PHOTO_MAX_WIDTH : 480 });
+  };
+  input.click();
+}
+
+/* Plain YAML scalars break on ": ", " #", a leading indicator character or
+   edge spaces; quote only then, so ordinary values stay as they were. */
+function yamlValue(value) {
+  var text = String(value == null ? '' : value);
+  if (!text) return '';
+  if (/^[\s\-?:,\[\]{}#&*!|>'"%@`]|:\s|\s#|\s$/.test(text)) {
+    return '"' + text.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
+  }
+  return text;
+}
+
+/* Replace a top-level `key: value`, keeping any trailing comment. Function
+   replacers, so a `$` typed into a value is not read as a capture group. */
+function setYamlKey(yaml, key, value) {
+  var line = new RegExp('^(' + key + ':[ \\t]*)([^#\\n]*?)([ \\t]*#.*)?$', 'm');
+  if (!line.test(yaml)) return null;
+  return yaml.replace(line, function(match, head, old, comment) {
+    return head + yamlValue(value) + (comment || '');
+  });
 }
 
 async function saveQuickSettings() {
@@ -2081,17 +2194,27 @@ async function saveQuickSettings() {
     var tagline = document.getElementById('qs-tagline').value.trim();
     var desc = document.getElementById('qs-description').value.trim();
     var avatar = document.getElementById('qs-avatar').value.trim();
+    var cover = document.getElementById('qs-cover').value.trim();
 
-    yaml = yaml.replace(/^(title:\s*)([^#\n]*)(.*)$/m, '$1' + title + ' $3');
-    yaml = yaml.replace(/^(tagline:\s*)([^#\n]*)(.*)$/m, '$1' + tagline + ' $3');
+    yaml = setYamlKey(yaml, 'title', title) || yaml;
+    yaml = setYamlKey(yaml, 'tagline', tagline) || yaml;
     if (/^description:\s*>-?\s*(?:#.*)?\n[\s\S]*?(?=\n\S|\n*$)/m.test(yaml)) {
-      yaml = yaml.replace(/^description:\s*>-?\s*(?:#.*)?\n[\s\S]*?(?=\n\S|\n*$)/m, 'description: >-\n  ' + desc);
+      yaml = yaml.replace(/^description:\s*>-?\s*(?:#.*)?\n[\s\S]*?(?=\n\S|\n*$)/m, function() {
+        return 'description: >-\n  ' + desc;
+      });
     } else if (/^description:\s*.*$/m.test(yaml)) {
-      yaml = yaml.replace(/^description:\s*.*$/m, 'description: "' + desc.replace(/"/g, '\\"') + '"');
+      yaml = yaml.replace(/^description:\s*.*$/m, function() {
+        return 'description: "' + desc.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
+      });
     }
-    yaml = yaml.replace(/^(avatar:\s*).*$/m, '$1' + avatar);
-    if (/^social_preview_image:\s*.*$/m.test(yaml)) {
-      yaml = yaml.replace(/^(social_preview_image:\s*).*$/m, '$1' + avatar);
+    yaml = setYamlKey(yaml, 'avatar', avatar) || yaml;
+    yaml = setYamlKey(yaml, 'social_preview_image', avatar) || yaml;
+    var withCover = setYamlKey(yaml, 'cover_image', cover);
+    if (withCover !== null) {
+      yaml = withCover;
+    } else if (cover) {
+      /* First cover photo: add the key right under the profile photo. */
+      yaml = yaml.replace(/^(avatar:.*)$/m, function(line) { return line + '\ncover_image: ' + yamlValue(cover); });
     }
 
     await ghPutFile('_config.yml', yaml, file.sha, 'update blog quick settings');
@@ -2207,7 +2330,7 @@ function applyTemplateEditorContent() {
 
 async function loadSettingsWorkspace() {
   if (!requireAuth('설정', { silent: true })) return;
-  await Promise.all([loadSummary(), loadTemplates(), loadRaw(S.rawKind || 'config')]);
+  await Promise.all([loadSummary(), loadTemplates(), loadRaw(S.rawKind || 'config'), loadAboutPage()]);
 }
 
 /* ═══════ GitHub API ═══════ */
@@ -2381,6 +2504,7 @@ async function loadPosts() {
   } finally {
     S.loadingPosts = false;
     syncNewPostAvailability();
+    if (S.postsLoaded) consumeStudioIntent();
   }
 }
 
@@ -2656,6 +2780,74 @@ function hasMeaningfulSnapshot(snapshot) {
   }));
 }
 
+/*
+ * Shortcuts from the blog. `?new=1` opens a new post and `?edit=_posts/x.md`
+ * opens that post (the blog shows these links only on a signed-in device; see
+ * assets/js/blog-owner.js). The request is parked in sessionStorage so it
+ * survives the GitHub sign-in round trip, and carried out once the post list
+ * has loaded — editPost needs the list, newPost needs the numbering.
+ */
+var STUDIO_INTENT_KEY = 'jm-studio-intent';
+var BLOG_OWNER_KEY = 'jm-blog-owner';
+
+function captureStudioIntent() {
+  var params = new URLSearchParams(window.location.search);
+  var editPath = params.get('edit') || '';
+  var intent = null;
+  if (/^_(posts|drafts)\/[^/]+\.md$/.test(editPath)) intent = { type: 'edit', path: editPath };
+  else if (params.get('new') === '1') intent = { type: 'new' };
+  if (!intent) return;
+  try { sessionStorage.setItem(STUDIO_INTENT_KEY, JSON.stringify(intent)); } catch (e) {}
+  params.delete('edit');
+  params.delete('new');
+  var rest = params.toString();
+  window.history.replaceState({}, '', window.location.pathname + (rest ? '?' + rest : ''));
+}
+
+function consumeStudioIntent() {
+  var raw = null;
+  try {
+    raw = sessionStorage.getItem(STUDIO_INTENT_KEY);
+    sessionStorage.removeItem(STUDIO_INTENT_KEY);
+  } catch (e) {}
+  if (!raw) return;
+  var intent = null;
+  try { intent = JSON.parse(raw); } catch (e) { return; }
+  if (intent && intent.type === 'new') {
+    newPost();
+  } else if (intent && intent.type === 'edit') {
+    if (S.posts.some(function(p) { return p.path === intent.path; })) editPost(intent.path);
+    else toast('수정할 글을 찾지 못했어요. 목록에서 골라 주세요.', 'info');
+  }
+}
+
+function setBlogOwnerFlag(on) {
+  try {
+    if (on) localStorage.setItem(BLOG_OWNER_KEY, '1');
+    else localStorage.removeItem(BLOG_OWNER_KEY);
+  } catch (e) {}
+}
+
+/* "블로그에서 보기" in the editor: only for a published, visible post. Without
+   a permalink the URL follows _config.yml's /posts/:title/ rule. */
+function updateViewOnBlogLink() {
+  var link = document.getElementById('ed-view-link');
+  if (!link) return;
+  var path = S.editing && !S.editing.isNew ? S.editing.path : '';
+  var hidden = document.getElementById('ed-hidden').checked;
+  if (!path || path.indexOf('_posts/') !== 0 || hidden) {
+    link.style.display = 'none';
+    return;
+  }
+  var permalink = document.getElementById('ed-permalink').value.trim();
+  if (!permalink) {
+    var name = path.split('/').pop().replace(/\.md$/, '');
+    permalink = '/posts/' + name.replace(/^\d{4}-\d{2}-\d{2}-/, '') + '/';
+  }
+  link.href = 'https://' + OWNER + '.github.io' + (permalink.charAt(0) === '/' ? permalink : '/' + permalink);
+  link.style.display = 'inline-flex';
+}
+
 function newPost() {
   if (!requireAuth('새 글 작성')) return;
   if (S.saving || S.loadingPost) return toast('현재 작업이 끝난 뒤 새 글을 열어 주세요.', 'info');
@@ -2679,6 +2871,7 @@ function newPost() {
     S.autosaveDismissed = false;
   }
   document.getElementById('ed-delete-btn').style.display = 'none';
+  updateViewOnBlogLink();
   showView('editor');
   setTopbar('새 글', true);
   refreshAutosaveBanner();
@@ -2732,6 +2925,7 @@ async function editPost(path) {
       }
       document.getElementById('ed-delete-btn').style.display = 'inline-flex';
       S.editing = { path: path, sha: null, isNew: false };
+      updateViewOnBlogLink();
       S.autosaveDismissed = false;
       refreshAutosaveBanner();
       updateEditorStats();
@@ -2784,6 +2978,7 @@ async function editPost(path) {
 
     document.getElementById('ed-delete-btn').style.display = 'inline-flex';
     S.editing = { path: path, sha: sha, isNew: false };
+    updateViewOnBlogLink();
     S.autosaveDismissed = false;
     refreshAutosaveBanner();
     updateEditorStats();
@@ -3092,7 +3287,8 @@ function canvasToBlob(canvas, type, quality) {
   return new Promise(function(resolve) { canvas.toBlob(resolve, type, quality); });
 }
 
-async function prepareImageForUpload(file) {
+async function prepareImageForUpload(file, options) {
+  var maxWidth = (options && options.maxWidth) || PHOTO_MAX_WIDTH;
   var type = String(file.type || '').toLowerCase();
   if (type === 'image/gif' || type === 'image/svg+xml') return file;
 
@@ -3108,7 +3304,7 @@ async function prepareImageForUpload(file) {
 
   var width = img.naturalWidth;
   var height = img.naturalHeight;
-  var scale = Math.min(1, PHOTO_MAX_WIDTH / width, PHOTO_MAX_HEIGHT / height);
+  var scale = Math.min(1, maxWidth / width, PHOTO_MAX_HEIGHT / height);
   var isScreenshot = type === 'image/png' && file.size < 3 * 1024 * 1024;
   if (scale === 1 && file.size <= PHOTO_KEEP_BELOW && !/hei[cf]/.test(type)) return file;
 
@@ -3175,18 +3371,20 @@ async function insertPhotos(files) {
   if (paths.length > 1) toast('사진 ' + paths.length + '장을 슬라이드로 넣었어요', 'success');
 }
 
-async function uploadImageFile(file, onSuccess) {
+/* options.folder: where the photo goes (default: the post's own folder).
+   options.maxWidth: shrink limit (default PHOTO_MAX_WIDTH). */
+async function uploadImageFile(file, onSuccess, options) {
   if (S.saving || S.loadingPost) return toast('진행 중인 작업이 끝난 뒤 이미지를 올려 주세요.', 'info');
   if (!file || !String(file.type || '').startsWith('image/')) {
     return toast('이미지 파일만 업로드할 수 있습니다', 'error');
   }
   var titleSlug = document.getElementById('ed-title').value.trim().replace(/[^a-zA-Z0-9가-힣_-]/g, '-').toLowerCase() || 'upload';
-  var folder = 'assets/img/posts/' + titleSlug;
+  var folder = (options && options.folder) || 'assets/img/posts/' + titleSlug;
 
   setSavingState(true);
   try {
     try {
-      file = await prepareImageForUpload(file);
+      file = await prepareImageForUpload(file, options);
     } catch (prepareError) {
       toast(prepareError.message, 'error');
       return;

@@ -315,6 +315,18 @@ vm.createContext(appSandbox);
 vm.runInContext(inlineScripts[0], appSandbox);
 
 assert.equal(appSandbox.studioRedirectUri(), 'https://jmchoi4u.github.io/jm-studio/');
+assert.equal(appSandbox.yamlValue('나의 실패 일기장, 나는 부끄러워져도'), '나의 실패 일기장, 나는 부끄러워져도', 'ordinary settings must stay plain YAML');
+assert.equal(appSandbox.yamlValue('새 블로그: 시작'), '"새 블로그: 시작"', 'a ": " in a setting must be quoted');
+assert.equal(
+  appSandbox.setYamlKey('title: Old # the main title\ntagline_en: x\n', 'title', 'A $1 title'),
+  'title: A $1 title # the main title\ntagline_en: x\n',
+  'settings must keep trailing comments and take $ literally'
+);
+assert.equal(appSandbox.setYamlKey('tagline_en: keep\ntagline: old\n', 'tagline', 'new'), 'tagline_en: keep\ntagline: new\n', 'a longer key sharing the prefix must be left alone');
+assert.equal(appSandbox.setYamlKey('avatar: /a.png\n', 'cover_image', '/c.jpg'), null, 'a missing key must be reported, not written in place');
+assert.match(html, /function captureStudioIntent[\s\S]*?_\(posts\|drafts\)/, 'blog shortcuts may only open post files');
+assert.match(html, /if \(S\.postsLoaded\) consumeStudioIntent\(\)/, 'shortcuts must wait for the post list');
+assert.match(html, /setBlogOwnerFlag\(false\);\s*await clearTrustedSession\(\)/, 'signing out must hide the blog shortcuts');
 assert.equal(appSandbox.isValidPostDate('2026-07-13 18:30:00 +0900'), true);
 assert.equal(appSandbox.isValidPostDate('2026/07/13'), false);
 assert.equal(appSandbox.isValidPostDate('2026-02-30 18:30:00 +0900'), false);
@@ -484,6 +496,7 @@ assert.doesNotMatch(postLayout, /requestGoatCounterCount/, 'post layout must use
 assert.match(subscribeScript, /if \(!response\.ok \|\| data\.ok !== true\)/, 'subscribe UI must reject HTTP and application failures');
 assert.match(subscribeModal, /blog-subscribe\.js/, 'the subscribe dialog must load its script');
 assert.match(postLayout, /blog-post\.js/, 'the post layout must load its script');
+assert.match(postLayout, /\?edit=\{\{ page\.path \| url_encode \}\}"[^>]*data-owner-only/, 'a post must link straight to its editor, for the owner only');
 assert.doesNotMatch(postLayout, /post-floating-topbar|post-fab/, 'the hidden floating post controls were removed; any that return must be inert while hidden');
 assert.match(postScript, /target\.focus\(\{ preventScroll: true \}\)/, 'comment navigation must move keyboard focus');
 assert.match(postScript, /aria-label', '이전 사진'[\s\S]*aria-label', '다음 사진'/, 'photo slide arrows must be labelled buttons');

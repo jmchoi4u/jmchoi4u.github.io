@@ -46,7 +46,19 @@ layout: default
 <div class="jm-home">
   <h1 class="jm-sr">{{ site.title }}</h1>
 
-  <div class="jm-cover" aria-hidden="true" style="background-image:url('{{ '/assets/img/profile/blog-cover.jpg' | relative_url }}')"></div>
+  {%- comment -%}
+    The cover is set in Studio (설정 → 커버 사진), stored as `cover_image` in
+    _config.yml. The default mascot crop is anchored at the top so the character
+    peeks up from the bottom edge; any other photo is centred.
+  {%- endcomment -%}
+  {%- assign has_cover = false -%}
+  {%- if site.cover_image and site.cover_image != empty -%}{%- assign has_cover = true -%}{%- endif -%}
+  {%- if has_cover -%}
+    {%- capture cover_src -%}{% include media-url.html src=site.cover_image %}{%- endcapture -%}
+  {%- else -%}
+    {%- assign cover_src = '/assets/img/profile/blog-cover.jpg' | relative_url -%}
+  {%- endif %}
+  <div class="jm-cover" aria-hidden="true" style="background-image:url('{{ cover_src | strip }}');background-position:{% if has_cover %}50% 50%{% else %}50% 0{% endif %}"></div>
 
   <section class="jm-blog" aria-label="블로그 소개">
     <div class="jm-blog-head">
@@ -60,6 +72,10 @@ layout: default
     <div class="jm-btn-row">
       <button type="button" class="jm-btn jm-btn-follow" data-subscribe-open data-analytics-event="subscribe_open" data-analytics-component="home_profile">+ 새 글 알림 받기</button>
       <a class="jm-btn" href="{{ '/about/' | relative_url }}">소개</a>
+    </div>
+    <div class="jm-btn-row jm-owner-row" data-owner-only>
+      <a class="jm-btn jm-btn-write" href="{{ '/jm-studio/' | relative_url }}?new=1">새 글 쓰기</a>
+      <a class="jm-btn" href="{{ '/jm-studio/' | relative_url }}">Studio</a>
     </div>
   </section>
 

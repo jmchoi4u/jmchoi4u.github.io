@@ -16,19 +16,23 @@ function element(attributes = {}) {
     dataset: {},
     getAttribute(name) { return values.get(name) ?? null; },
     setAttribute(name, value) { values.set(name, String(value)); },
+    removeAttribute(name) { values.delete(name); },
+    hasAttribute(name) { return values.has(name); },
     addEventListener(type, handler) { handlers.set(type, handler); },
-    click(target = this) { handlers.get('click')?.({ target }); },
+    dispatch(type, event) { handlers.get(type)?.(event); },
     closest() { return this; },
+    scrollIntoView() {},
     classList: {
       toggle(name, on) { if (on) classes.add(name); else classes.delete(name); },
+      contains(name) { return classes.has(name); },
     },
   };
 }
 
 function createHarness(hash = '') {
-  const groups = ['writing', 'dev', 'all'].map((group) => element({ 'data-home-filter': group }));
-  const subs = [['all', 'all'], ['writing', 'essay'], ['dev', '개발환경']].map(([parent, sub]) =>
-    element({ 'data-home-parent': parent, 'data-home-sub-filter': sub })
+  /* The tabs above the list: 전체, the writing shelf's sub-categories, dev. */
+  const links = [['all', 'all'], ['writing', 'essay'], ['dev', 'all']].map(([group, sub]) =>
+    element({ 'data-cat-group': group, 'data-cat-sub': sub })
   );
   const sorts = ['recent', 'popular'].map((sort) => element({ 'data-home-sort': sort }));
   const cards = [
@@ -43,21 +47,20 @@ function createHarness(hash = '') {
     card.querySelector = () => card.counter;
     return card;
   });
-  function bar(buttons) {
-    return Object.assign(element(), {
-      querySelectorAll() { return buttons; },
-      contains(button) { return buttons.includes(button); },
-    });
-  }
-  const groupBar = bar(groups);
-  const subBar = bar(subs);
-  const sortBar = bar(sorts);
+
+  const sortBar = Object.assign(element(), {
+    querySelectorAll() { return sorts; },
+  });
+  const tabs = Object.assign(element(), {
+    querySelector(selector) {
+      return selector === '.is-current' ? links.find((link) => link.classList.contains('is-current')) ?? null : null;
+    },
+  });
   const empty = element();
-  const shortcut = element();
-  let searches = 0;
   const handlers = new Map();
   const list = {
     children: [...cards],
+    querySelectorAll() { return cards; },
     appendChild(card) {
       this.children = this.children.filter((entry) => entry !== card);
       this.children.push(card);
@@ -66,44 +69,43 @@ function createHarness(hash = '') {
   const window = {
     location: { hash },
     addEventListener(type, handler) { handlers.set(type, handler); },
+    requestAnimationFrame(callback) { callback(); },
     JMBlogAnalytics: { trackEvent() {}, fillViewCounts() { return Promise.resolve(); } },
   };
   const document = {
     readyState: 'complete',
+    body: element(),
     addEventListener(type, handler) { handlers.set('document:' + type, handler); },
     querySelector(selector) {
-      return {
-        '.home-filter': groupBar,
-        '[data-home-subfilter]': subBar,
-        '.home-sort': sortBar,
-        '[data-home-filter-empty]': empty,
-        '[data-home-search]': shortcut,
-      }[selector] ?? null;
+      return { '.jm-sort': sortBar, '[data-home-empty]': empty }[selector] ?? null;
     },
-    querySelectorAll() { return cards; },
+    querySelectorAll(selector) { return selector === '[data-cat-link]' ? links : []; },
     getElementById(id) {
       if (id === 'post-list') return list;
-      if (id === 'search-trigger') return { click() { searches += 1; } };
+      if (id === 'post-list-head') return tabs;
       return null;
     },
   };
-  vm.runInNewContext(source, { document, window });
+  vm.runInNewContext(source, { document, window, Date });
   return {
-    cards, empty, shortcut, window,
-    get searches() { return searches; },
+    cards, empty, links,
     visible() { return list.children.filter((card) => !card.hidden).map((card) => card.id); },
-    group(value) { groupBar.click(groups.find((button) => button.getAttribute('data-home-filter') === value)); },
-    sort(value) { sortBar.click(sorts.find((button) => button.getAttribute('data-home-sort') === value)); },
+    current() { return links.filter((link) => link.classList.contains('is-current')).map((link) => link.getAttribute('data-cat-group') + '/' + link.getAttribute('data-cat-sub')); },
+    sort(value) { sortBar.dispatch('click', { target: sorts.find((button) => button.getAttribute('data-home-sort') === value) }); },
     changeHash(value) { window.location.hash = value; handlers.get('hashchange')?.(); },
     emit(type) { handlers.get('document:' + type)?.(); },
   };
 }
 
 const normal = createHarness();
-assert.deepEqual(normal.visible(), ['essay-pinned', 'essay-new']);
-normal.group('dev');
+assert.deepEqual(normal.visible(), ['essay-pinned', 'dev-new', 'essay-new', 'dev-old'], 'the feed opens on every post, pinned first');
+assert.deepEqual(normal.current(), ['all/all'], 'the 전체 tab starts selected');
+normal.changeHash('#dev');
 assert.deepEqual(normal.visible(), ['dev-new', 'dev-old']);
-normal.group('all');
+assert.deepEqual(normal.current(), ['dev/all']);
+normal.changeHash('#writing/essay');
+assert.deepEqual(normal.visible(), ['essay-pinned', 'essay-new']);
+normal.changeHash('#all');
 normal.sort('popular');
 await Promise.resolve();
 assert.deepEqual(normal.visible(), ['dev-old', 'dev-new', 'essay-new', 'essay-pinned']);
@@ -122,11 +124,12 @@ deepLink.changeHash('#dev/no-longer-a-category');
 assert.deepEqual(deepLink.visible(), ['dev-new', 'dev-old'], 'stale subcategory links should retain the valid group');
 deepLink.changeHash('#dev/essay');
 assert.deepEqual(deepLink.visible(), ['dev-new', 'dev-old'], 'a subcategory from another group must not empty the feed');
+deepLink.changeHash('#nonsense');
+assert.deepEqual(deepLink.visible(), ['essay-pinned', 'dev-new', 'essay-new', 'dev-old'], 'an unknown group falls back to every post');
 
 const malformed = createHarness('#%E0%A4%A');
-assert.deepEqual(malformed.visible(), ['essay-pinned', 'essay-new']);
-malformed.shortcut.click();
-assert.equal(malformed.searches, 1, 'malformed deep links must not prevent search initialization');
+assert.deepEqual(malformed.visible(), ['essay-pinned', 'dev-new', 'essay-new', 'dev-old'], 'malformed deep links fall back to every post');
 assert.doesNotThrow(() => malformed.changeHash('#%'));
+assert.equal(malformed.empty.hidden, true, 'the empty note stays hidden while posts are shown');
 
-console.log('Home filtering, sorting, deep-link recovery, and search initialization checks passed.');
+console.log('Home filtering, sorting, and deep-link recovery checks passed.');

@@ -267,6 +267,9 @@
       if (!target) return;
       event.preventDefault();
       target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      /* Move keyboard focus too, after the smooth scroll has settled. */
+      if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
+      window.setTimeout(function () { target.focus({ preventScroll: true }); }, 450);
     });
   }
 

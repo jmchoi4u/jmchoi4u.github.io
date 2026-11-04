@@ -98,7 +98,14 @@
         return { group: 'all', sub: 'all' };
       }
       if (group !== 'all' && group !== 'writing' && group !== 'dev') return { group: 'all', sub: 'all' };
-      return { group: group, sub: group === 'all' ? 'all' : sub || 'all' };
+      if (group === 'all') return { group: 'all', sub: 'all' };
+      /* A renamed or removed sub-category, or one from the other shelf, keeps
+         the shelf rather than emptying the feed. */
+      var known = items.some(function (item) {
+        return normalize(item.getAttribute('data-home-group')) === group &&
+          normalize(item.getAttribute('data-home-sub')) === sub;
+      });
+      return { group: group, sub: sub && known ? sub : 'all' };
     }
 
     function closeDrawer() {

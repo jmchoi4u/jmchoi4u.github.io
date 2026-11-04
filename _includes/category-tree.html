@@ -8,7 +8,9 @@
 
   Every link targets the home feed's hash filter (/#writing/에세이), which
   blog-home.js applies in place on the home page and on arrival from any
-  other page. Sub-categories are listed most recently used first.
+  other page. Sub-categories are listed most recently used first. Those hashes
+  name a filter, not an element, so the links carry data-proofer-ignore to keep
+  htmlproofer's internal-hash check (CI) off them.
 
   include.group / include.sub: entry to mark as current (post pages).
 {%- endcomment -%}
@@ -29,7 +31,7 @@
 {%- endfor -%}
 <ul class="jm-cats">
   <li>
-    <a class="jm-cats-all" href="{{ _home }}#all" data-cat-link data-cat-group="all" data-cat-sub="all">
+    <a class="jm-cats-all" href="{{ _home }}#all" data-cat-link data-proofer-ignore data-cat-group="all" data-cat-sub="all">
       <span class="jm-cat-name">전체보기</span>
       <span class="jm-cat-count">({{ site.posts | size }})</span>
     </a>
@@ -42,7 +44,7 @@
     {%- endif -%}
     {%- if _g_total > 0 %}
   <li>
-    <a href="{{ _home }}#{{ _g }}" data-cat-link data-cat-group="{{ _g }}" data-cat-sub="all"
+    <a href="{{ _home }}#{{ _g }}" data-cat-link data-proofer-ignore data-cat-group="{{ _g }}" data-cat-sub="all"
       {%- if include.group == _g and include.sub == nil %} class="is-current"{% endif %}>
       <span class="jm-cat-name">{% if _g == 'dev' %}개발{% else %}글{% endif %}</span>
       <span class="jm-cat-count">({{ _g_total }})</span>
@@ -58,7 +60,7 @@
           {%- if _pg == _g and _ps == _sub -%}{%- assign _n = _n | plus: 1 -%}{%- endif -%}
         {%- endfor %}
       <li>
-        <a href="{{ _home }}#{{ _g }}/{{ _sub | replace: ' ', '%20' | escape }}" data-cat-link data-cat-group="{{ _g }}" data-cat-sub="{{ _sub | escape }}"
+        <a href="{{ _home }}#{{ _g }}/{{ _sub | replace: ' ', '%20' | escape }}" data-cat-link data-proofer-ignore data-cat-group="{{ _g }}" data-cat-sub="{{ _sub | escape }}"
           {%- if include.group == _g and include.sub == _sub %} class="is-current"{% endif %}>
           <span class="jm-cat-name">{{ _sub }}</span>
           <span class="jm-cat-count">({{ _n }})</span>

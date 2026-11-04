@@ -18,6 +18,9 @@ const notifyWorkflow = read('.github/workflows/notify-subscribers.yml');
 const blogHead = read('_includes/head.html');
 const blogAnalytics = read('assets/js/blog-analytics.js');
 const postLayout = read('_layouts/post.html');
+const postScript = read('assets/js/blog-post.js');
+const subscribeScript = read('assets/js/blog-subscribe.js');
+const subscribeModal = read('_includes/subscribe-modal.html');
 
 const inlineScripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)]
   .map((match) => match[1])
@@ -478,11 +481,17 @@ assert.match(blogHead, /data-view-counter-endpoint=/, 'public view counts must d
 assert.match(html, /WORKER_URL \+ ['"]\/views\?path=/, 'Studio view counts must use the Worker proxy');
 assert.doesNotMatch(html, /goatcounter\.com\/counter\//, 'Studio must not request tracker-domain counters directly');
 assert.doesNotMatch(postLayout, /requestGoatCounterCount/, 'post layout must use the shared counter implementation');
-assert.match(postLayout, /if\(!response\.ok\|\|data\.ok!==true\)/, 'subscribe UI must reject HTTP and application failures');
-assert.match(postLayout, /post-floating-topbar[^>]*inert/, 'hidden floating controls must not receive keyboard focus');
-assert.match(postLayout, /post-fab[^>]*inert/, 'hidden floating action buttons must not receive keyboard focus');
-assert.match(postLayout, /comments\.focus\(\{ preventScroll: true \}\)/, 'comment navigation must move keyboard focus');
+assert.match(subscribeScript, /if \(!response\.ok \|\| data\.ok !== true\)/, 'subscribe UI must reject HTTP and application failures');
+assert.match(subscribeModal, /blog-subscribe\.js/, 'the subscribe dialog must load its script');
+assert.match(postLayout, /blog-post\.js/, 'the post layout must load its script');
+assert.doesNotMatch(postLayout, /post-floating-topbar|post-fab/, 'the hidden floating post controls were removed; any that return must be inert while hidden');
+assert.match(postScript, /target\.focus\(\{ preventScroll: true \}\)/, 'comment navigation must move keyboard focus');
+assert.match(postScript, /aria-label', '이전 사진'[\s\S]*aria-label', '다음 사진'/, 'photo slide arrows must be labelled buttons');
+assert.match(html, /function prepareImageForUpload[\s\S]*?PHOTO_MAX_WIDTH/, 'Studio must shrink photos before uploading them');
+assert.match(html, /inp\.multiple = true/, 'Studio must accept several photos at once for a slide');
 new Function(blogAnalytics);
+new Function(postScript);
+new Function(subscribeScript);
 for (const icon of manifest.icons) {
   const bytes = readFileSync(new URL(icon.src, new URL('../jm-studio/', import.meta.url)));
   assert.ok(serviceWorker.includes(icon.src), `${icon.src} must be included in the offline app shell`);

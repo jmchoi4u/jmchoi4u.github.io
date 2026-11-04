@@ -18,11 +18,14 @@ layout: default
   category is chosen, which would leave filtered pages empty. The full list
   also lives at /archives/.
 -->
-{% assign pinned_posts = site.posts | where: 'pin', true %}
-{% assign rest_posts = site.posts | where_exp: 'item', 'item.pin != true' %}
+{%- comment -%} _plugins/hidden-posts-filter.rb already drops hidden posts; filter here too so the
+  template stays correct without the plugin (tools/test-home-categories.rb builds it bare). {%- endcomment -%}
+{% assign visible_posts = site.posts | where_exp: 'item', 'item.hidden != true' %}
+{% assign pinned_posts = visible_posts | where: 'pin', true %}
+{% assign rest_posts = visible_posts | where_exp: 'item', 'item.pin != true' %}
 {% assign posts = pinned_posts | concat: rest_posts %}
 {%- capture avatar_url -%}{% include media-url.html src=site.avatar %}{%- endcapture -%}
-{%- assign first_post = site.posts | last -%}
+{%- assign first_post = visible_posts | last -%}
 
 {%- comment -%}
   Tabs: every sub-category of the writing shelf (most recently used first),
@@ -31,7 +34,7 @@ layout: default
 {%- endcomment -%}
 {%- assign w_subs = '' | split: '' -%}
 {%- assign dev_count = 0 -%}
-{%- for p in site.posts -%}
+{%- for p in visible_posts -%}
   {%- if p.categories contains 'dev' -%}
     {%- assign dev_count = dev_count | plus: 1 -%}
   {%- else -%}
@@ -50,7 +53,7 @@ layout: default
       <span class="jm-blog-avatar" aria-hidden="true" style="background-image:url('{{ avatar_url | strip }}')"></span>
       <div>
         <p class="jm-blog-name">{{ site.title }}</p>
-        <p class="jm-blog-stats">글 {{ site.posts | size }}{% if first_post %} · {{ first_post.date | date: '%Y년 %-m월' }}부터 기록 중{% endif %}</p>
+        <p class="jm-blog-stats">글 {{ visible_posts | size }}{% if first_post %} · {{ first_post.date | date: '%Y년 %-m월' }}부터 기록 중{% endif %}</p>
       </div>
     </div>
     <p class="jm-blog-intro">{{ site.tagline }}</p>
@@ -63,27 +66,27 @@ layout: default
   <nav aria-label="카테고리">
     <ul class="jm-tabs" id="post-list-head">
       <li>
-        <a href="#all" data-cat-link data-cat-group="all" data-cat-sub="all">
-          <span class="jm-cat-name">전체</span><span class="jm-cat-count">{{ site.posts | size }}</span>
+        <a href="#all" data-cat-link data-proofer-ignore data-cat-group="all" data-cat-sub="all">
+          <span class="jm-cat-name">전체</span><span class="jm-cat-count">{{ visible_posts | size }}</span>
         </a>
       </li>
       {%- for s in w_subs -%}
         {%- assign n = 0 -%}
-        {%- for p in site.posts -%}
+        {%- for p in visible_posts -%}
           {%- unless p.categories contains 'dev' -%}
             {%- assign ps = p.categories | where_exp: 'c', 'c != "writing" and c != "dev"' | first -%}
             {%- if ps == s -%}{%- assign n = n | plus: 1 -%}{%- endif -%}
           {%- endunless -%}
         {%- endfor %}
       <li>
-        <a href="#writing/{{ s | replace: ' ', '%20' | escape }}" data-cat-link data-cat-group="writing" data-cat-sub="{{ s | escape }}">
+        <a href="#writing/{{ s | replace: ' ', '%20' | escape }}" data-cat-link data-proofer-ignore data-cat-group="writing" data-cat-sub="{{ s | escape }}">
           <span class="jm-cat-name">{{ s }}</span><span class="jm-cat-count">{{ n }}</span>
         </a>
       </li>
       {%- endfor -%}
       {%- if dev_count > 0 %}
       <li>
-        <a href="#dev" data-cat-link data-cat-group="dev" data-cat-sub="all">
+        <a href="#dev" data-cat-link data-proofer-ignore data-cat-group="dev" data-cat-sub="all">
           <span class="jm-cat-name">개발</span><span class="jm-cat-count">{{ dev_count }}</span>
         </a>
       </li>

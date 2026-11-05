@@ -22,10 +22,11 @@ sitemap: false
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
-:root{--bg:#F5F0EB;--bg2:#EDE8E2;--panel:#fff;--line:#E5DDD4;--text:#1A1A1A;--muted:#756B63;--point:#B45335;--point-h:#9F472E;--point-s:#FDF0EB;--danger:#B83D34;--success:#2F7D4E;--purple:#7C4DDB;--radius:12px;--shadow:0 2px 12px rgba(26,26,26,.06);--safe-top:env(safe-area-inset-top,0px);--safe-right:env(safe-area-inset-right,0px);--safe-bottom:env(safe-area-inset-bottom,0px);--safe-left:env(safe-area-inset-left,0px)}
+/* Same palette as the blog ("하늘 노트", assets/css/blog.css). */
+:root{--bg:#F4F7FA;--bg2:#EAEEF3;--panel:#fff;--line:#E6EAEF;--text:#1B1F24;--muted:#5D6670;--point:#2F5D8A;--point-h:#264D73;--point-s:#EEF3F8;--danger:#C62828;--success:#2E7D4F;--purple:#6B5BD2;--radius:12px;--shadow:0 2px 12px rgba(27,31,36,.06);--safe-top:env(safe-area-inset-top,0px);--safe-right:env(safe-area-inset-right,0px);--safe-bottom:env(safe-area-inset-bottom,0px);--safe-left:env(safe-area-inset-left,0px)}
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;min-height:100dvh;-webkit-font-smoothing:antialiased;overflow:hidden;-webkit-text-size-adjust:100%}
-::selection{background:rgba(218,119,86,.2)}
+html,body{font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR','Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;min-height:100dvh;-webkit-font-smoothing:antialiased;overflow:hidden;-webkit-text-size-adjust:100%}
+::selection{background:rgba(47,93,138,.2)}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#CCC5BD;border-radius:99px}
 
 /* === Layout === */
@@ -53,7 +54,7 @@ html,body{font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSys
 .auth-form{width:100%;max-width:360px;display:flex;flex-direction:column;align-items:stretch}
 .auth-field{display:block;text-align:left;font-size:.76rem;font-weight:600;color:var(--muted);margin-bottom:12px}
 .auth-input{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:var(--radius);font-size:16px;background:var(--panel);outline:none;margin-top:6px;text-align:left;color:var(--text)}
-.auth-input:focus{border-color:var(--point);box-shadow:0 0 0 3px rgba(218,119,86,.12)}
+.auth-input:focus{border-color:var(--point);box-shadow:0 0 0 3px rgba(47,93,138,.12)}
 .auth-choice{display:flex;align-items:flex-start;gap:10px;text-align:left;font-size:.8rem;line-height:1.45;color:var(--text);margin:0 0 14px;cursor:pointer}
 .auth-choice input{width:20px;height:20px;flex:0 0 auto;margin-top:1px;accent-color:var(--point)}
 .auth-choice small{display:block;color:var(--muted);font-size:.72rem;margin-top:2px}
@@ -69,7 +70,7 @@ html,body{font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSys
 
 /* === Buttons === */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:10px 18px;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);color:var(--text);font-size:.85rem;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
-.btn:focus-visible,.topbar-back:focus-visible,.bottombar button:focus-visible,.md-toolbar button:focus-visible,.sidebar-btn:focus-visible{outline:3px solid rgba(218,119,86,.35);outline-offset:2px}
+.btn:focus-visible,.topbar-back:focus-visible,.bottombar button:focus-visible,.md-toolbar button:focus-visible,.sidebar-btn:focus-visible{outline:3px solid rgba(47,93,138,.35);outline-offset:2px}
 .btn:disabled{opacity:.55;cursor:wait;transform:none}
 .btn:active{transform:scale(.97)}
 .btn-primary{background:var(--point);color:#fff;border-color:var(--point)}
@@ -79,7 +80,7 @@ html,body{font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSys
 .btn-block{width:100%}
 .btn.btn-github{background:#24292f;color:#fff;border-color:#24292f}
 .btn.btn-github:hover{background:#1b1f23;color:#fff}
-.btn-fab{position:fixed;bottom:calc(72px + var(--safe-bottom));right:max(16px,var(--safe-right));width:54px;height:54px;border-radius:50%;background:var(--point);color:#fff;border:none;font-size:1.4rem;box-shadow:0 4px 16px rgba(218,119,86,.3);z-index:20;cursor:pointer}
+.btn-fab{position:fixed;bottom:calc(72px + var(--safe-bottom));right:max(16px,var(--safe-right));width:54px;height:54px;border-radius:50%;background:var(--point);color:#fff;border:none;font-size:1.4rem;box-shadow:0 4px 16px rgba(47,93,138,.3);z-index:20;cursor:pointer}
 .btn-fab:active{transform:scale(.92)}
 
 /* === Cards === */
@@ -87,12 +88,12 @@ html,body{font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSys
 .card-actions{display:flex;gap:6px;margin-top:10px;padding-top:8px;border-top:1px solid var(--bg2)}
 .card-title{font-weight:600;font-size:.9rem;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .card-title-button{width:100%;padding:2px 0;border:0;background:transparent;color:inherit;text-align:left;cursor:pointer;line-height:1.45}
-.card-title-button:focus-visible{outline:3px solid rgba(218,119,86,.3);outline-offset:3px;border-radius:4px}
+.card-title-button:focus-visible{outline:3px solid rgba(47,93,138,.3);outline-offset:3px;border-radius:4px}
 .card-meta{display:flex;flex-wrap:wrap;gap:6px;font-size:.72rem;color:var(--muted)}
 .card-meta span{display:inline-flex;align-items:center;gap:3px}
 .card-pin{display:inline-flex;align-items:center;gap:3px;color:var(--point);font-size:.68rem;font-weight:700}
 .card-tag{background:var(--point-s);color:var(--point);padding:1px 6px;border-radius:4px;font-size:.65rem;font-weight:600}
-.suggestion-chip{min-height:32px;padding:5px 9px;border:1px solid rgba(218,119,86,.2);font:inherit;cursor:pointer}
+.suggestion-chip{min-height:32px;padding:5px 9px;border:1px solid rgba(47,93,138,.2);font:inherit;cursor:pointer}
 .card-status{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .status-published{background:var(--success)}
 .status-draft{background:var(--purple)}
@@ -103,7 +104,7 @@ html,body{font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSys
 .editor-section{margin-bottom:16px}
 .editor-label{font-size:.75rem;font-weight:600;color:var(--muted);margin-bottom:5px;display:block}
 .editor-input{width:100%;padding:11px 14px;border:1px solid var(--line);border-radius:10px;font-size:16px;background:var(--panel);outline:none;color:var(--text)}
-.editor-input:focus{border-color:var(--point);box-shadow:0 0 0 3px rgba(218,119,86,.12)}
+.editor-input:focus{border-color:var(--point);box-shadow:0 0 0 3px rgba(47,93,138,.12)}
 textarea.editor-input{min-height:42dvh;font-family:'Cascadia Code','D2Coding',monospace;font-size:16px;line-height:1.7;resize:vertical}
 .editor-row{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
 .editor-checks{display:flex;flex-wrap:wrap;gap:8px 14px;padding:8px 0}
@@ -125,7 +126,7 @@ textarea.editor-input{min-height:42dvh;font-family:'Cascadia Code','D2Coding',mo
 .editor-dock-status{margin-top:8px;font-size:.72rem;color:var(--muted);text-align:center}
 .power-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:.72rem;font-weight:700;background:var(--bg);color:var(--muted);border:1px solid var(--line)}
 .power-badge.active{background:rgba(27,159,80,.1);color:#1b9f50;border-color:rgba(27,159,80,.22)}
-.power-badge.local{background:rgba(218,119,86,.12);color:var(--point);border-color:rgba(218,119,86,.22)}
+.power-badge.local{background:rgba(47,93,138,.12);color:var(--point);border-color:rgba(47,93,138,.22)}
 .power-actions{display:flex;flex-wrap:wrap;gap:8px}
 .power-actions .btn{flex:1 1 140px}
 .power-note{font-size:.76rem;color:var(--muted);line-height:1.6}
@@ -148,7 +149,7 @@ textarea.editor-input{min-height:42dvh;font-family:'Cascadia Code','D2Coding',mo
 .filter-row select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);font-size:.82rem}
 .raw-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
 .raw-tab{padding:8px 12px;border:1px solid var(--line);border-radius:999px;background:var(--panel);font-size:.78rem;cursor:pointer}
-.raw-tab.active{background:var(--point-s);color:var(--point);border-color:rgba(218,119,86,.22)}
+.raw-tab.active{background:var(--point-s);color:var(--point);border-color:rgba(47,93,138,.22)}
 .helper-grid{display:grid;gap:12px}
 .info-list{display:grid;grid-template-columns:110px 1fr;gap:8px 12px;font-size:.82rem}
 .info-list dt{color:var(--muted)}
@@ -157,9 +158,9 @@ textarea.editor-input{min-height:42dvh;font-family:'Cascadia Code','D2Coding',mo
 
 /* === Preview === */
 .editor-hint{margin:6px 2px 0;color:var(--muted);font-size:.72rem;line-height:1.5}
-.preview-content{padding:20px 18px;max-width:40rem;margin:0 auto;line-height:1.9;font-size:1.0625rem;letter-spacing:-.004em;word-break:keep-all;overflow-wrap:break-word;color:#3B352E}
-.preview-content p{margin:0 0 1.15em;text-wrap:pretty}
-.preview-content h1,.preview-content h2,.preview-content h3,.preview-content h4{letter-spacing:-.028em;line-height:1.45;text-wrap:balance;word-break:keep-all;color:#2A241D}
+.preview-content{padding:20px 18px;max-width:40rem;margin:0 auto;line-height:1.85;font-size:1rem;letter-spacing:-.005em;word-break:keep-all;overflow-wrap:break-word;color:#2B3138}
+.preview-content p{margin:0 0 1.3em;text-wrap:pretty}
+.preview-content h1,.preview-content h2,.preview-content h3,.preview-content h4{letter-spacing:-.028em;line-height:1.45;text-wrap:balance;word-break:keep-all;color:#1B1F24}
 .preview-content h1{margin:2.6rem 0 1rem;font-size:1.5rem;font-weight:700}
 .preview-content h2{margin:2.4rem 0 .9rem;font-size:1.28rem;font-weight:700}
 .preview-content h3{margin:1.9rem 0 .7rem;font-size:1.12rem;font-weight:700}
@@ -299,6 +300,93 @@ textarea.editor-input{min-height:42dvh;font-family:'Cascadia Code','D2Coding',mo
   .editor-dock{display:none!important}
 }
 
+/* === Writing-first editor: title and text first, live preview beside them
+   on a wide screen (a 쓰기 / 미리보기 tab on a phone), every other post
+   field in the 글 설정 sheet. === */
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+#topbar-actions{display:flex;align-items:center}
+.tb-editor{display:flex;align-items:center;gap:8px}
+.tb-editor[hidden]{display:none}
+.ed-mode{display:flex;padding:3px;border-radius:9px;background:var(--bg2)}
+.ed-mode button{min-height:36px;padding:0 14px;border:0;border-radius:7px;background:none;color:var(--muted);font:inherit;font-size:.84rem;cursor:pointer}
+.ed-mode button[aria-selected="true"]{background:var(--panel);color:var(--text);font-weight:700;box-shadow:0 1px 2px rgba(27,31,36,.12)}
+.ed-title-input{width:100%;padding:4px 0 6px;border:0;border-radius:0;background:transparent;color:var(--text);font:inherit;font-size:1.5rem;font-weight:700;letter-spacing:-.03em;outline:none}
+.ed-title-input::placeholder,textarea.ed-body-input::placeholder{color:#8C95A0}
+.ed-chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 14px}
+.ed-chip{min-height:34px;padding:0 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--text);font:inherit;font-size:.8rem;cursor:pointer}
+.ed-chip.is-empty{border-style:dashed;color:var(--muted)}
+.ed-chip.is-tags{color:var(--point)}
+#view-editor .md-toolbar{position:sticky;top:0;z-index:5;flex-wrap:nowrap;margin-bottom:10px;overflow-x:auto;background:var(--panel);scrollbar-width:none}
+#view-editor .md-toolbar::-webkit-scrollbar{display:none}
+#view-editor .md-toolbar button{flex:0 0 auto;font-weight:600}
+.app.editor-active .main{background:var(--panel)}
+textarea.editor-input.ed-body-input{min-height:55dvh;padding:4px 0;border:0;border-radius:0;background:transparent;font-family:inherit;font-size:16px;line-height:1.85;resize:none;box-shadow:none}
+.ed-preview{display:none}
+#view-editor.mode-preview .ed-write{display:none}
+#view-editor.mode-preview .ed-preview{display:block}
+.ed-pane-label{margin:0 0 12px;font-size:.72rem;font-weight:700;color:var(--muted)}
+.ed-preview .preview-content{padding:0;max-width:none}
+.ed-preview .pv-slide{margin-left:0;margin-right:0}
+.live-cat{margin:0 0 6px!important;color:var(--point);font-size:.8rem;font-weight:700}
+.live-title{margin:0 0 20px!important;color:#1B1F24;font-size:1.5rem;font-weight:700;line-height:1.4;letter-spacing:-.03em}
+.live-empty{color:var(--muted);font-size:.86rem}
+.app.editor-active .editor-dock{display:none!important}
+.ed-toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:50px;border-bottom:1px solid var(--bg2);font-size:.9rem;cursor:pointer}
+.ed-toggle small{display:block;color:var(--muted);font-size:.72rem}
+.ed-toggle input{width:22px;height:22px;flex:0 0 auto;accent-color:var(--point)}
+.post-settings{position:fixed;inset:0;z-index:60}
+.post-settings[hidden]{display:none}
+.post-settings-backdrop{position:absolute;inset:0;background:rgba(27,31,36,.42)}
+.post-settings-panel{position:absolute;left:0;right:0;bottom:0;display:flex;flex-direction:column;max-height:88dvh;border-radius:16px 16px 0 0;background:var(--panel);box-shadow:0 -8px 30px rgba(27,31,36,.16);outline:none}
+.post-settings-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 16px 6px 20px}
+.post-settings-head h2{font-size:1.1rem}
+.post-settings-head p{margin-top:2px;color:var(--muted);font-size:.76rem}
+.post-settings-body{flex:1;overflow-y:auto;padding:8px 20px 12px;overscroll-behavior:contain}
+.post-settings-foot{padding:12px 20px calc(16px + var(--safe-bottom));border-top:1px solid var(--line)}
+.post-settings-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.post-settings-links:empty{display:none}
+.post-settings-advanced{margin-top:10px;border-top:1px solid var(--line)}
+.post-settings-advanced>summary{min-height:50px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;color:var(--muted);font-size:.86rem;list-style:none}
+.post-settings-advanced>summary::-webkit-details-marker{display:none}
+.post-settings-advanced>summary::after{content:'▾'}
+.post-settings-advanced[open]>summary::after{content:'▴'}
+.list-extras{margin:0 0 10px}
+.list-extras>summary{min-height:40px;display:flex;align-items:center;gap:6px;color:var(--muted);font-size:.8rem;cursor:pointer;list-style:none}
+.list-extras>summary::-webkit-details-marker{display:none}
+.list-extras>summary::after{content:'▾'}
+.list-extras[open]>summary::after{content:'▴'}
+#post-list .card{margin:0;padding:14px 2px;border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent;cursor:default}
+#post-list .card:hover{box-shadow:none;border-color:var(--line)}
+#post-list .card-title{font-size:1rem;font-weight:700;letter-spacing:-.02em}
+#post-list .card-actions{display:flex;gap:4px;margin-top:8px;padding-top:0;border-top:0}
+#post-list .card-actions .btn{min-height:34px;padding:4px 10px;border-color:transparent;background:var(--bg);color:var(--muted);font-weight:500}
+#post-list .card-actions .btn-primary{background:var(--point-s);color:var(--point)}
+@media(max-width:767px){
+  .app.editor-active .bottombar{display:none!important}
+  .app.editor-active #topbar-title{display:none}
+  .app.editor-active #topbar-actions{flex:1}
+  .app.editor-active .tb-editor{flex:1;justify-content:space-between}
+  .tb-editor .tb-settings{display:none}
+  /* The 16px floor above (it stops iOS zooming into a field) must not shrink the title. */
+  #ed-title.ed-title-input{font-size:1.375rem!important}
+  #view-editor{padding-bottom:48px}
+  #view-editor .md-toolbar{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  #view-editor .md-toolbar::-webkit-scrollbar{display:none}
+  #view-editor .md-toolbar button{flex:0 0 auto}
+}
+@media(min-width:768px){
+  .post-settings-panel{top:0;left:auto;width:440px;max-height:none;border-radius:0}
+}
+@media(min-width:1024px){
+  .ed-mode{display:none}
+  #view-editor{max-width:none}
+  .ed-split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .ed-write{padding-right:28px;border-right:1px solid var(--line)}
+  .ed-preview,#view-editor.mode-preview .ed-preview{display:block;padding-left:32px}
+  #view-editor.mode-preview .ed-write{display:block}
+  .ed-preview-inner{position:sticky;top:0;max-height:calc(100dvh - 120px);overflow-y:auto}
+}
+
 /* === Wide desktop (1200px+) === */
 @media(min-width:1200px){
   .sidebar{width:260px}
@@ -343,7 +431,16 @@ textarea.editor-input{min-height:42dvh;font-family:'Cascadia Code','D2Coding',mo
       <button class="topbar-sidebar-toggle" id="topbar-sidebar-toggle" type="button" onclick="toggleSidebar()" title="사이드바 열기" aria-label="사이드바 열기">&#9776;</button>
       <button class="topbar-back" id="topbar-back" type="button" onclick="goBack()" aria-label="이전 화면">&larr;</button>
       <h1 id="topbar-title">Blog Studio</h1>
-      <div id="topbar-actions"></div>
+      <div id="topbar-actions">
+        <div class="tb-editor" id="tb-editor" hidden>
+          <div class="ed-mode" role="tablist" aria-label="보기 전환">
+            <button type="button" role="tab" id="ed-mode-write" aria-selected="true" onclick="setEditorMode('write')">쓰기</button>
+            <button type="button" role="tab" id="ed-mode-preview" aria-selected="false" onclick="setEditorMode('preview')">미리보기</button>
+          </div>
+          <button type="button" class="btn btn-sm tb-settings" onclick="openPostSettings()">글 설정</button>
+          <button type="button" class="btn btn-primary btn-sm" data-save-action onclick="topbarSave()">발행</button>
+        </div>
+      </div>
     </div>
 
     <!-- Main content area -->
@@ -403,6 +500,8 @@ textarea.editor-input{min-height:42dvh;font-family:'Cascadia Code','D2Coding',mo
       <div class="search-bar">
         <input type="search" id="search-input" placeholder="제목·태그 검색" aria-label="글 검색" oninput="filterPosts()">
       </div>
+      <details class="list-extras">
+        <summary>통계와 필터</summary>
       <div class="quick-stats" id="list-stats">
         <div class="quick-stat"><span class="quick-stat-num" id="stat-all">0</span><span class="quick-stat-label">전체</span></div>
         <div class="quick-stat"><span class="quick-stat-num" id="stat-published">0</span><span class="quick-stat-label">발행</span></div>
@@ -425,6 +524,7 @@ textarea.editor-input{min-height:42dvh;font-family:'Cascadia Code','D2Coding',mo
           <option value="">전체 태그</option>
         </select>
       </div>
+      </details>
       <div class="tab-bar" id="list-tabs">
         <button class="active" type="button" data-tab="all" onclick="setListTab('all',this)">전체</button>
         <button type="button" data-tab="published" onclick="setListTab('published',this)">발행</button>
@@ -454,148 +554,154 @@ textarea.editor-input{min-height:42dvh;font-family:'Cascadia Code','D2Coding',mo
         </div>
       </div>
 
-      <div class="editor-section">
-        <label class="editor-label" for="ed-title">제목</label>
-        <input class="editor-input" id="ed-title" type="text" placeholder="글 제목">
-      </div>
-
-      <div class="editor-row">
-        <div class="editor-section">
-          <label class="editor-label" for="ed-date">날짜</label>
-          <input class="editor-input" id="ed-date" type="text" placeholder="2026-03-26 09:00:00 +0900">
-        </div>
-        <div class="editor-section">
-          <label class="editor-label" for="ed-desc">설명</label>
-          <input class="editor-input" id="ed-desc" type="text" placeholder="SEO 설명">
-        </div>
-      </div>
-
-      <div class="editor-row">
-        <div class="editor-section">
-          <label class="editor-label" for="ed-cats">카테고리</label>
-          <input class="editor-input" id="ed-cats" type="text" placeholder="예: 개발환경">
-          <div class="editor-meta" id="ed-cats-suggestions" style="margin-top:6px;gap:5px"></div>
-        </div>
-        <div class="editor-section">
-          <label class="editor-label" for="ed-tags">태그</label>
-          <input class="editor-input" id="ed-tags" type="text" placeholder="chirpy, seo">
-          <div class="editor-meta" id="ed-tags-suggestions" style="margin-top:6px;gap:5px"></div>
-        </div>
-      </div>
-
-      <div class="editor-section">
-        <label class="editor-label" for="ed-hero-title">표시 제목 (줄바꿈 가능)</label>
-        <input class="editor-input" id="ed-hero-title" type="text" placeholder="비워두면 글 제목 사용">
-      </div>
-
-      <div class="editor-row">
-        <div class="editor-section">
-          <label class="editor-label" for="ed-summary">요약</label>
-          <input class="editor-input" id="ed-summary" type="text" placeholder="목록/미리보기용 요약 (선택)">
-        </div>
-        <div class="editor-section">
-          <label class="editor-label" for="ed-permalink">고정 URL</label>
-          <input class="editor-input" id="ed-permalink" type="text" placeholder="비워두면 기본 규칙 사용 (예: /posts/6/)">
-        </div>
-      </div>
-
-      <div class="editor-section">
-        <label class="editor-label" for="cover-file">표지 이미지</label>
-        <label class="img-upload" id="cover-upload" for="cover-file">
-          이미지를 선택하세요
-          <input type="file" id="cover-file" accept="image/*" onchange="uploadCover(this)">
-        </label>
-        <div class="cover-preview" id="cover-preview" style="display:none">
-          <img id="cover-img" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="cover">
-          <button class="cover-remove" type="button" onclick="removeCover()" aria-label="표지 이미지 제거">&times;</button>
-        </div>
-        <input type="hidden" id="ed-cover">
-        <input type="hidden" id="ed-hero-image-position">
-        <input type="hidden" id="ed-image-extra">
-        <input type="hidden" id="ed-extra-front-matter">
-        <label class="editor-label" for="ed-cover-alt" style="margin-top:10px">이미지 설명</label>
-        <input class="editor-input" id="ed-cover-alt" type="text" placeholder="이미지를 보지 못해도 이해할 수 있는 설명">
-      </div>
-
-      <div class="editor-section">
-        <label class="editor-label">옵션</label>
-        <div class="editor-checks">
-          <label class="editor-check"><input type="checkbox" id="ed-toc" checked> TOC</label>
-          <label class="editor-check"><input type="checkbox" id="ed-comments" checked> 댓글</label>
-          <label class="editor-check"><input type="checkbox" id="ed-pin"> 고정</label>
-          <label class="editor-check"><input type="checkbox" id="ed-hidden"> 숨김</label>
-          <label class="editor-check"><input type="checkbox" id="ed-draft"> 임시저장</label>
-          <label class="editor-check"><input type="checkbox" id="ed-mermaid"> Mermaid</label>
-          <label class="editor-check"><input type="checkbox" id="ed-math"> Math</label>
-        </div>
-      </div>
-
-      <div class="editor-section">
-        <label class="editor-label">발행 전 점검</label>
-        <div class="publish-checklist" id="publish-checklist" aria-live="polite">
-          <span class="publish-check" data-check="title">제목 입력</span>
-          <span class="publish-check" data-check="description">설명 40~160자 권장</span>
-          <span class="publish-check" data-check="category">카테고리 1개 이상</span>
-          <span class="publish-check" data-check="tags">태그 1~5개 권장</span>
-          <span class="publish-check" data-check="image-alt">표지 이미지 설명</span>
-        </div>
-      </div>
-
-      <div class="editor-section">
-        <label class="editor-label">웹 전용 모드</label>
-        <div class="template-tools">
-          <div class="editor-input" style="display:flex;align-items:center;color:var(--muted)">localhost 템플릿/파워 기능은 비활성화되어 있습니다.</div>
-        </div>
-        <div class="editor-meta">
-          <span id="power-mode-editor-status">웹 전용 GitHub 편집 모드</span>
-        </div>
-      </div>
-
-      <div class="editor-section">
-        <label class="editor-label">SNS 공유 미리보기</label>
-        <div class="soft-card" id="sns-preview" style="padding:0;overflow:hidden;border-radius:12px;max-width:400px">
-          <div id="sns-preview-img-wrap" style="width:100%;height:200px;background:#eee;display:flex;align-items:center;justify-content:center;overflow:hidden">
-            <img id="sns-preview-img" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="SNS 공유 이미지 미리보기" style="width:100%;height:100%;object-fit:cover">
+      <div class="ed-split">
+        <section class="ed-write" aria-label="쓰기">
+          <label class="sr-only" for="ed-title">제목</label>
+          <input class="ed-title-input" id="ed-title" type="text" placeholder="제목" autocomplete="off">
+          <div class="ed-chips" aria-label="글 설정 요약">
+            <button type="button" class="ed-chip is-empty" id="ed-chip-cat" onclick="openPostSettings()">+ 카테고리</button>
+            <button type="button" class="ed-chip is-empty" id="ed-chip-tags" onclick="openPostSettings()">+ 태그</button>
+            <button type="button" class="ed-chip is-empty" id="ed-chip-cover" onclick="openPostSettings()">+ 표지 사진</button>
           </div>
-          <div style="padding:12px;background:#f9f9f9;border-top:1px solid var(--line)">
-            <div id="sns-preview-url" style="font-size:.7rem;color:var(--muted);margin-bottom:2px;text-transform:uppercase">JMCHOI4U.GITHUB.IO</div>
-            <div id="sns-preview-title" style="font-size:.9rem;font-weight:700;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden">글 제목</div>
-            <div id="sns-preview-desc" style="font-size:.75rem;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">SEO 설명이 여기에 표시됩니다.</div>
+          <div class="md-toolbar" id="md-toolbar" role="toolbar" aria-label="서식">
+            <button type="button" onclick="triggerBodyImage()" title="사진 (여러 장 고르면 슬라이드)" aria-label="본문에 사진 넣기, 여러 장 고르면 슬라이드" style="color:var(--point)">사진</button>
+            <button type="button" onclick="insert('## ')" title="소제목" aria-label="소제목">제목</button>
+            <button type="button" onclick="wrap('**','**')" title="굵게" aria-label="굵게"><b>B</b></button>
+            <button type="button" onclick="insert('- ')" title="목록" aria-label="목록">목록</button>
+            <button type="button" onclick="insert('> ')" title="인용" aria-label="인용">인용</button>
+            <button type="button" onclick="wrap('[','](https://)')" title="링크" aria-label="링크 삽입">링크</button>
+            <span class="md-sep"></span>
+            <button type="button" onclick="wrap('*','*')" title="기울임" aria-label="기울임"><i>I</i></button>
+            <button type="button" onclick="wrap('<u>','</u>')" title="밑줄" aria-label="밑줄"><u>U</u></button>
+            <button type="button" onclick="wrap('~~','~~')" title="취소선" aria-label="취소선"><s>S</s></button>
+            <button type="button" onclick="insert('### ')" title="작은 소제목" aria-label="작은 소제목">H3</button>
+            <button type="button" onclick="wrap('`','`')" title="코드" aria-label="인라인 코드">&lt;/&gt;</button>
+            <button type="button" onclick="insert('```\n\n```')" title="코드블록" aria-label="코드 블록">{ }</button>
+          </div>
+          <label class="sr-only" for="ed-body">본문</label>
+          <textarea class="editor-input ed-body-input" id="ed-body" placeholder="여기에 쓰세요. 엔터 한 번은 줄바꿈, 두 번은 새 문단이에요." oninput="autoSave()"></textarea>
+          <p class="editor-hint">사진은 여러 장을 한 번에 고르면 옆으로 넘겨 보는 슬라이드가 돼요. 붙여넣기·끌어다 놓기도 되고, 큰 사진은 올리기 전에 자동으로 줄여요.</p>
+          <div class="editor-meta">
+            <span id="editor-stats">0자 · 0단어</span>
+            <span id="autosave-status">자동저장 대기</span>
+          </div>
+        </section>
+        <section class="ed-preview" aria-label="블로그에서 보이는 모습">
+          <div class="ed-preview-inner">
+            <p class="ed-pane-label">블로그에서 이렇게 보여요</p>
+            <div class="preview-content" id="live-preview"></div>
+          </div>
+        </section>
+      </div>
+
+      <!-- 글 설정: everything about the post that is not its title and text. -->
+      <div class="post-settings" id="post-settings" hidden>
+        <div class="post-settings-backdrop" onclick="closePostSettings()"></div>
+        <div class="post-settings-panel" role="dialog" aria-modal="true" aria-labelledby="post-settings-title" tabindex="-1">
+          <div class="post-settings-head">
+            <div>
+              <h2 id="post-settings-title">글 설정</h2>
+              <p>발행하면 1~2분 뒤 블로그에 올라가요.</p>
+            </div>
+            <button type="button" class="btn btn-sm" onclick="closePostSettings()">닫기</button>
+          </div>
+          <div class="post-settings-body">
+            <div class="editor-section">
+              <label class="editor-label" for="ed-cats">카테고리</label>
+              <input class="editor-input" id="ed-cats" type="text" placeholder="예: 에세이 (쉼표로 여러 개)">
+              <div class="editor-meta" id="ed-cats-suggestions" style="margin-top:6px;gap:5px"></div>
+            </div>
+            <div class="editor-section">
+              <label class="editor-label" for="ed-tags">태그</label>
+              <input class="editor-input" id="ed-tags" type="text" placeholder="예: 글쓰기, 기록">
+              <div class="editor-meta" id="ed-tags-suggestions" style="margin-top:6px;gap:5px"></div>
+            </div>
+            <div class="editor-section">
+              <label class="editor-label" for="cover-file">표지 사진 (목록에서 글 옆에 작게)</label>
+              <label class="img-upload" id="cover-upload" for="cover-file">
+                사진 고르기
+                <input type="file" id="cover-file" accept="image/*" onchange="uploadCover(this)">
+              </label>
+              <div class="cover-preview" id="cover-preview" style="display:none">
+                <img id="cover-img" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="cover">
+                <button class="cover-remove" type="button" onclick="removeCover()" aria-label="표지 사진 빼기">&times;</button>
+              </div>
+              <input type="hidden" id="ed-cover">
+              <input type="hidden" id="ed-hero-image-position">
+              <input type="hidden" id="ed-image-extra">
+              <input type="hidden" id="ed-extra-front-matter">
+              <label class="editor-label" for="ed-cover-alt" style="margin-top:10px">사진 설명</label>
+              <input class="editor-input" id="ed-cover-alt" type="text" placeholder="사진을 못 보는 사람도 알 수 있게 한 줄로">
+            </div>
+            <label class="ed-toggle"><span>댓글 받기</span><input type="checkbox" id="ed-comments" checked></label>
+            <label class="ed-toggle"><span>맨 위에 고정</span><input type="checkbox" id="ed-pin"></label>
+            <label class="ed-toggle"><span>목록에서 숨기기<small>주소를 아는 사람만 볼 수 있어요</small></span><input type="checkbox" id="ed-hidden"></label>
+            <label class="ed-toggle"><span>임시저장으로 두기<small>블로그에 올리지 않고 저장만 해요</small></span><input type="checkbox" id="ed-draft"></label>
+            <details class="post-settings-advanced">
+              <summary>고급 설정 (날짜·주소·검색 설명)</summary>
+              <div class="editor-section">
+                <label class="editor-label" for="ed-date">날짜</label>
+                <input class="editor-input" id="ed-date" type="text" placeholder="2026-03-26 09:00:00 +0900">
+              </div>
+              <div class="editor-section">
+                <label class="editor-label" for="ed-desc">검색·공유용 설명</label>
+                <input class="editor-input" id="ed-desc" type="text" placeholder="검색 결과와 공유 카드에 나오는 한두 문장">
+              </div>
+              <div class="editor-section">
+                <label class="editor-label" for="ed-summary">목록용 요약</label>
+                <input class="editor-input" id="ed-summary" type="text" placeholder="비워두면 본문 앞부분을 써요">
+              </div>
+              <div class="editor-section">
+                <label class="editor-label" for="ed-hero-title">표시 제목 (줄바꿈 가능)</label>
+                <input class="editor-input" id="ed-hero-title" type="text" placeholder="비워두면 글 제목 사용">
+              </div>
+              <div class="editor-section">
+                <label class="editor-label" for="ed-permalink">고정 주소</label>
+                <input class="editor-input" id="ed-permalink" type="text" placeholder="비워두면 기본 규칙 사용 (예: /posts/6/)">
+              </div>
+              <div class="editor-section">
+                <div class="editor-checks">
+                  <label class="editor-check"><input type="checkbox" id="ed-toc" checked> 목차</label>
+                  <label class="editor-check"><input type="checkbox" id="ed-mermaid"> Mermaid</label>
+                  <label class="editor-check"><input type="checkbox" id="ed-math"> 수식</label>
+                </div>
+              </div>
+              <div class="editor-section">
+                <label class="editor-label">발행 전 점검</label>
+                <div class="publish-checklist" id="publish-checklist" aria-live="polite">
+                  <span class="publish-check" data-check="title">제목 입력</span>
+                  <span class="publish-check" data-check="description">설명 40~160자 권장</span>
+                  <span class="publish-check" data-check="category">카테고리 1개 이상</span>
+                  <span class="publish-check" data-check="tags">태그 1~5개 권장</span>
+                  <span class="publish-check" data-check="image-alt">표지 이미지 설명</span>
+                </div>
+              </div>
+              <div class="editor-section">
+                <label class="editor-label">공유 카드 미리보기</label>
+                <div class="soft-card" id="sns-preview" style="padding:0;overflow:hidden;border-radius:12px;max-width:400px">
+                  <div id="sns-preview-img-wrap" style="width:100%;height:200px;background:#eee;display:flex;align-items:center;justify-content:center;overflow:hidden">
+                    <img id="sns-preview-img" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="SNS 공유 이미지 미리보기" style="width:100%;height:100%;object-fit:cover">
+                  </div>
+                  <div style="padding:12px;background:#f9f9f9;border-top:1px solid var(--line)">
+                    <div id="sns-preview-url" style="font-size:.7rem;color:var(--muted);margin-bottom:2px;text-transform:uppercase">JMCHOI4U.GITHUB.IO</div>
+                    <div id="sns-preview-title" style="font-size:.9rem;font-weight:700;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden">글 제목</div>
+                    <div id="sns-preview-desc" style="font-size:.75rem;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">SEO 설명이 여기에 표시됩니다.</div>
+                  </div>
+                </div>
+              </div>
+              <div class="editor-meta" style="margin-bottom:12px">
+                <span id="power-mode-editor-status">웹 전용 GitHub 편집 모드</span>
+              </div>
+            </details>
+          </div>
+          <div class="post-settings-foot">
+            <button class="btn btn-primary btn-block" data-save-action type="button" onclick="publishFromSheet()">발행</button>
+            <div class="post-settings-links">
+              <a class="btn btn-sm" id="ed-view-link" href="#" target="_blank" rel="noopener noreferrer" style="display:none">블로그에서 보기</a>
+              <button class="btn btn-danger btn-sm" id="ed-delete-btn" type="button" style="display:none" onclick="deletePost()">삭제</button>
+            </div>
           </div>
         </div>
-      </div>
-
-      <div class="editor-section">
-        <label class="editor-label" for="ed-body">본문</label>
-        <div class="md-toolbar" id="md-toolbar">
-          <button type="button" onclick="wrap('**','**')" title="굵게" aria-label="굵게"><b>B</b></button>
-          <button type="button" onclick="wrap('*','*')" title="기울임" aria-label="기울임"><i>I</i></button>
-          <button type="button" onclick="wrap('<u>','</u>')" title="밑줄" aria-label="밑줄"><u>U</u></button>
-          <button type="button" onclick="wrap('~~','~~')" title="취소선" aria-label="취소선"><s>S</s></button>
-          <span class="md-sep"></span>
-          <button type="button" onclick="insert('## ')" title="H2" aria-label="2단계 제목">H2</button>
-          <button type="button" onclick="insert('### ')" title="H3" aria-label="3단계 제목">H3</button>
-          <span class="md-sep"></span>
-          <button type="button" onclick="insert('- ')" title="목록" aria-label="목록">&bull;</button>
-          <button type="button" onclick="insert('> ')" title="인용" aria-label="인용">&ldquo;</button>
-          <button type="button" onclick="wrap('`','`')" title="코드" aria-label="인라인 코드">&lt;/&gt;</button>
-          <button type="button" onclick="insert('```\n\n```')" title="코드블록" aria-label="코드 블록">{ }</button>
-          <button type="button" onclick="wrap('[','](https://)')" title="링크" aria-label="링크 삽입">&#128279;</button>
-          <button type="button" onclick="triggerBodyImage()" title="사진 (여러 장 고르면 슬라이드)" aria-label="본문에 사진 넣기, 여러 장 고르면 슬라이드">&#128247;</button>
-        </div>
-        <textarea class="editor-input" id="ed-body" placeholder="마크다운으로 작성하세요. 엔터로 친 줄바꿈은 글에도 그대로 나옵니다." oninput="autoSave()"></textarea>
-        <p class="editor-hint">엔터 한 번 = 줄바꿈, 엔터 두 번 = 새 문단. 쓴 그대로 발행됩니다.<br>사진은 여러 장을 한 번에 고르면 옆으로 넘겨 보는 슬라이드가 돼요. 붙여넣기·끌어다 놓기도 되고, 큰 사진은 올리기 전에 자동으로 줄여요.</p>
-        <div class="editor-meta">
-          <span id="editor-stats">0자 · 0단어</span>
-          <span id="autosave-status">자동저장 대기</span>
-        </div>
-      </div>
-
-      <div class="editor-actions">
-        <button class="btn btn-primary" style="flex:1" data-save-action type="button" onclick="savePost()">저장</button>
-        <button class="btn" onclick="togglePreview()">미리보기</button>
-        <a class="btn" id="ed-view-link" href="#" target="_blank" rel="noopener noreferrer" style="display:none">블로그에서 보기</a>
-        <button class="btn btn-danger btn-sm" id="ed-delete-btn" style="display:none" onclick="deletePost()">삭제</button>
       </div>
     </div>
 
@@ -1135,6 +1241,8 @@ window.addEventListener('DOMContentLoaded', function() {
     var el = document.getElementById(id);
     if (el) el.addEventListener('change', autoSave);
   });
+  /* Crossing the wide-screen width shows or hides the side-by-side preview. */
+  window.addEventListener('resize', scheduleLivePreview, { passive: true });
   window.addEventListener('pagehide', flushAutosave);
   document.addEventListener('visibilitychange', function() {
     if (document.visibilityState === 'hidden') flushAutosave();
@@ -1764,6 +1872,159 @@ function updateEditorStats() {
     snsImg.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
   }
   updatePublishChecklist();
+  /* Every edit and every post load passes through here. */
+  updateEditorChips();
+  refreshSaveActionLabels();
+  scheduleLivePreview();
+}
+
+/* ═══════ Writing-first editor: mode tabs, live preview, 글 설정 sheet ═══════ */
+var LIVE_PREVIEW_DELAY = 180;
+var livePreviewTimer = null;
+var postSettingsReturnFocus = null;
+
+function isWideEditor() {
+  return window.matchMedia('(min-width: 1024px)').matches;
+}
+
+/* Phone and tablet: 쓰기 / 미리보기 tabs. Wide screens show both side by side. */
+function setEditorMode(mode) {
+  S.editorMode = mode === 'preview' ? 'preview' : 'write';
+  var view = document.getElementById('view-editor');
+  if (view) view.classList.toggle('mode-preview', S.editorMode === 'preview');
+  [['ed-mode-write', 'write'], ['ed-mode-preview', 'preview']].forEach(function(pair) {
+    var tab = document.getElementById(pair[0]);
+    if (tab) tab.setAttribute('aria-selected', S.editorMode === pair[1] ? 'true' : 'false');
+  });
+  if (S.editorMode === 'preview') renderLivePreview();
+  if (!isWideEditor()) document.getElementById('main-scroll').scrollTop = 0;
+}
+
+function scheduleLivePreview() {
+  clearTimeout(livePreviewTimer);
+  livePreviewTimer = setTimeout(renderLivePreview, LIVE_PREVIEW_DELAY);
+}
+
+/* The label the blog puts above a post's title: its sub-category, else the shelf. */
+function previewCategoryLabel(categories) {
+  var sub = categories.filter(function(c) { return c !== 'writing' && c !== 'dev'; })[0];
+  if (sub) return sub;
+  if (categories.indexOf('dev') !== -1) return '개발';
+  return categories.length ? '글' : '';
+}
+
+/* The post as the blog will show it: category, title, then the text with
+   photos and slides (renderMarkdown + buildPreviewSlides, as in 미리보기).
+   Skipped while hidden — a phone writing in the 쓰기 tab renders nothing. */
+function renderLivePreview() {
+  var pane = document.getElementById('live-preview');
+  if (!pane) return;
+  if (!isWideEditor() && S.editorMode !== 'preview') return;
+  var title = document.getElementById('ed-title').value.trim();
+  var body = document.getElementById('ed-body').value;
+  var category = previewCategoryLabel(parseList(document.getElementById('ed-cats').value));
+
+  pane.innerHTML = '';
+  if (category) {
+    var cat = document.createElement('p');
+    cat.className = 'live-cat';
+    cat.textContent = category;
+    pane.appendChild(cat);
+  }
+  var heading = document.createElement('h1');
+  heading.className = 'live-title';
+  heading.textContent = title || '제목 없음';
+  pane.appendChild(heading);
+
+  var bodyWrap = document.createElement('div');
+  if (body.trim()) {
+    bodyWrap.innerHTML = renderMarkdown(body);
+    buildPreviewSlides(bodyWrap);
+  } else {
+    var empty = document.createElement('p');
+    empty.className = 'live-empty';
+    empty.textContent = '본문을 쓰면 여기에 블로그 모습 그대로 보여요.';
+    bodyWrap.appendChild(empty);
+  }
+  pane.appendChild(bodyWrap);
+}
+
+/* The chips under the title summarise the 글 설정 sheet and open it. */
+function updateEditorChips() {
+  var cats = parseList(document.getElementById('ed-cats').value);
+  var tags = parseList(document.getElementById('ed-tags').value);
+  var cover = document.getElementById('ed-cover').value.trim();
+  var catChip = document.getElementById('ed-chip-cat');
+  var tagChip = document.getElementById('ed-chip-tags');
+  var coverChip = document.getElementById('ed-chip-cover');
+  if (catChip) {
+    var label = cats.length ? (previewCategoryLabel(cats) === '글' ? cats.join(' / ') : previewCategoryLabel(cats)) : '';
+    catChip.textContent = label || '+ 카테고리';
+    catChip.classList.toggle('is-empty', !label);
+  }
+  if (tagChip) {
+    var shown = tags.slice(0, 3).map(function(tag) { return '#' + tag; }).join(' ');
+    tagChip.textContent = tags.length ? shown + (tags.length > 3 ? ' 외 ' + (tags.length - 3) : '') : '+ 태그';
+    tagChip.classList.toggle('is-empty', !tags.length);
+    tagChip.classList.toggle('is-tags', tags.length > 0);
+  }
+  if (coverChip) {
+    coverChip.textContent = cover ? '표지 사진 있음' : '+ 표지 사진';
+    coverChip.classList.toggle('is-empty', !cover);
+  }
+}
+
+/* A new post is 발행; an existing one is 저장; either kept as a draft is 임시저장. */
+function saveActionLabel() {
+  var draft = document.getElementById('ed-draft');
+  if (draft && draft.checked) return '임시저장';
+  return S.editing && !S.editing.isNew ? '저장' : '발행';
+}
+
+function refreshSaveActionLabels() {
+  if (S.saving || S.loadingPost) return;
+  document.querySelectorAll('[data-save-action]').forEach(function(button) {
+    button.textContent = saveActionLabel();
+  });
+}
+
+/* An edit to an existing post saves straight away. A new post goes through
+   the sheet first: publishing it e-mails the subscribers, so its category,
+   tags and cover get one look before it leaves. */
+function topbarSave() {
+  if (S.editing && !S.editing.isNew) savePost();
+  else openPostSettings();
+}
+
+function openPostSettings() {
+  var sheet = document.getElementById('post-settings');
+  if (!sheet) return;
+  postSettingsReturnFocus = document.activeElement;
+  sheet.hidden = false;
+  document.addEventListener('keydown', postSettingsKeydown);
+  var panel = sheet.querySelector('.post-settings-panel');
+  if (panel) panel.focus();
+}
+
+function closePostSettings() {
+  var sheet = document.getElementById('post-settings');
+  if (!sheet || sheet.hidden) return;
+  sheet.hidden = true;
+  document.removeEventListener('keydown', postSettingsKeydown);
+  if (postSettingsReturnFocus && typeof postSettingsReturnFocus.focus === 'function') postSettingsReturnFocus.focus();
+  postSettingsReturnFocus = null;
+}
+
+function postSettingsKeydown(event) {
+  if (event.key === 'Escape') closePostSettings();
+}
+
+/* savePost shows #publish-status only when the save went through. */
+async function publishFromSheet() {
+  hidePublishStatus();
+  await savePost();
+  var status = document.getElementById('publish-status');
+  if (status && status.classList.contains('show')) closePostSettings();
 }
 
 function setPublishCheck(name, state, label) {
@@ -3154,11 +3415,11 @@ function setPostLoadingState(loading) {
 
 function syncEditorBusyState() {
   var busy = S.saving || S.loadingPost;
-  document.querySelectorAll('#view-editor input, #view-editor textarea, #view-editor button, #editor-dock button, #post-list button').forEach(function(control) {
+  document.querySelectorAll('#view-editor input, #view-editor textarea, #view-editor button, #editor-dock button, #tb-editor button, #post-list button').forEach(function(control) {
     control.disabled = busy;
   });
   document.querySelectorAll('[data-save-action]').forEach(function(button) {
-    button.textContent = S.loadingPost ? '불러오는 중…' : (S.saving ? '저장 중…' : '저장');
+    button.textContent = S.loadingPost ? '불러오는 중…' : (S.saving ? '저장 중…' : saveActionLabel());
   });
   syncNewPostAvailability();
 }
@@ -3793,6 +4054,14 @@ function showView(id, options) {
   document.querySelectorAll('.sidebar-btn').forEach(function(b) {
     b.classList.toggle('active', b.dataset.view === id);
   });
+
+  /* The editor's own controls (쓰기/미리보기, 글 설정, 발행) live in the top bar. */
+  var editorish = id === 'editor' || id === 'preview';
+  var editorBar = document.getElementById('tb-editor');
+  if (editorBar) editorBar.hidden = !editorish;
+  document.getElementById('app').classList.toggle('editor-active', editorish);
+  if (id !== 'editor') closePostSettings();
+  if (id === 'editor' && previousView !== 'editor' && previousView !== 'preview') setEditorMode('write');
 
   var backBtn = document.getElementById('topbar-back');
   var titles = { boot: 'Blog Studio', auth: 'Blog Studio', lock: 'Blog Studio', list: 'Blog Studio', editor: (S.editing && !S.editing.isNew ? '글 수정' : '새 글'), preview: '미리보기', settings: '설정' };

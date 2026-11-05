@@ -689,6 +689,9 @@ textarea.editor-input{min-height:42dvh;font-family:'Cascadia Code','D2Coding',mo
           <label class="editor-label">블로그 소개
             <input class="editor-input" id="qs-tagline" type="text" placeholder="개인에게 더 많은 자유를">
           </label>
+          <label class="editor-label" style="grid-column:1/-1">영어 한 줄 (소개 위에 작게, 비워도 돼요)
+            <input class="editor-input" id="qs-tagline-en" type="text" placeholder="for humanity. and so, for you.">
+          </label>
           <label class="editor-label" style="grid-column:1/-1">블로그 설명
             <input class="editor-input" id="qs-description" type="text" placeholder="문제 해결 과정을 정리하는 개인 블로그입니다.">
           </label>
@@ -2106,6 +2109,7 @@ function loadQuickSettings(yaml) {
   }
   document.getElementById('qs-title').value = get('title');
   document.getElementById('qs-tagline').value = get('tagline');
+  document.getElementById('qs-tagline-en').value = get('tagline_en');
   document.getElementById('qs-avatar').value = get('avatar');
   document.getElementById('qs-cover').value = get('cover_image');
   var descMatch = yaml.match(/^description:\s*>-?\s*(?:#.*)?\n([\s\S]*?)(?=\n\S|\n*$)/m);
@@ -2192,12 +2196,19 @@ async function saveQuickSettings() {
     var yaml = file.content;
     var title = document.getElementById('qs-title').value.trim();
     var tagline = document.getElementById('qs-tagline').value.trim();
+    var taglineEn = document.getElementById('qs-tagline-en').value.trim();
     var desc = document.getElementById('qs-description').value.trim();
     var avatar = document.getElementById('qs-avatar').value.trim();
     var cover = document.getElementById('qs-cover').value.trim();
 
     yaml = setYamlKey(yaml, 'title', title) || yaml;
     yaml = setYamlKey(yaml, 'tagline', tagline) || yaml;
+    var withTaglineEn = setYamlKey(yaml, 'tagline_en', taglineEn);
+    if (withTaglineEn !== null) {
+      yaml = withTaglineEn;
+    } else if (taglineEn) {
+      yaml = yaml.replace(/^(tagline:.*)$/m, function(line) { return line + '\ntagline_en: ' + yamlValue(taglineEn); });
+    }
     if (/^description:\s*>-?\s*(?:#.*)?\n[\s\S]*?(?=\n\S|\n*$)/m.test(yaml)) {
       yaml = yaml.replace(/^description:\s*>-?\s*(?:#.*)?\n[\s\S]*?(?=\n\S|\n*$)/m, function() {
         return 'description: >-\n  ' + desc;

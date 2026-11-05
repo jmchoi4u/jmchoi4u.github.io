@@ -18,6 +18,9 @@
       {%- endif -%}
     </a>
     <a class="jm-profile-name site-title" href="{{ '/' | relative_url }}">{{ site.title }}</a>
+    {%- if site.tagline_en %}
+    <p class="jm-motto" lang="en">{{ site.tagline_en }}</p>
+    {%- endif %}
     <p class="jm-profile-intro">{{ site.tagline }}</p>
     <div class="jm-btn-row">
       <button type="button" class="jm-btn jm-btn-follow" data-subscribe-open data-analytics-event="subscribe_open" data-analytics-component="sidebar_profile">+ 새 글 알림 받기</button>

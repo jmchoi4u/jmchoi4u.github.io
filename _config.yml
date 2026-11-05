@@ -16,8 +16,8 @@ timezone: Asia/Seoul
 
 title: James Choi # the main title
 
-tagline: 나의 실패 일기장, 나는 부끄러워져도, 누군가에겐 도움되겠지. # it will display as the subtitle
-tagline_en: A little more kindness, from one imperfect person to another.
+tagline: 나의 메모장, 나는 부끄러워져도, 누군가에겐 도움되겠지. # it will display as the subtitle
+tagline_en: for humanity. and so, for you. # shown small above the tagline in the profile
 
 description: >-
   for humanity. and so, for you

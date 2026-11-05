@@ -68,6 +68,9 @@ layout: default
         <p class="jm-blog-stats">글 {{ visible_posts | size }}{% if first_post %} · {{ first_post.date | date: '%Y년 %-m월' }}부터 기록 중{% endif %}</p>
       </div>
     </div>
+    {%- if site.tagline_en %}
+    <p class="jm-motto" lang="en">{{ site.tagline_en }}</p>
+    {%- endif %}
     <p class="jm-blog-intro">{{ site.tagline }}</p>
     <div class="jm-btn-row">
       <button type="button" class="jm-btn jm-btn-follow" data-subscribe-open data-analytics-event="subscribe_open" data-analytics-component="home_profile">+ 새 글 알림 받기</button>

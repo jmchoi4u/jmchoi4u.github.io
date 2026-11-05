@@ -276,6 +276,32 @@ textarea:focus-visible,
   text-decoration: none;
 }
 
+/* The English line above the tagline: quieter than the Korean, set by
+   `tagline_en` (Studio → 빠른 설정 → 영어 한 줄). */
+.jm-motto {
+  margin: 0 0 0.25rem;
+  color: var(--jm-meta);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+}
+
+.jm-blog .jm-motto {
+  margin-top: 0.9rem;
+}
+
+.jm-blog .jm-motto + .jm-blog-intro {
+  margin-top: 0;
+}
+
+.jm-author .jm-motto {
+  margin: 0.25rem 0 0.1rem;
+}
+
+.jm-author .jm-motto + .jm-author-intro {
+  margin-top: 0;
+}
+
 #sidebar .jm-profile-intro {
   margin: 0;
   color: var(--jm-sub);
@@ -313,6 +339,22 @@ textarea:focus-visible,
 
 #sidebar .jm-cats a.is-current {
   color: var(--jm-accent);
+}
+
+/* Same id-level override, or the filled "새 글 쓰기" button turns its white
+   label into the grey sidebar link colour and it all but disappears. */
+#sidebar .jm-btn-write,
+#sidebar .jm-btn-write:hover {
+  color: #fff;
+}
+
+html[data-mode='dark'] #sidebar .jm-btn-write,
+html[data-mode='dark'] #sidebar .jm-btn-write:hover {
+  color: #16181b;
+}
+
+#sidebar .jm-motto {
+  margin: 0 0 0.25rem;
 }
 
 #sidebar .jm-side-menu {

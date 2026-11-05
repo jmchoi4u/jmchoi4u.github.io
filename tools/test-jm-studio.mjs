@@ -510,6 +510,8 @@ assert.match(workflow, /node tools\/test-jm-studio\.mjs/, 'Studio checks must ru
 assert.match(workflow, /cron:\s*["']3 \* \* \* \*["']/, 'scheduled posts must be checked every hour by the main Pages workflow');
 assert.match(workflow, /python3 tools\/due-posts\.py >> "\$GITHUB_OUTPUT"/, 'the hourly run must build only when a scheduled post is due');
 assert.match(workflow, /needs\.due\.outputs\.build == 'true'/, 'a quiet hour must skip the build');
+assert.match(workflow, /if: \$\{\{ !cancelled\(\) && needs\.build\.result == 'success' \}\}/, 'a push must still deploy although the due job is skipped');
+assert.match(workflow, /needs\.deploy\.result == 'success'/, 'notifications must follow a deploy that went through');
 assert.doesNotMatch(workflow, /^concurrency:/m, 'the hourly check must not cancel a deploy that is running');
 assert.match(workflow, /gh workflow run notify-subscribers\.yml/, 'a scheduled post that goes up must e-mail the subscribers');
 assert.match(notifyWorkflow, /--fail-with-body/, 'notification HTTP failures must fail CI');

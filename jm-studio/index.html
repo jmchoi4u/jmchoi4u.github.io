@@ -313,12 +313,17 @@ textarea.editor-input{min-height:42dvh;font-family:'Cascadia Code','D2Coding',mo
 .ed-title-input{width:100%;padding:4px 0 6px;border:0;border-radius:0;background:transparent;color:var(--text);font:inherit;font-size:1.5rem;font-weight:700;letter-spacing:-.03em;outline:none}
 .ed-title-input::placeholder,textarea.ed-body-input::placeholder{color:#8C95A0}
 .ed-chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 14px}
-.ed-chip{min-height:34px;padding:0 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--text);font:inherit;font-size:.8rem;cursor:pointer}
+.ed-chip{min-height:34px;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:var(--panel);color:var(--text);font:inherit;font-size:.8rem;cursor:pointer}
 .ed-chip.is-empty{border-style:dashed;color:var(--muted)}
 .ed-chip.is-tags{color:var(--point)}
-#view-editor .md-toolbar{position:sticky;top:0;z-index:5;flex-wrap:nowrap;margin-bottom:10px;overflow-x:auto;background:var(--panel);scrollbar-width:none}
+/* Each formatting button is its own gray key, so the row reads as buttons
+   rather than a line of words; the sticky strip is ruled off from the text. */
+#view-editor .md-toolbar{position:sticky;top:0;z-index:5;flex-wrap:nowrap;gap:6px;margin:0 0 14px;padding:8px 0;overflow-x:auto;border:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);border-radius:0;background:var(--panel);scrollbar-width:none}
 #view-editor .md-toolbar::-webkit-scrollbar{display:none}
-#view-editor .md-toolbar button{flex:0 0 auto;font-weight:600}
+#view-editor .md-toolbar button{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;gap:5px;height:38px;padding:0 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-weight:600}
+#view-editor .md-toolbar button.md-photo,#view-editor .md-toolbar button:active{border-color:rgba(47,93,138,.3);background:var(--point-s);color:var(--point)}
+@media(hover:hover){#view-editor .md-toolbar button:hover{border-color:rgba(47,93,138,.3);background:var(--point-s);color:var(--point)}}
+#view-editor .md-sep{margin:7px 2px}
 .app.editor-active .main{background:var(--panel)}
 textarea.editor-input.ed-body-input{min-height:55dvh;padding:4px 0;border:0;border-radius:0;background:transparent;font-family:inherit;font-size:16px;line-height:1.85;resize:none;box-shadow:none}
 .ed-preview{display:none}
@@ -366,13 +371,15 @@ textarea.editor-input.ed-body-input{min-height:55dvh;padding:4px 0;border:0;bord
   .app.editor-active #topbar-title{display:none}
   .app.editor-active #topbar-actions{flex:1}
   .app.editor-active .tb-editor{flex:1;justify-content:space-between}
-  .tb-editor .tb-settings{display:none}
+  /* 글 설정 shrinks to an icon key beside 발행, so a saved post's settings stay one tap away. */
+  .ed-mode button{padding:0 12px}
+  .tb-editor .tb-settings{width:40px;margin-left:auto;padding:0}
+  .tb-settings-label{display:none}
   /* The 16px floor above (it stops iOS zooming into a field) must not shrink the title. */
   #ed-title.ed-title-input{font-size:1.375rem!important}
   #view-editor{padding-bottom:48px}
-  #view-editor .md-toolbar{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
-  #view-editor .md-toolbar::-webkit-scrollbar{display:none}
-  #view-editor .md-toolbar button{flex:0 0 auto}
+  /* Edge to edge, so the key cut off at the right shows the row scrolls. */
+  #view-editor .md-toolbar{margin-left:-16px;margin-right:-16px;padding-left:16px;padding-right:16px}
 }
 @media(min-width:768px){
   .post-settings-panel{top:0;left:auto;width:440px;max-height:none;border-radius:0}
@@ -437,7 +444,7 @@ textarea.editor-input.ed-body-input{min-height:55dvh;padding:4px 0;border:0;bord
             <button type="button" role="tab" id="ed-mode-write" aria-selected="true" onclick="setEditorMode('write')">쓰기</button>
             <button type="button" role="tab" id="ed-mode-preview" aria-selected="false" onclick="setEditorMode('preview')">미리보기</button>
           </div>
-          <button type="button" class="btn btn-sm tb-settings" onclick="openPostSettings()">글 설정</button>
+          <button type="button" class="btn btn-sm tb-settings" onclick="openPostSettings()" aria-label="글 설정" title="글 설정"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M3 6h8M15 6h2M3 14h2M9 14h8"></path><circle cx="13" cy="6" r="2"></circle><circle cx="7" cy="14" r="2"></circle></svg><span class="tb-settings-label">글 설정</span></button>
           <button type="button" class="btn btn-primary btn-sm" data-save-action onclick="topbarSave()">발행</button>
         </div>
       </div>
@@ -564,8 +571,8 @@ textarea.editor-input.ed-body-input{min-height:55dvh;padding:4px 0;border:0;bord
             <button type="button" class="ed-chip is-empty" id="ed-chip-cover" onclick="openPostSettings()">+ 표지 사진</button>
           </div>
           <div class="md-toolbar" id="md-toolbar" role="toolbar" aria-label="서식">
-            <button type="button" onclick="triggerBodyImage()" title="사진 (여러 장 고르면 슬라이드)" aria-label="본문에 사진 넣기, 여러 장 고르면 슬라이드" style="color:var(--point)">사진</button>
-            <button type="button" onclick="insert('## ')" title="소제목" aria-label="소제목">제목</button>
+            <button type="button" class="md-photo" onclick="triggerBodyImage()" title="사진 (여러 장 고르면 슬라이드)" aria-label="본문에 사진 넣기, 여러 장 고르면 슬라이드"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4" width="15" height="12" rx="2"></rect><circle cx="7.5" cy="8.5" r="1.5"></circle><path d="m17.5 13-4-4-7 7"></path></svg>사진</button>
+            <button type="button" onclick="insert('## ')" title="소제목" aria-label="소제목">소제목</button>
             <button type="button" onclick="wrap('**','**')" title="굵게" aria-label="굵게"><b>B</b></button>
             <button type="button" onclick="insert('- ')" title="목록" aria-label="목록">목록</button>
             <button type="button" onclick="insert('> ')" title="인용" aria-label="인용">인용</button>

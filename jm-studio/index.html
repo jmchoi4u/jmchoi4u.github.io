@@ -37,7 +37,7 @@ html,body{font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Ma
 .topbar-sidebar-toggle{display:none}
 .main{flex:1;min-height:0;overflow-y:auto;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;scroll-padding-bottom:calc(150px + var(--safe-bottom))}
 .bottombar{display:flex;background:var(--panel);border-top:1px solid var(--line);flex-shrink:0;padding:0 var(--safe-right) var(--safe-bottom) var(--safe-left)}
-.bottombar button{flex:1;min-height:54px;border:none;background:none;padding:8px 0 7px;font-size:.72rem;color:var(--muted);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;transition:color .15s}
+.bottombar button{flex:1;min-height:54px;border:none;background:none;padding:8px 0 7px;font-size:.8rem;color:var(--muted);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;transition:color .15s}
 .bottombar button.active{color:var(--point);font-weight:600}
 .bottombar .bar-icon{font-size:1.15rem}
 
@@ -57,8 +57,8 @@ html,body{font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Ma
 .auth-input:focus{border-color:var(--point);box-shadow:0 0 0 3px rgba(47,93,138,.12)}
 .auth-choice{display:flex;align-items:flex-start;gap:10px;text-align:left;font-size:.8rem;line-height:1.45;color:var(--text);margin:0 0 14px;cursor:pointer}
 .auth-choice input{width:20px;height:20px;flex:0 0 auto;margin-top:1px;accent-color:var(--point)}
-.auth-choice small{display:block;color:var(--muted);font-size:.72rem;margin-top:2px}
-.auth-divider{display:flex;align-items:center;gap:12px;width:100%;max-width:340px;margin:16px 0;color:var(--muted);font-size:.75rem}
+.auth-choice small{display:block;color:var(--muted);font-size:.8rem;margin-top:2px}
+.auth-divider{display:flex;align-items:center;gap:12px;width:100%;max-width:340px;margin:16px 0;color:var(--muted);font-size:.8rem}
 .auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--line)}
 .btn-github{background:#24292f;color:#fff;border-color:#24292f;gap:8px}
 .btn-github:hover{background:#1b1f23}
@@ -89,10 +89,10 @@ html,body{font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Ma
 .card-title{font-weight:600;font-size:.9rem;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .card-title-button{width:100%;padding:2px 0;border:0;background:transparent;color:inherit;text-align:left;cursor:pointer;line-height:1.45}
 .card-title-button:focus-visible{outline:3px solid rgba(47,93,138,.3);outline-offset:3px;border-radius:4px}
-.card-meta{display:flex;flex-wrap:wrap;gap:6px;font-size:.72rem;color:var(--muted)}
+.card-meta{display:flex;flex-wrap:wrap;gap:6px;font-size:.8rem;color:var(--muted)}
 .card-meta span{display:inline-flex;align-items:center;gap:3px}
-.card-pin{display:inline-flex;align-items:center;gap:3px;color:var(--point);font-size:.68rem;font-weight:700}
-.card-tag{background:var(--point-s);color:var(--point);padding:1px 6px;border-radius:4px;font-size:.65rem;font-weight:600}
+.card-pin{display:inline-flex;align-items:center;gap:3px;color:var(--point);font-size:.76rem;font-weight:700}
+.card-tag{background:var(--point-s);color:var(--point);padding:1px 6px;border-radius:4px;font-size:.74rem;font-weight:600}
 .suggestion-chip{min-height:32px;padding:5px 9px;border:1px solid rgba(47,93,138,.2);font:inherit;cursor:pointer}
 .card-status{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .status-published{background:var(--success)}
@@ -102,7 +102,7 @@ html,body{font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Ma
 
 /* === Editor === */
 .editor-section{margin-bottom:16px}
-.editor-label{font-size:.75rem;font-weight:600;color:var(--muted);margin-bottom:5px;display:block}
+.editor-label{font-size:.8rem;font-weight:600;color:var(--muted);margin-bottom:5px;display:block}
 .editor-input{width:100%;padding:11px 14px;border:1px solid var(--line);border-radius:10px;font-size:16px;background:var(--panel);outline:none;color:var(--text)}
 .editor-input:focus{border-color:var(--point);box-shadow:0 0 0 3px rgba(47,93,138,.12)}
 textarea.editor-input{min-height:42dvh;font-family:'Cascadia Code','D2Coding',monospace;font-size:16px;line-height:1.7;resize:vertical}
@@ -111,7 +111,7 @@ textarea.editor-input{min-height:42dvh;font-family:'Cascadia Code','D2Coding',mo
 .editor-check{display:flex;align-items:center;gap:5px;font-size:.8rem;cursor:pointer;color:var(--text)}
 .editor-check{min-height:36px;padding:4px 2px}
 .editor-check input{width:20px;height:20px;accent-color:var(--point)}
-.editor-meta{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:8px;font-size:.74rem;color:var(--muted)}
+.editor-meta{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:8px;font-size:.8rem;color:var(--muted)}
 .editor-meta strong{color:var(--text)}
 .editor-inline-banner{display:none;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;margin-bottom:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
 .editor-inline-banner.show{display:flex}
@@ -123,8 +123,8 @@ textarea.editor-input{min-height:42dvh;font-family:'Cascadia Code','D2Coding',mo
 .editor-dock.show{display:block}
 .editor-dock-actions{display:flex;gap:8px}
 .editor-dock-actions .btn{flex:1;min-height:42px}
-.editor-dock-status{margin-top:8px;font-size:.72rem;color:var(--muted);text-align:center}
-.power-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:.72rem;font-weight:700;background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.editor-dock-status{margin-top:8px;font-size:.8rem;color:var(--muted);text-align:center}
+.power-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:.8rem;font-weight:700;background:var(--bg);color:var(--muted);border:1px solid var(--line)}
 .power-badge.active{background:rgba(27,159,80,.1);color:#1b9f50;border-color:rgba(27,159,80,.22)}
 .power-badge.local{background:rgba(47,93,138,.12);color:var(--point);border-color:rgba(47,93,138,.22)}
 .power-actions{display:flex;flex-wrap:wrap;gap:8px}
@@ -133,18 +133,18 @@ textarea.editor-input{min-height:42dvh;font-family:'Cascadia Code','D2Coding',mo
 .quick-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:14px}
 .quick-stat{padding:12px 14px;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel)}
 .quick-stat-num{font-size:1.05rem;font-weight:700;display:block}
-.quick-stat-label{font-size:.72rem;color:var(--muted)}
+.quick-stat-label{font-size:.8rem;color:var(--muted)}
 .audience-panel{margin-bottom:14px;padding:12px 14px;border:1px solid var(--line);border-radius:var(--radius);background:linear-gradient(135deg,var(--panel),var(--point-s))}
 .audience-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
-.audience-head strong{font-size:.82rem}.audience-head a{font-size:.72rem;color:var(--point);text-decoration:none;font-weight:600}
+.audience-head strong{font-size:.82rem}.audience-head a{font-size:.8rem;color:var(--point);text-decoration:none;font-weight:600}
 .audience-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.audience-stat{min-width:0}.audience-stat strong{display:block;font-size:1rem}.audience-stat span{font-size:.68rem;color:var(--muted)}
+.audience-stat{min-width:0}.audience-stat strong{display:block;font-size:1rem}.audience-stat span{font-size:.76rem;color:var(--muted)}
 .publish-checklist{display:grid;gap:6px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--panel);font-size:.76rem}
 .publish-check{display:flex;align-items:center;gap:8px;color:var(--muted)}
 .publish-check::before{content:'○';color:var(--muted);font-weight:700}.publish-check.ok{color:var(--success)}.publish-check.ok::before{content:'✓';color:var(--success)}.publish-check.warn{color:#8A5A12}.publish-check.warn::before{content:'!';color:#8A5A12}
 .publish-status{display:none;align-items:flex-start;justify-content:space-between;gap:12px;margin:0 0 14px;padding:12px 14px;border:1px solid rgba(47,125,78,.25);border-radius:10px;background:rgba(47,125,78,.08)}
-.publish-status.show{display:flex}.publish-status strong{font-size:.82rem}.publish-status p{margin:3px 0 0;color:var(--muted);font-size:.72rem;line-height:1.45}.publish-status-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
-.view-count-chip{margin-left:auto;font-size:.68rem;color:var(--muted);white-space:nowrap}
+.publish-status.show{display:flex}.publish-status strong{font-size:.82rem}.publish-status p{margin:3px 0 0;color:var(--muted);font-size:.8rem;line-height:1.45}.publish-status-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.view-count-chip{margin-left:auto;font-size:.76rem;color:var(--muted);white-space:nowrap}
 .filter-row{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;margin-bottom:12px}
 .filter-row select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);font-size:.82rem}
 .raw-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
@@ -157,13 +157,13 @@ textarea.editor-input{min-height:42dvh;font-family:'Cascadia Code','D2Coding',mo
 .soft-card{padding:14px;border:1px solid var(--bg2);border-radius:var(--radius);background:var(--panel)}
 
 /* === Preview === */
-.editor-hint{margin:6px 2px 0;color:var(--muted);font-size:.72rem;line-height:1.5}
-.preview-content{padding:20px 18px;max-width:40rem;margin:0 auto;line-height:1.85;font-size:1rem;letter-spacing:-.005em;word-break:keep-all;overflow-wrap:break-word;color:#2B3138}
-.preview-content p{margin:0 0 1.3em;text-wrap:pretty}
+.editor-hint{margin:6px 2px 0;color:var(--muted);font-size:.8rem;line-height:1.5}
+.preview-content{padding:20px 18px;max-width:40rem;margin:0 auto;line-height:1.9;font-size:1.0625rem;letter-spacing:-.005em;word-break:keep-all;overflow-wrap:break-word;color:#2B3138}
+.preview-content p{margin:0 0 1.45em;text-wrap:pretty}
 .preview-content h1,.preview-content h2,.preview-content h3,.preview-content h4{letter-spacing:-.028em;line-height:1.45;text-wrap:balance;word-break:keep-all;color:#1B1F24}
 .preview-content h1{margin:2.6rem 0 1rem;font-size:1.5rem;font-weight:700}
-.preview-content h2{margin:2.4rem 0 .9rem;font-size:1.28rem;font-weight:700}
-.preview-content h3{margin:1.9rem 0 .7rem;font-size:1.12rem;font-weight:700}
+.preview-content h2{margin:2.4rem 0 .9rem;font-size:1.375rem;font-weight:700}
+.preview-content h3{margin:1.9rem 0 .7rem;font-size:1.1875rem;font-weight:700}
 .preview-content h4{margin:1.6rem 0 .55rem;font-size:1rem;font-weight:600}
 .preview-content>:first-child{margin-top:0}
 .preview-content ul,.preview-content ol{margin:0 0 1.15em;padding-left:1.3rem}
@@ -181,7 +181,7 @@ textarea.editor-input{min-height:42dvh;font-family:'Cascadia Code','D2Coding',mo
 .pv-slide{display:flex;margin:1.6em -18px 0;overflow-x:auto;background:#f1f3f5;scroll-snap-type:x mandatory;scrollbar-width:none}
 .pv-slide::-webkit-scrollbar{display:none}
 .pv-slide img{flex:0 0 100%;width:100%;max-height:70vh;margin:0;object-fit:contain;scroll-snap-align:center}
-.pv-slide-note{margin:.4em 0 1.6em;color:var(--muted);font-size:.72rem;text-align:center}
+.pv-slide-note{margin:.4em 0 1.6em;color:var(--muted);font-size:.8rem;text-align:center}
 .preview-content table{width:100%;border-collapse:collapse;font-size:.85rem}
 .preview-content th,.preview-content td{padding:6px 10px;border:1px solid var(--line);text-align:left}
 .preview-content th{background:var(--bg);font-weight:600}
@@ -209,7 +209,7 @@ textarea.editor-input{min-height:42dvh;font-family:'Cascadia Code','D2Coding',mo
 .setting-item{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--bg2)}
 .setting-item:last-child{border:none}
 .setting-label{font-size:.88rem;font-weight:500}
-.setting-sub{font-size:.72rem;color:var(--muted);margin-top:2px}
+.setting-sub{font-size:.8rem;color:var(--muted);margin-top:2px}
 
 /* === Empty === */
 .empty{text-align:center;padding:48px 20px;color:var(--muted);font-size:.85rem}
@@ -263,7 +263,7 @@ textarea.editor-input{min-height:42dvh;font-family:'Cascadia Code','D2Coding',mo
   .sidebar-btn:hover{background:var(--bg);color:var(--text)}
   .sidebar-btn.active{background:var(--point-s);color:var(--point);font-weight:600}
   .sidebar-icon{font-size:1.1rem;width:20px;text-align:center}
-  .sidebar-footer{padding:12px 18px;border-top:1px solid var(--line);font-size:.72rem;color:var(--muted)}
+  .sidebar-footer{padding:12px 18px;border-top:1px solid var(--line);font-size:.8rem;color:var(--muted)}
   .sidebar-user{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .sidebar-toggle{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--muted);cursor:pointer;font-size:.85rem;position:absolute;top:22px;right:-14px;z-index:11;box-shadow:var(--shadow);transition:all .15s}
   .sidebar-toggle:hover{color:var(--point);border-color:var(--point)}
@@ -325,11 +325,11 @@ textarea.editor-input{min-height:42dvh;font-family:'Cascadia Code','D2Coding',mo
 @media(hover:hover){#view-editor .md-toolbar button:hover{border-color:rgba(47,93,138,.3);background:var(--point-s);color:var(--point)}}
 #view-editor .md-sep{margin:7px 2px}
 .app.editor-active .main{background:var(--panel)}
-textarea.editor-input.ed-body-input{min-height:55dvh;padding:4px 0;border:0;border-radius:0;background:transparent;font-family:inherit;font-size:16px;line-height:1.85;resize:none;box-shadow:none}
+textarea.editor-input.ed-body-input{min-height:55dvh;padding:4px 0;border:0;border-radius:0;background:transparent;font-family:inherit;font-size:1.0625rem;line-height:1.9;resize:none;box-shadow:none}
 .ed-preview{display:none}
 #view-editor.mode-preview .ed-write{display:none}
 #view-editor.mode-preview .ed-preview{display:block}
-.ed-pane-label{margin:0 0 12px;font-size:.72rem;font-weight:700;color:var(--muted)}
+.ed-pane-label{margin:0 0 12px;font-size:.8rem;font-weight:700;color:var(--muted)}
 .ed-preview .preview-content{padding:0;max-width:none}
 .ed-preview .pv-slide{margin-left:0;margin-right:0}
 .live-cat{margin:0 0 6px!important;color:var(--point);font-size:.8rem;font-weight:700}
@@ -337,8 +337,21 @@ textarea.editor-input.ed-body-input{min-height:55dvh;padding:4px 0;border:0;bord
 .live-empty{color:var(--muted);font-size:.86rem}
 .app.editor-active .editor-dock{display:none!important}
 .ed-toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:50px;border-bottom:1px solid var(--bg2);font-size:.9rem;cursor:pointer}
-.ed-toggle small{display:block;color:var(--muted);font-size:.72rem}
+.ed-toggle small{display:block;color:var(--muted);font-size:.8rem}
 .ed-toggle input{width:22px;height:22px;flex:0 0 auto;accent-color:var(--point)}
+.ed-toggle[hidden]{display:none}
+/* 예약 발행: 지금 / 예약 first, then a day and an on-the-hour time. */
+.ed-when-mode{display:flex;padding:3px;border-radius:10px;background:var(--bg2)}
+.ed-when-mode button{flex:1;min-height:42px;border:0;border-radius:8px;background:none;color:var(--muted);font:inherit;font-size:.92rem;cursor:pointer}
+.ed-when-mode button[aria-pressed="true"]{background:var(--panel);color:var(--text);font-weight:700;box-shadow:0 1px 2px rgba(27,31,36,.12)}
+.ed-when-pick{margin-top:10px}
+.ed-when-fields{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:8px}
+.ed-when-quick{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.ed-when-note{margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--point-s);color:var(--point-h);font-size:.86rem;line-height:1.55}
+.ed-when-note.is-warn{background:#FEF0EF;color:var(--danger)}
+.status-scheduled{background:var(--point)}
+.card-status-label{font-size:.76rem;color:var(--muted)}
+.card-status-label.is-scheduled{color:var(--point);font-weight:600}
 .post-settings{position:fixed;inset:0;z-index:60}
 .post-settings[hidden]{display:none}
 .post-settings-backdrop{position:absolute;inset:0;background:rgba(27,31,36,.42)}
@@ -375,8 +388,10 @@ textarea.editor-input.ed-body-input{min-height:55dvh;padding:4px 0;border:0;bord
   .ed-mode button{padding:0 12px}
   .tb-editor .tb-settings{width:40px;margin-left:auto;padding:0}
   .tb-settings-label{display:none}
-  /* The 16px floor above (it stops iOS zooming into a field) must not shrink the title. */
+  /* The 16px floor above (it stops iOS zooming into a field) must not shrink
+     the title, nor the text, which matches the blog's 17px reading size. */
   #ed-title.ed-title-input{font-size:1.375rem!important}
+  #ed-body.ed-body-input{font-size:1.0625rem!important}
   #view-editor{padding-bottom:48px}
   /* Edge to edge, so the key cut off at the right shows the row scrolls. */
   #view-editor .md-toolbar{margin-left:-16px;margin-right:-16px;padding-left:16px;padding-right:16px}
@@ -535,6 +550,7 @@ textarea.editor-input.ed-body-input{min-height:55dvh;padding:4px 0;border:0;bord
       <div class="tab-bar" id="list-tabs">
         <button class="active" type="button" data-tab="all" onclick="setListTab('all',this)">전체</button>
         <button type="button" data-tab="published" onclick="setListTab('published',this)">발행</button>
+        <button type="button" data-tab="scheduled" onclick="setListTab('scheduled',this)">예약</button>
         <button type="button" data-tab="drafts" onclick="setListTab('drafts',this)">임시</button>
       </div>
       <div id="post-list"></div>
@@ -546,14 +562,14 @@ textarea.editor-input.ed-body-input{min-height:55dvh;padding:4px 0;border:0;bord
       <div class="publish-status" id="publish-status" role="status" aria-live="polite">
         <div><strong id="publish-status-title">저장 완료</strong><p id="publish-status-copy"></p></div>
         <div class="publish-status-actions">
-          <a class="btn btn-sm" id="publish-live-link" href="https://jmchoi4u.github.io/" target="_blank" rel="noopener noreferrer">라이브 확인</a>
+          <a class="btn btn-sm" id="publish-live-link" href="https://jmchoi4u.github.io/" target="_blank" rel="noopener noreferrer">블로그에서 보기</a>
           <a class="btn btn-sm" href="https://github.com/jmchoi4u/jmchoi4u.github.io/actions" target="_blank" rel="noopener noreferrer">배포 상태</a>
         </div>
       </div>
       <div class="editor-inline-banner" id="autosave-banner">
         <div>
           <strong>임시저장된 내용이 있습니다.</strong>
-          <div style="margin-top:2px;font-size:.72rem;color:var(--muted)" id="autosave-banner-text">복원할 수 있습니다.</div>
+          <div style="margin-top:2px;font-size:.8rem;color:var(--muted)" id="autosave-banner-text">복원할 수 있습니다.</div>
         </div>
         <div class="editor-inline-actions">
           <button class="btn btn-sm" onclick="dismissAutosaveBanner()">닫기</button>
@@ -608,12 +624,33 @@ textarea.editor-input.ed-body-input{min-height:55dvh;padding:4px 0;border:0;bord
           <div class="post-settings-head">
             <div>
               <h2 id="post-settings-title">글 설정</h2>
-              <p>발행하면 1~2분 뒤 블로그에 올라가요.</p>
+              <p id="post-settings-sub">발행하면 1~2분 뒤 블로그에 올라가요.</p>
             </div>
             <button type="button" class="btn btn-sm" onclick="closePostSettings()">닫기</button>
           </div>
           <div class="post-settings-body">
-            <div class="editor-section">
+            <div class="editor-section" id="ed-when">
+              <span class="editor-label">언제 올릴까요?</span>
+              <div class="ed-when-mode">
+                <button type="button" id="ed-when-now" aria-pressed="true" onclick="setScheduleMode('now')">지금 올리기</button>
+                <button type="button" id="ed-when-later" aria-pressed="false" onclick="setScheduleMode('later')">예약하기</button>
+              </div>
+              <div class="ed-when-pick" id="ed-when-pick" hidden>
+                <div class="ed-when-fields">
+                  <label class="sr-only" for="ed-sched-day">예약 날짜</label>
+                  <input class="editor-input" id="ed-sched-day" type="date" onchange="applySchedulePick()">
+                  <label class="sr-only" for="ed-sched-hour">예약 시간</label>
+                  <select class="editor-input" id="ed-sched-hour" onchange="applySchedulePick()"></select>
+                </div>
+                <div class="ed-when-quick">
+                  <button type="button" class="ed-chip" onclick="pickSchedulePreset(1, 9)">내일 아침 9시</button>
+                  <button type="button" class="ed-chip" onclick="pickSchedulePreset(1, 20)">내일 저녁 8시</button>
+                </div>
+              </div>
+              <p class="ed-when-note" id="ed-when-note" aria-live="polite" hidden></p>
+            </div>
+            <label class="ed-toggle" id="ed-notify-row"><span>구독자에게 메일 보내기<small>글이 블로그에 올라갈 때 구독자에게 알려요</small></span><input type="checkbox" id="ed-notify" checked></label>
+            <div class="editor-section" style="margin-top:16px">
               <label class="editor-label" for="ed-cats">카테고리</label>
               <input class="editor-input" id="ed-cats" type="text" placeholder="예: 에세이 (쉼표로 여러 개)">
               <div class="editor-meta" id="ed-cats-suggestions" style="margin-top:6px;gap:5px"></div>
@@ -692,7 +729,7 @@ textarea.editor-input.ed-body-input{min-height:55dvh;padding:4px 0;border:0;bord
                   <div style="padding:12px;background:#f9f9f9;border-top:1px solid var(--line)">
                     <div id="sns-preview-url" style="font-size:.7rem;color:var(--muted);margin-bottom:2px;text-transform:uppercase">JMCHOI4U.GITHUB.IO</div>
                     <div id="sns-preview-title" style="font-size:.9rem;font-weight:700;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden">글 제목</div>
-                    <div id="sns-preview-desc" style="font-size:.75rem;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">SEO 설명이 여기에 표시됩니다.</div>
+                    <div id="sns-preview-desc" style="font-size:.8rem;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">SEO 설명이 여기에 표시됩니다.</div>
                   </div>
                 </div>
               </div>
@@ -1244,10 +1281,13 @@ window.addEventListener('DOMContentLoaded', function() {
     var el = document.getElementById(id);
     if (el) el.addEventListener('input', autoSave);
   });
-  ['ed-toc','ed-comments','ed-pin','ed-hidden','ed-draft','ed-mermaid','ed-math'].forEach(function(id) {
+  ['ed-toc','ed-comments','ed-pin','ed-hidden','ed-draft','ed-notify','ed-mermaid','ed-math'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.addEventListener('change', autoSave);
   });
+  /* A date typed in 고급 설정 moves the 지금 / 예약 choice with it. */
+  var postDateInput = document.getElementById('ed-date');
+  if (postDateInput) postDateInput.addEventListener('input', onPostDateInput);
   /* Crossing the wide-screen width shows or hides the side-by-side preview. */
   window.addEventListener('resize', scheduleLivePreview, { passive: true });
   window.addEventListener('pagehide', flushAutosave);
@@ -1716,6 +1756,7 @@ function collectEditorState() {
     draft: document.getElementById('ed-draft').checked,
     mermaid: document.getElementById('ed-mermaid').checked,
     math: document.getElementById('ed-math').checked,
+    notify: document.getElementById('ed-notify').checked,
     body: document.getElementById('ed-body').value,
     path: currentEditorPath(),
     savedAt: new Date().toISOString()
@@ -1744,6 +1785,7 @@ function applyEditorState(data) {
   document.getElementById('ed-draft').checked = !!data.draft;
   document.getElementById('ed-mermaid').checked = !!data.mermaid;
   document.getElementById('ed-math').checked = !!data.math;
+  document.getElementById('ed-notify').checked = data.notify !== false;
   document.getElementById('ed-body').value = data.body || '';
 
   if (data.cover) {
@@ -1756,6 +1798,9 @@ function applyEditorState(data) {
     document.getElementById('cover-upload').style.display = '';
   }
 
+  /* A restored time still ahead counts as chosen, so saving keeps it. */
+  S.dateTouched = isFuturePostDate(document.getElementById('ed-date').value);
+  resetScheduleFromDate();
   updateEditorStats();
 }
 
@@ -1844,7 +1889,7 @@ function restoreAutosave() {
   if (!data) return toast('복원할 임시저장이 없습니다', 'error');
   if (data.path && data.path !== '__new__') {
     var post = S.posts.find(function(item) { return item.path === data.path; });
-    if (post) S.editing = { path: post.path, sha: post.sha, isNew: false };
+    if (post) S.editing = { path: post.path, sha: post.sha, isNew: false, wasPublic: postWasPublic(post.path, post.date) };
   }
   applyEditorState(data);
   S.autosaveDismissed = true;
@@ -1881,7 +1926,7 @@ function updateEditorStats() {
   updatePublishChecklist();
   /* Every edit and every post load passes through here. */
   updateEditorChips();
-  refreshSaveActionLabels();
+  updateScheduleUI();
   scheduleLivePreview();
 }
 
@@ -1981,11 +2026,15 @@ function updateEditorChips() {
   }
 }
 
-/* A new post is 발행; an existing one is 저장; either kept as a draft is 임시저장. */
+/* A post going out for the first time (new, or a draft) is 발행, or 예약 발행
+   with a time ahead; a post already out is 저장; one kept as a draft is 임시저장. */
 function saveActionLabel() {
   var draft = document.getElementById('ed-draft');
   if (draft && draft.checked) return '임시저장';
-  return S.editing && !S.editing.isNew ? '저장' : '발행';
+  var path = S.editing && S.editing.path ? S.editing.path : '';
+  var firstOut = !S.editing || S.editing.isNew || path.indexOf('_drafts/') === 0;
+  if (S.scheduleMode === 'later' && scheduleApplies()) return firstOut ? '예약 발행' : '예약 저장';
+  return firstOut ? '발행' : '저장';
 }
 
 function refreshSaveActionLabels() {
@@ -1995,17 +2044,18 @@ function refreshSaveActionLabels() {
   });
 }
 
-/* An edit to an existing post saves straight away. A new post goes through
-   the sheet first: publishing it e-mails the subscribers, so its category,
-   tags and cover get one look before it leaves. */
+/* An edit to a post already out, or a draft kept as a draft, saves straight
+   away. Anything about to go out goes through the sheet first: it e-mails the
+   subscribers, so its time, category, tags and cover get one look. */
 function topbarSave() {
-  if (S.editing && !S.editing.isNew) savePost();
+  if (document.getElementById('ed-draft').checked || (S.editing && S.editing.wasPublic)) savePost();
   else openPostSettings();
 }
 
 function openPostSettings() {
   var sheet = document.getElementById('post-settings');
   if (!sheet) return;
+  updateScheduleUI();
   postSettingsReturnFocus = document.activeElement;
   sheet.hidden = false;
   document.addEventListener('keydown', postSettingsKeydown);
@@ -2032,6 +2082,157 @@ async function publishFromSheet() {
   await savePost();
   var status = document.getElementById('publish-status');
   if (status && status.classList.contains('show')) closePostSettings();
+}
+
+/* ═══════ 예약 발행 ═══════
+   A post is scheduled while its date is still ahead: Jekyll leaves it out of
+   the build until then, and the hourly Pages run (tools/due-posts.py) builds
+   it once the time has come. The sheet edits that date as a day and an
+   on-the-hour time, since the site only checks once an hour. */
+function postWasPublic(path, date) {
+  return String(path || '').indexOf('_posts/') === 0 && !isFuturePostDate(date);
+}
+
+/* Only a post that is not out yet can be scheduled, and not while kept as a draft. */
+function scheduleApplies() {
+  if (S.editing && S.editing.wasPublic) return false;
+  var draft = document.getElementById('ed-draft');
+  return !(draft && draft.checked);
+}
+
+function resetScheduleFromDate() {
+  var date = document.getElementById('ed-date').value;
+  S.scheduleMode = isFuturePostDate(date) ? 'later' : 'now';
+  fillSchedulePickers(date);
+  updateScheduleUI();
+}
+
+function fillSchedulePickers(date) {
+  var day = document.getElementById('ed-sched-day');
+  var hour = document.getElementById('ed-sched-hour');
+  if (!day || !hour) return;
+  if (!hour.options.length) {
+    for (var h = 0; h < 24; h++) hour.add(new Option(hourLabel(h), String(h)));
+  }
+  day.min = formatNow().slice(0, 10);
+  if (!isFuturePostDate(date)) return;
+  var kst = formatPostDate(postDateMs(date));
+  day.value = kst.slice(0, 10);
+  hour.value = String(Number(kst.slice(11, 13)));
+}
+
+function setScheduleMode(mode) {
+  var dateInput = document.getElementById('ed-date');
+  if (mode === 'later') {
+    S.scheduleMode = 'later';
+    if (!isFuturePostDate(dateInput.value)) return pickSchedulePreset(1, 9);
+  } else {
+    S.scheduleMode = 'now';
+    if (isFuturePostDate(dateInput.value)) {
+      dateInput.value = formatNow();
+      S.dateTouched = false;
+    }
+  }
+  autoSave();
+}
+
+function pickSchedulePreset(daysAhead, hour) {
+  fillSchedulePickers('');
+  document.getElementById('ed-sched-day').value = formatPostDate(Date.now() + daysAhead * 86400000).slice(0, 10);
+  document.getElementById('ed-sched-hour').value = String(hour);
+  applySchedulePick();
+}
+
+function applySchedulePick() {
+  var day = document.getElementById('ed-sched-day').value;
+  var hour = Number(document.getElementById('ed-sched-hour').value);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || isNaN(hour)) return;
+  S.scheduleMode = 'later';
+  S.dateTouched = true;
+  document.getElementById('ed-date').value = day + ' ' + String(hour).padStart(2, '0') + ':00:00 +0900';
+  autoSave();
+}
+
+function onPostDateInput() {
+  S.dateTouched = true;
+  resetScheduleFromDate();
+}
+
+function updateScheduleUI() {
+  var section = document.getElementById('ed-when');
+  if (!section) return;
+  var applies = scheduleApplies();
+  var later = S.scheduleMode === 'later';
+  var date = document.getElementById('ed-date').value;
+  var notify = document.getElementById('ed-notify').checked;
+  var note = document.getElementById('ed-when-note');
+  section.hidden = !applies;
+  document.getElementById('ed-notify-row').hidden = !applies;
+  var sub = document.getElementById('post-settings-sub');
+  if (sub) {
+    if (document.getElementById('ed-draft').checked) sub.textContent = '임시저장은 블로그에 올라가지 않아요.';
+    else if (!applies) sub.textContent = '저장하면 1~2분 뒤 블로그에 반영돼요.';
+    else sub.textContent = later ? '정한 시간에 블로그에 올라가요.' : '발행하면 1~2분 뒤 블로그에 올라가요.';
+  }
+  document.getElementById('ed-when-now').setAttribute('aria-pressed', later ? 'false' : 'true');
+  document.getElementById('ed-when-later').setAttribute('aria-pressed', later ? 'true' : 'false');
+  document.getElementById('ed-when-pick').hidden = !later;
+  note.hidden = !later;
+  if (later) {
+    var due = isFuturePostDate(date);
+    note.classList.toggle('is-warn', !due);
+    note.textContent = due
+      ? friendlyPostTime(date) + '에 블로그에 올라가요. ' + (notify ? '구독자 메일도 그때 나가요.' : '구독자 메일은 보내지 않아요.')
+      : '고른 시간이 벌써 지났어요. 다시 골라 주세요.';
+  }
+  refreshSaveActionLabels();
+}
+
+/* After a post first goes out, ask GitHub Pages for its address until it is
+   there, then say so. HEAD passes the service worker by; the query string
+   passes the CDN cache by. Only the live site can see itself, so a local
+   Studio skips this. */
+var LIVE_WATCH_INTERVAL = 15000;
+var LIVE_WATCH_LIMIT = 6 * 60 * 1000;
+var liveWatchTimer = null;
+
+function postLiveUrl(permalink, path) {
+  var link = String(permalink || '');
+  if (!link) {
+    var name = String(path || '').split('/').pop().replace(/\.md$/, '').replace(/^\d{4}-\d{2}-\d{2}-/, '');
+    if (!name) return '';
+    link = '/posts/' + name + '/';
+  }
+  return new URL(link, 'https://' + OWNER + '.github.io').href;
+}
+
+function watchUntilLive(url) {
+  clearTimeout(liveWatchTimer);
+  if (!url || new URL(url).origin !== window.location.origin) return;
+  var started = Date.now();
+  function retry() {
+    if (Date.now() - started < LIVE_WATCH_LIMIT) liveWatchTimer = setTimeout(check, LIVE_WATCH_INTERVAL);
+  }
+  function check() {
+    fetch(url + '?studio-live=' + Date.now(), { method: 'HEAD', cache: 'no-store' }).then(function(response) {
+      if (response.ok) markPostLive(url);
+      else retry();
+    }).catch(retry);
+  }
+  liveWatchTimer = setTimeout(check, LIVE_WATCH_INTERVAL);
+}
+
+function markPostLive(url) {
+  var title = document.getElementById('publish-status-title');
+  var copy = document.getElementById('publish-status-copy');
+  var link = document.getElementById('publish-live-link');
+  if (title) title.textContent = '블로그에 올라갔어요';
+  if (copy) copy.textContent = '지금 블로그에서 볼 수 있어요.';
+  if (link) {
+    link.href = url;
+    link.style.display = 'inline-flex';
+  }
+  toast('블로그에 올라갔어요', 'success');
 }
 
 function setPublishCheck(name, state, label) {
@@ -2062,16 +2263,20 @@ function hidePublishStatus() {
   if (status) status.classList.remove('show');
 }
 
-function showPublishStatus(fm, isDraft) {
+function showPublishStatus(fm, isDraft, firstOut) {
   var status = document.getElementById('publish-status');
   var title = document.getElementById('publish-status-title');
   var copy = document.getElementById('publish-status-copy');
   var link = document.getElementById('publish-live-link');
   if (!status || !title || !copy || !link) return;
 
-  var canOpen = !isDraft && !fm.hidden && fm.permalink;
-  title.textContent = isDraft ? '임시저장 완료' : (fm.hidden ? '숨김 글 저장 완료' : 'GitHub 저장 완료');
-  copy.textContent = isDraft ? '아직 공개되지 않습니다.' : (fm.hidden ? '배포되지만 목록에서는 숨겨집니다.' : '배포가 끝나면 라이브 페이지에 반영됩니다. 보통 1~3분 정도 걸립니다.');
+  var scheduled = !isDraft && isFuturePostDate(fm.date);
+  var canOpen = !isDraft && !scheduled && !fm.hidden && fm.permalink;
+  title.textContent = isDraft ? '임시저장 완료' : (scheduled ? '예약했어요' : (fm.hidden ? '숨김 글 저장 완료' : '저장했어요'));
+  if (isDraft) copy.textContent = '아직 공개되지 않습니다.';
+  else if (scheduled) copy.textContent = friendlyPostTime(fm.date) + '에 블로그에 올라가요. ' + (fm.notify === false ? '구독자 메일은 보내지 않아요.' : '구독자 메일도 그때 나가요.');
+  else if (fm.hidden) copy.textContent = '배포되지만 목록에서는 숨겨집니다.';
+  else copy.textContent = firstOut ? '1~2분 뒤 블로그에 올라가요. 올라가면 여기서 알려 드릴게요.' : '1~2분 뒤 블로그에 반영돼요.';
   link.style.display = canOpen ? 'inline-flex' : 'none';
   if (canOpen) link.href = new URL(fm.permalink, 'https://jmchoi4u.github.io').href;
   status.classList.add('show');
@@ -2284,6 +2489,7 @@ function fillEditorFromData(data) {
   document.getElementById('ed-draft').checked = !!data.draft;
   document.getElementById('ed-mermaid').checked = !!data.mermaid;
   document.getElementById('ed-math').checked = !!data.math;
+  document.getElementById('ed-notify').checked = data.notify !== false;
   document.getElementById('ed-body').value = data.body || '';
   document.getElementById('ed-cover').value = data.coverImage || '';
   document.getElementById('ed-hero-image-position').value = data.heroImagePosition || '';
@@ -2796,6 +3002,9 @@ async function loadPostTitles() {
         var content = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ''))));
         var fm = parseFrontMatter(content);
         p.title = fm.title || p.slug;
+        /* The full date: a post scheduled for later today shares today's file name. */
+        p.date = fm.date ? String(fm.date) : p.date;
+        p.notify = fm.notify !== false;
         p.description = fm.description || '';
         p.categories = fm.categories || [];
         p.tags = fm.tags || [];
@@ -2812,9 +3021,16 @@ async function loadPostTitles() {
   }
 }
 
+function isScheduledPost(p) {
+  return !p.isDraft && isFuturePostDate(p.date);
+}
+
 function updateListStats() {
+  var scheduledCount = S.posts.filter(isScheduledPost).length;
+  var scheduledTab = document.querySelector('#list-tabs [data-tab="scheduled"]');
+  if (scheduledTab) scheduledTab.textContent = scheduledCount ? '예약 ' + scheduledCount : '예약';
   document.getElementById('stat-all').textContent = String(S.posts.length);
-  document.getElementById('stat-published').textContent = String(S.posts.filter(function(p) { return !p.isDraft && !p.hidden; }).length);
+  document.getElementById('stat-published').textContent = String(S.posts.filter(function(p) { return !p.isDraft && !p.hidden && !isScheduledPost(p); }).length);
   document.getElementById('stat-drafts').textContent = String(S.posts.filter(function(p) { return p.isDraft; }).length);
   document.getElementById('stat-hidden').textContent = String(S.posts.filter(function(p) { return p.hidden; }).length);
 }
@@ -2850,7 +3066,8 @@ function renderPosts() {
   var categoryFilter = document.getElementById('filter-category').value;
   var tagFilter = document.getElementById('filter-tag').value;
 
-  if (S.listTab === 'published') filtered = filtered.filter(function(p) { return !p.isDraft; });
+  if (S.listTab === 'published') filtered = filtered.filter(function(p) { return !p.isDraft && !isScheduledPost(p); });
+  if (S.listTab === 'scheduled') filtered = filtered.filter(isScheduledPost);
   if (S.listTab === 'drafts') filtered = filtered.filter(function(p) { return p.isDraft; });
   if (categoryFilter) filtered = filtered.filter(function(p) { return (p.categories || []).indexOf(categoryFilter) !== -1; });
   if (tagFilter) filtered = filtered.filter(function(p) { return (p.tags || []).indexOf(tagFilter) !== -1; });
@@ -2872,8 +3089,9 @@ function renderPosts() {
   }
 
   listEl.innerHTML = filtered.map(function(p) {
-    var statusCls = p.isDraft ? 'status-draft' : (p.pendingDeploy ? 'status-pending' : (p.hidden ? 'status-hidden' : 'status-published'));
-    var statusLabel = p.isDraft ? '임시' : (p.pendingDeploy ? '배포대기' : (p.hidden ? '숨김' : '발행'));
+    var scheduled = isScheduledPost(p);
+    var statusCls = p.isDraft ? 'status-draft' : (scheduled ? 'status-scheduled' : (p.pendingDeploy ? 'status-pending' : (p.hidden ? 'status-hidden' : 'status-published')));
+    var statusLabel = p.isDraft ? '임시' : (scheduled ? '예약 · ' + friendlyPostTime(p.date) : (p.pendingDeploy ? '배포대기' : (p.hidden ? '숨김' : '발행')));
     var cats = (p.categories || []).join(' / ');
     var tags = (p.tags || []).slice(0, 3).map(function(t) { return '<span class="card-tag">' + esc(t) + '</span>'; }).join(' ');
 
@@ -2881,28 +3099,32 @@ function renderPosts() {
     var hideBtnCls = p.hidden ? 'btn-primary' : '';
     var draftBtnLabel = p.isDraft ? '발행' : (canUseLocalPower() ? '편집' : '임시저장');
     var modeTag = canUseLocalPower() ? '<span class="power-badge active local" style="margin-left:auto">로컬</span>' : '';
-    var viewPath = !p.isDraft ? (p.permalink || ('/posts/' + p.slug + '/')) : '';
+    var viewPath = !p.isDraft && !scheduled ? (p.permalink || ('/posts/' + p.slug + '/')) : '';
     var viewChip = viewPath ? '<span class="view-count-chip" data-studio-view-path="' + esc(normalizeGoatPath(viewPath)) + '">조회 확인 중</span>' : '';
 
     var safePath = esc(p.path);
+    var actions = scheduled
+      ? '<button type="button" class="btn btn-sm btn-primary" data-post-action="publish-now" data-path="' + safePath + '">지금 올리기</button>'
+        + '<button type="button" class="btn btn-sm" data-post-action="draft" data-path="' + safePath + '">예약 취소</button>'
+      : '<button type="button" class="btn btn-sm ' + hideBtnCls + '" data-post-action="hidden" data-path="' + safePath + '">' + hideBtnLabel + '</button>'
+        + '<button type="button" class="btn btn-sm" data-post-action="draft" data-path="' + safePath + '">' + draftBtnLabel + '</button>';
     return '<div class="card">'
       + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
       + '<span class="card-status ' + statusCls + '"></span>'
-      + '<span style="font-size:.68rem;color:var(--muted)">' + statusLabel + '</span>'
+      + '<span class="card-status-label' + (scheduled ? ' is-scheduled' : '') + '">' + esc(statusLabel) + '</span>'
       + (p.pin ? '<span class="card-pin" aria-label="고정 글">&#128204; 고정</span>' : '')
       + modeTag
       + viewChip
       + '</div>'
       + '<button type="button" class="card-title card-title-button" data-post-action="edit" data-path="' + safePath + '">' + esc(p.title || p.slug) + '</button>'
       + '<div class="card-meta">'
-      + (p.date ? '<span>' + esc(p.date) + '</span>' : '')
+      + (p.date ? '<span>' + esc(String(p.date).slice(0, 10)) + '</span>' : '')
       + (cats ? '<span>' + esc(cats) + '</span>' : '')
       + '</div>'
       + (tags ? '<div class="card-meta" style="margin-top:3px">' + tags + '</div>' : '')
       + '<div class="card-actions">'
       + '<button type="button" class="btn btn-sm" data-post-action="edit" data-path="' + safePath + '">수정</button>'
-      + '<button type="button" class="btn btn-sm ' + hideBtnCls + '" data-post-action="hidden" data-path="' + safePath + '">' + hideBtnLabel + '</button>'
-      + '<button type="button" class="btn btn-sm" data-post-action="draft" data-path="' + safePath + '">' + draftBtnLabel + '</button>'
+      + actions
       + '</div>'
       + '</div>';
   }).join('');
@@ -2915,6 +3137,7 @@ function renderPosts() {
     if (action === 'edit') editPost(path);
     else if (action === 'hidden') quickToggleHidden(path);
     else if (action === 'draft') quickToggleDraft(path);
+    else if (action === 'publish-now') quickPublishNow(path);
   };
   loadRenderedPostViews();
 }
@@ -2985,6 +3208,7 @@ async function quickToggleDraft(path) {
 
     var content = post._content;
     var wasDraft = post.isDraft;
+    var wasScheduled = isScheduledPost(post);
     var newDir = wasDraft ? '_posts' : '_drafts';
     var newPath = newDir + '/' + post.name;
 
@@ -2998,13 +3222,56 @@ async function quickToggleDraft(path) {
     post.path = newPath;
     post.sha = result.content.sha;
     post.isDraft = !wasDraft;
-    toast(wasDraft ? '발행 완료' : '임시저장으로 이동', 'success');
+    toast(wasDraft ? '발행 완료' : (wasScheduled ? '예약을 취소하고 임시저장으로 옮겼어요' : '임시저장으로 이동'), 'success');
+    updateListStats();
     renderPosts();
   } catch (e) {
     toast('실패: ' + e.message, 'error');
   } finally {
     setSavingState(false);
   }
+}
+
+/* 지금 올리기 on a scheduled post: its date becomes now, in place. The file
+   keeps its name (Jekyll goes by the front matter date), so the push is a
+   plain edit and the Pages build takes it straight away. */
+async function quickPublishNow(path) {
+  if (!requireAuth('지금 올리기')) return;
+  if (S.saving || S.loadingPost) return toast('진행 중인 작업이 끝날 때까지 기다려 주세요.', 'info');
+  var post = S.posts.find(function(p) { return p.path === path; });
+  if (!post) return toast('글 데이터를 불러올 수 없습니다', 'error');
+  if (canUseLocalPower()) return editPost(path);
+  if (!post._content) return toast('글 데이터를 불러올 수 없습니다', 'error');
+
+  var now = formatNow();
+  var content = setFrontMatterDate(post._content, now);
+  if (!content) return toast('날짜를 바꾸지 못했어요. 수정 화면에서 올려 주세요.', 'error');
+  setSavingState(true);
+  try {
+    var result = await ghPutFile(post.path, content, post.sha, 'publish now ' + post.path);
+    post.sha = result.content.sha;
+    post._content = content;
+    post.date = now;
+    toast('지금 올리고 있어요. 1~2분 뒤 블로그에 보여요.', 'success');
+    updateListStats();
+    renderPosts();
+    if (!post.hidden) watchUntilLive(postLiveUrl(post.permalink, post.path));
+  } catch (e) {
+    toast('실패: ' + e.message, 'error');
+  } finally {
+    setSavingState(false);
+  }
+}
+
+/* Replaces the date line inside the front matter only; null if there is none. */
+function setFrontMatterDate(content, date) {
+  var text = String(content || '').replace(/\r\n/g, '\n');
+  if (!text.startsWith('---\n')) return null;
+  var end = text.indexOf('\n---\n', 4);
+  if (end === -1) return null;
+  var head = text.slice(0, end);
+  if (!/^date:.*$/m.test(head)) return null;
+  return head.replace(/^date:.*$/m, 'date: ' + date) + text.slice(end);
 }
 
 function setListTab(tab, btn) {
@@ -3147,6 +3414,7 @@ function newPost() {
   } else {
     clearAutosave('__new__');
     document.getElementById('ed-date').value = formatNow();
+    resetScheduleFromDate();
     S.autosaveDismissed = false;
   }
   document.getElementById('ed-delete-btn').style.display = 'none';
@@ -3184,7 +3452,10 @@ async function editPost(path) {
       document.getElementById('ed-hero-image-position').value = localPost.heroImagePosition || '';
       document.getElementById('ed-image-extra').value = localPost.imageExtra || '';
       document.getElementById('ed-cover-alt').value = localPost.coverAlt || extractImageAlt(localPost.imageExtra || '');
-      document.getElementById('ed-extra-front-matter').value = localPost.extra || '';
+      /* The local server keeps unknown keys in `extra`; notify gets its own toggle. */
+      var localExtra = takeNotifyLine(localPost.extra || '');
+      document.getElementById('ed-extra-front-matter').value = localExtra.extra;
+      document.getElementById('ed-notify').checked = localExtra.notify;
       document.getElementById('ed-toc').checked = localPost.toc !== false;
       document.getElementById('ed-comments').checked = localPost.comments !== false;
       document.getElementById('ed-pin').checked = localPost.pin === true;
@@ -3203,7 +3474,8 @@ async function editPost(path) {
         document.getElementById('cover-upload').style.display = 'none';
       }
       document.getElementById('ed-delete-btn').style.display = 'inline-flex';
-      S.editing = { path: path, sha: null, isNew: false };
+      S.editing = { path: path, sha: null, isNew: false, wasPublic: postWasPublic(path, localPost.date) };
+      resetScheduleFromDate();
       updateViewOnBlogLink();
       S.autosaveDismissed = false;
       refreshAutosaveBanner();
@@ -3242,6 +3514,7 @@ async function editPost(path) {
     document.getElementById('ed-draft').checked = path.startsWith('_drafts/');
     document.getElementById('ed-mermaid').checked = fm.mermaid === true || fm.mermaid === 'true';
     document.getElementById('ed-math').checked = fm.math === true || fm.math === 'true';
+    document.getElementById('ed-notify').checked = fm.notify !== false && fm.notify !== 'false';
     document.getElementById('ed-body').value = body;
 
     var cover = (fm.image && fm.image.path) ? fm.image.path : (typeof fm.image === 'string' ? fm.image : '') || '';
@@ -3256,7 +3529,8 @@ async function editPost(path) {
     }
 
     document.getElementById('ed-delete-btn').style.display = 'inline-flex';
-    S.editing = { path: path, sha: sha, isNew: false };
+    S.editing = { path: path, sha: sha, isNew: false, wasPublic: postWasPublic(path, fm.date) };
+    resetScheduleFromDate();
     updateViewOnBlogLink();
     S.autosaveDismissed = false;
     refreshAutosaveBanner();
@@ -3281,11 +3555,19 @@ async function savePost() {
   var title = document.getElementById('ed-title').value.trim();
   if (!title) return toast('제목을 입력하세요', 'error');
 
-  var date = document.getElementById('ed-date').value.trim() || formatNow();
+  var isDraft = document.getElementById('ed-draft').checked;
+  var dateInput = document.getElementById('ed-date');
+  /* This save takes the post out (now or at its scheduled time) when it is not out yet. */
+  var goingOut = !isDraft && scheduleApplies();
+  var scheduling = goingOut && S.scheduleMode === 'later';
+  /* 지금 올리기 goes out at the moment of saving, unless a date was typed in 고급 설정. */
+  if (goingOut && !scheduling && !S.dateTouched) dateInput.value = formatNow();
+  var date = dateInput.value.trim() || formatNow();
   if (!isValidPostDate(date)) {
     return toast('날짜는 2026-07-13 18:30:00 +0900 형식으로 입력해 주세요', 'error');
   }
-  var isDraft = document.getElementById('ed-draft').checked;
+  if (scheduling && !isFuturePostDate(date)) return toast('예약 시간이 벌써 지났어요. 다시 골라 주세요.', 'error');
+  var firstOut = goingOut && !isFuturePostDate(date);
   var body = document.getElementById('ed-body').value;
 
   /* Stability Guard: Prevent build errors from empty attributes */
@@ -3304,6 +3586,7 @@ async function savePost() {
     comments: document.getElementById('ed-comments').checked,
     pin: document.getElementById('ed-pin').checked,
     hidden: document.getElementById('ed-hidden').checked,
+    notify: document.getElementById('ed-notify').checked,
     mermaid: document.getElementById('ed-mermaid').checked,
     math: document.getElementById('ed-math').checked,
     hero_title: document.getElementById('ed-hero-title').value.trim(),
@@ -3361,14 +3644,14 @@ async function savePost() {
           hidden: fm.hidden,
           mermaid: fm.mermaid,
           math: fm.math,
-          extra: fm.extra_front_matter,
+          extra: [fm.extra_front_matter, fm.notify ? '' : 'notify: false'].filter(Boolean).join('\n'),
           body: body,
           coverImage: fm.cover,
           coverAlt: document.getElementById('ed-cover-alt').value.trim(),
           permalink: fm.permalink
         })
       });
-      S.editing = { path: localResult.relativePath, sha: null, isNew: false };
+      S.editing = { path: localResult.relativePath, sha: null, isNew: false, wasPublic: !isDraft && !isFuturePostDate(date) };
       document.getElementById('ed-delete-btn').style.display = 'inline-flex';
       toast('로컬 저장 완료', 'success');
       completeAutosaveAfterSave(autosavePath);
@@ -3376,14 +3659,14 @@ async function savePost() {
       S.autosaveDismissed = false;
       refreshAutosaveBanner();
       updateEditorDock(S.currentView);
-      showPublishStatus(fm, isDraft);
+      showPublishStatus(fm, isDraft, firstOut);
       await refreshLocalRuntime(true);
       return;
     }
 
     /* Create the new path first. If cleanup fails, a duplicate is recoverable; a deleted original is not. */
     var result = await ghPutFile(newPath, content, moving ? null : originalSha);
-    S.editing = { path: newPath, sha: result.content.sha, isNew: false };
+    S.editing = { path: newPath, sha: result.content.sha, isNew: false, wasPublic: !isDraft && !isFuturePostDate(date) };
     var cleanupWarning = '';
     if (moving) {
       try {
@@ -3400,7 +3683,8 @@ async function savePost() {
     S.autosaveDismissed = false;
     refreshAutosaveBanner();
     updateEditorDock(S.currentView);
-    showPublishStatus(fm, isDraft);
+    showPublishStatus(fm, isDraft, firstOut);
+    if (firstOut && !fm.hidden) watchUntilLive(postLiveUrl(fm.permalink, newPath));
     loadPosts();
   } catch (e) {
     toast('저장 실패: ' + e.message, 'error');
@@ -3493,6 +3777,10 @@ function clearEditor() {
   document.getElementById('ed-draft').checked = false;
   document.getElementById('ed-mermaid').checked = false;
   document.getElementById('ed-math').checked = false;
+  document.getElementById('ed-notify').checked = true;
+  document.getElementById('ed-sched-day').value = '';
+  S.scheduleMode = null;
+  S.dateTouched = false;
   document.getElementById('cover-preview').style.display = 'none';
   document.getElementById('cover-upload').style.display = '';
   document.getElementById('autosave-status').textContent = '자동저장 대기';
@@ -3919,7 +4207,7 @@ function parseFrontMatter(text) {
 
   var lines = head.split('\n');
   var consumed = {};
-  var knownKeys = { title: true, date: true, description: true, categories: true, tags: true, toc: true, comments: true, pin: true, hidden: true, mermaid: true, math: true, hero_title: true, summary: true, hero_image_position: true, permalink: true, image: true };
+  var knownKeys = { title: true, date: true, description: true, categories: true, tags: true, toc: true, comments: true, pin: true, hidden: true, notify: true, mermaid: true, math: true, hero_title: true, summary: true, hero_image_position: true, permalink: true, image: true };
   for (var i = 0; i < lines.length; i++) {
     var line = lines[i];
     var m = line.match(/^(\w[\w_]*)\s*:\s*(.*)$/);
@@ -3984,7 +4272,7 @@ function parseFrontMatter(text) {
       result[key] = val;
     }
   }
-  var knownKeyPattern = /^(title|date|description|categories|tags|toc|comments|pin|hidden|mermaid|math|hero_title|summary|hero_image_position|permalink|image):/;
+  var knownKeyPattern = /^(title|date|description|categories|tags|toc|comments|pin|hidden|notify|mermaid|math|hero_title|summary|hero_image_position|permalink|image):/;
   result._extra = lines.filter(function(line, index) {
     return !consumed[index] && line.trim() && !knownKeyPattern.test(line.trim()) && !/^\s+path:/.test(line);
   }).join('\n');
@@ -4017,6 +4305,8 @@ function buildFileContent(fm, body) {
   yaml += 'comments: ' + fm.comments + '\n';
   if (fm.pin) yaml += 'pin: true\n';
   if (fm.hidden) yaml += 'hidden: true\n';
+  /* Read by .github/workflows/notify-subscribers.yml: no e-mail for this post. */
+  if (fm.notify === false) yaml += 'notify: false\n';
   if (fm.mermaid) yaml += 'mermaid: true\n';
   if (fm.math) yaml += 'math: true\n';
   if (fm.hero_title) yaml += 'hero_title: ' + yamlQuoted(fm.hero_title.replace(/\n/g, '<br>')) + '\n';
@@ -4128,10 +4418,58 @@ function toggleSidebar() {
 })();
 
 /* ═══════ Utilities ═══════ */
-function formatNow() {
-  var d = new Date();
+/* Post dates are Korean time, the blog's timezone, whatever zone the device is in. */
+var KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+
+function formatPostDate(ms) {
+  var d = new Date(ms + KST_OFFSET_MS);
   var pad = function(n) { return String(n).padStart(2, '0'); };
-  return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':00 +0900';
+  return d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-' + pad(d.getUTCDate()) + ' ' + pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) + ':00 +0900';
+}
+
+function formatNow() {
+  return formatPostDate(Date.now());
+}
+
+/* A front matter date as a moment; one without a zone is Korean time, as Jekyll reads it. */
+function postDateMs(value) {
+  var m = String(value || '').trim().match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?(?:\s*([+-])(\d{2}):?(\d{2}))?$/);
+  if (!m) return NaN;
+  var offsetMinutes = m[7] ? (m[7] === '-' ? -1 : 1) * (Number(m[8]) * 60 + Number(m[9])) : 540;
+  return Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]), Number(m[4] || 0), Number(m[5] || 0), Number(m[6] || 0)) - offsetMinutes * 60000;
+}
+
+function isFuturePostDate(value, now) {
+  var ms = postDateMs(value);
+  return !isNaN(ms) && ms > (now === undefined ? Date.now() : now);
+}
+
+function hourLabel(hour) {
+  if (hour === 0) return '밤 12시';
+  if (hour === 12) return '낮 12시';
+  return (hour < 12 ? '오전 ' + hour : '오후 ' + (hour - 12)) + '시';
+}
+
+/* 11월 7일 (토) 오후 8시 — Korean time, minutes only when there are some. */
+function friendlyPostTime(value) {
+  var ms = postDateMs(value);
+  if (isNaN(ms)) return '';
+  var d = new Date(ms + KST_OFFSET_MS);
+  var minutes = d.getUTCMinutes();
+  return (d.getUTCMonth() + 1) + '월 ' + d.getUTCDate() + '일 (' + '일월화수목금토'.charAt(d.getUTCDay()) + ') '
+    + hourLabel(d.getUTCHours()) + (minutes ? ' ' + minutes + '분' : '');
+}
+
+/* Splits a `notify:` line out of the local server's extra front matter. */
+function takeNotifyLine(extra) {
+  var notify = true;
+  var rest = String(extra || '').split('\n').filter(function(line) {
+    var m = line.match(/^notify:\s*(\S+)/);
+    if (!m) return true;
+    notify = m[1] !== 'false';
+    return false;
+  });
+  return { notify: notify, extra: rest.join('\n') };
 }
 
 function isValidPostDate(value) {

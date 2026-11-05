@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -330,6 +331,45 @@ assert.match(html, /setBlogOwnerFlag\(false\);\s*await clearTrustedSession\(\)/,
 assert.equal(appSandbox.isValidPostDate('2026-07-13 18:30:00 +0900'), true);
 assert.equal(appSandbox.isValidPostDate('2026/07/13'), false);
 assert.equal(appSandbox.isValidPostDate('2026-02-30 18:30:00 +0900'), false);
+
+/* 예약 발행: a post is scheduled while its date (Korean time) is still ahead. */
+const scheduleNow = Date.UTC(2026, 10, 5, 12, 0, 0);
+assert.equal(appSandbox.formatPostDate(scheduleNow), '2026-11-05 21:00:00 +0900', 'post dates must be Korean time on any device');
+assert.equal(appSandbox.isFuturePostDate('2026-11-05 21:00:01 +0900', scheduleNow), true);
+assert.equal(appSandbox.isFuturePostDate('2026-11-05 21:00:00 +0900', scheduleNow), false, 'a post due this second is out, not scheduled');
+assert.equal(appSandbox.isFuturePostDate('2026-11-06', scheduleNow), true, 'a date without a time is midnight Korean time');
+assert.equal(appSandbox.isFuturePostDate('not a date', scheduleNow), false);
+assert.equal(appSandbox.friendlyPostTime('2026-11-07 20:00:00 +0900'), '11월 7일 (토) 오후 8시');
+assert.equal(appSandbox.friendlyPostTime('2026-11-08 00:30:00 +0900'), '11월 8일 (일) 밤 12시 30분');
+assert.equal(
+  appSandbox.setFrontMatterDate('---\ntitle: x\ndate: 2026-11-07 20:00:00 +0900\n---\n\ndate: in the body\n', '2026-11-05 21:00:00 +0900'),
+  '---\ntitle: x\ndate: 2026-11-05 21:00:00 +0900\n---\n\ndate: in the body\n',
+  '지금 올리기 must change only the front matter date'
+);
+assert.equal(appSandbox.setFrontMatterDate('no front matter', '2026-11-05 21:00:00 +0900'), null);
+assert.match(
+  appSandbox.buildFileContent({ title: 't', date: '2026-11-07 20:00:00 +0900', categories: [], tags: [], toc: true, comments: true, notify: false }, ''),
+  /^notify: false$/m,
+  'turning the subscriber e-mail off must reach the front matter'
+);
+assert.equal(appSandbox.parseFrontMatter('---\ntitle: t\nnotify: false\n---\n').notify, false);
+assert.equal(appSandbox.parseFrontMatter('---\ntitle: t\nnotify: false\n---\n')._extra, '', 'notify must not be duplicated as an unknown key');
+assert.deepEqual({ ...appSandbox.takeNotifyLine('a: 1\nnotify: false\nb: 2') }, { notify: false, extra: 'a: 1\nb: 2' });
+
+const dueCheck = JSON.parse(execFileSync('python3', ['-c', [
+  'import importlib.util, json, pathlib',
+  'spec = importlib.util.spec_from_file_location("due", "tools/due-posts.py")',
+  'due = importlib.util.module_from_spec(spec)',
+  'spec.loader.exec_module(due)',
+  'post = pathlib.Path("_posts/2026-11-07-12.md")',
+  'print(json.dumps([due.post_time("2026-11-07 20:00:00 +0900").isoformat(), due.post_time("2026-11-07").isoformat(), due.post_url(post, {}), due.post_url(post, {"permalink": "/posts/12/"})]))',
+].join('\n')], { cwd: root, encoding: 'utf8' }));
+assert.deepEqual(dueCheck, [
+  '2026-11-07T20:00:00+09:00',
+  '2026-11-07T00:00:00+09:00',
+  'https://jmchoi4u.github.io/posts/12/',
+  'https://jmchoi4u.github.io/posts/12/',
+], 'the hourly due check must read dates and addresses as Jekyll does');
 const studioPostOrder = [...appSandbox.sortPostsForDisplay([
   { name: '2026-07-28-new.md', date: '2026-07-28', pin: false },
   { name: '2026-03-17-pinned.md', date: '2026-03-17', pin: true },
@@ -467,13 +507,19 @@ assert.doesNotMatch(worker, /path === ['"]\/unsubscribe['"]/, 'email-only unsubs
 assert.match(worker, /path === ['"]\/confirm['"]/, 'subscriptions must require an email confirmation route');
 assert.match(worker, /X-Notify-Secret/, 'automated notifications must use a dedicated secret');
 assert.match(workflow, /node tools\/test-jm-studio\.mjs/, 'Studio checks must run in CI');
-assert.match(workflow, /cron:\s*["']0 0 \* \* \*["']/, 'daily scheduled publishing must use the main Pages workflow');
+assert.match(workflow, /cron:\s*["']3 \* \* \* \*["']/, 'scheduled posts must be checked every hour by the main Pages workflow');
+assert.match(workflow, /python3 tools\/due-posts\.py >> "\$GITHUB_OUTPUT"/, 'the hourly run must build only when a scheduled post is due');
+assert.match(workflow, /needs\.due\.outputs\.build == 'true'/, 'a quiet hour must skip the build');
+assert.doesNotMatch(workflow, /^concurrency:/m, 'the hourly check must not cancel a deploy that is running');
+assert.match(workflow, /gh workflow run notify-subscribers\.yml/, 'a scheduled post that goes up must e-mail the subscribers');
 assert.match(notifyWorkflow, /--fail-with-body/, 'notification HTTP failures must fail CI');
 assert.match(notifyWorkflow, /X-Notify-Secret/, 'notification workflow must use the dedicated Worker secret');
 assert.match(notifyWorkflow, /schedule:[\s\S]*?cron:\s*["']30 1 \* \* \*['"]/, 'scheduled posts must be checked after the daily Pages build');
 assert.match(notifyWorkflow, /window_start[\s\S]*?Path\("_posts"\)\.glob/, 'all recently published posts must be considered');
 assert.match(notifyWorkflow, /git["], ["]diff["], ["]--name-status[\s\S]*?status\.startswith\(\(["]A["], ["]R["], ["]C["]\)\)/, 'pushes must include newly published or renamed posts regardless of their draft date');
 assert.match(notifyWorkflow, /was_unhidden/, 'revealed posts must be eligible for notification');
+assert.match(notifyWorkflow, /was_scheduled\(path, before_sha\)/, 'a scheduled post brought forward must be eligible for notification');
+assert.match(notifyWorkflow, /get\("notify", "true"\)\.lower\(\) == "false"/, 'a post with the e-mail turned off must not be sent');
 assert.match(worker, /NOTIFIED_KEY_PREFIX/, 'post notifications must be idempotent');
 assert.match(worker, /DELIVERED_KEY_PREFIX/, 'partial retries must be idempotent per recipient');
 assert.match(worker, /async function listAllKeys[\s\S]*?list_complete/, 'subscriber scans must follow Cloudflare KV cursors');

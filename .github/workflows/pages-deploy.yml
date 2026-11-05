@@ -9,9 +9,10 @@ on:
       - README.md
       - LICENSE
 
-  # Rebuild daily so future-dated posts appear automatically (09:00 KST).
+  # Hourly, so a scheduled (future-dated) post goes up soon after its time.
+  # The due job skips the build when nothing has come due.
   schedule:
-    - cron: "0 0 * * *"
+    - cron: "3 * * * *"
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -21,13 +22,28 @@ permissions:
   pages: write
   id-token: write
 
-# Allow one concurrent deployment
-concurrency:
-  group: "pages"
-  cancel-in-progress: true
-
 jobs:
+  due:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    outputs:
+      build: ${{ steps.check.outputs.build }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Look for scheduled posts that are due
+        id: check
+        run: python3 tools/due-posts.py >> "$GITHUB_OUTPUT"
+
   build:
+    needs: due
+    if: ${{ !cancelled() && (github.event_name != 'schedule' || needs.due.outputs.build == 'true') }}
+    # One build and deploy at a time; a newer one replaces one still running.
+    # The due check stays outside the group, so a quiet hour cancels nothing.
+    concurrency:
+      group: "pages"
+      cancel-in-progress: true
     runs-on: ubuntu-latest
 
     steps:
@@ -80,9 +96,26 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: "pages"
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     needs: build
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+  # A scheduled post that just went up was skipped by the push-time
+  # notification (its date was still ahead), so e-mail the subscribers now.
+  notify:
+    if: github.event_name == 'schedule'
+    needs: deploy
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - name: Start subscriber notifications
+        run: gh workflow run notify-subscribers.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME"
+        env:
+          GH_TOKEN: ${{ github.token }}

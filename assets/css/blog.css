@@ -22,7 +22,7 @@
   --jm-text: #2b3138;
   --jm-body: #3a414a;
   --jm-sub: #5d6670;
-  --jm-meta: #6b7684;
+  --jm-meta: #5f6977;
   --jm-faint: #c3cad3;
   --jm-accent: #2f5d8a;
   --jm-accent-line: #9fb7cf;
@@ -48,7 +48,7 @@ html[data-mode='dark'] {
   --jm-text: #d3d8de;
   --jm-body: #c2c8cf;
   --jm-sub: #a3acb6;
-  --jm-meta: #858e99;
+  --jm-meta: #98a1ab;
   --jm-faint: #4a515a;
   --jm-accent: #8fb6dd;
   --jm-accent-line: #4d6b88;
@@ -69,7 +69,7 @@ html[data-mode='dark'] {
     --jm-text: #d3d8de;
     --jm-body: #c2c8cf;
     --jm-sub: #a3acb6;
-    --jm-meta: #858e99;
+    --jm-meta: #98a1ab;
     --jm-faint: #4a515a;
     --jm-accent: #8fb6dd;
     --jm-accent-line: #4d6b88;
@@ -281,7 +281,7 @@ textarea:focus-visible,
 .jm-motto {
   margin: 0 0 0.25rem;
   color: var(--jm-meta);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   line-height: 1.5;
   letter-spacing: 0.01em;
 }
@@ -385,7 +385,7 @@ html[data-mode='dark'] #sidebar .jm-btn-write:hover {
   gap: 0.2rem 0.9rem;
   margin: 0;
   color: var(--jm-meta);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
 }
 
 .jm-visits b {
@@ -530,7 +530,7 @@ footer.jm-footer {
   border-top: 1px solid var(--jm-line);
   background: none;
   color: var(--jm-meta);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   text-align: center;
 }
 
@@ -692,7 +692,7 @@ html[data-mode='dark'] .jm-btn-write:hover {
 
 .jm-cat-count {
   color: var(--jm-meta);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-variant-numeric: tabular-nums;
 }
 
@@ -739,7 +739,7 @@ html[data-mode='dark'] .jm-btn-write:hover {
 .jm-pop-rank {
   flex: 0 0 0.8rem;
   color: var(--jm-meta);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
@@ -761,7 +761,7 @@ html[data-mode='dark'] .jm-btn-write:hover {
 .jm-pop-views {
   flex: 0 0 auto;
   color: var(--jm-meta);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-variant-numeric: tabular-nums;
 }
 
@@ -815,7 +815,7 @@ html[data-mode='dark'] .jm-btn-write:hover {
   margin: 0;
   overflow: hidden;
   color: var(--jm-title);
-  font-size: 1rem;
+  font-size: 1.0625rem;
   font-weight: 700;
   line-height: 1.45;
   letter-spacing: -0.02em;
@@ -835,8 +835,8 @@ html[data-mode='dark'] .jm-btn-write:hover {
   margin: 0.4rem 0 0;
   overflow: hidden;
   color: var(--jm-sub);
-  font-size: 0.875rem;
-  line-height: 1.6;
+  font-size: 0.9375rem;
+  line-height: 1.65;
   word-break: keep-all;
   overflow-wrap: anywhere;
   -webkit-box-orient: vertical;
@@ -849,7 +849,7 @@ html[data-mode='dark'] .jm-btn-write:hover {
   align-items: center;
   margin: 0.5rem 0 0;
   color: var(--jm-meta);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   line-height: 1.4;
 }
 
@@ -892,7 +892,7 @@ html[data-mode='dark'] .jm-btn-write:hover {
   border: 1px solid var(--jm-accent);
   border-radius: 3px;
   color: var(--jm-accent);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 700;
   line-height: 1.5;
   vertical-align: 2px;
@@ -936,7 +936,7 @@ html[data-mode='dark'] .jm-btn-write:hover {
 .jm-board-head > span,
 .jm-board-head > a {
   color: var(--jm-meta);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   text-decoration: none;
   white-space: nowrap;
 }
@@ -1000,7 +1000,7 @@ html[data-mode='dark'] .jm-cover {
 .jm-blog-stats {
   margin: 0.15rem 0 0.25rem;
   color: var(--jm-meta);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
 }
 
 .jm-blog-intro {
@@ -1087,7 +1087,7 @@ html[data-mode='dark'] .jm-cover {
   border: 0;
   background: none;
   color: var(--jm-meta);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   cursor: pointer;
 }
 
@@ -1198,7 +1198,7 @@ html[data-mode='dark'] .jm-cover {
 
 .jm-byline-date {
   color: var(--jm-meta);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-variant-numeric: tabular-nums;
 }
 
@@ -1230,13 +1230,15 @@ html[data-mode='dark'] .jm-cover {
   height: auto;
 }
 
-/* Reading text. 16px on a phone, a touch larger on desktop; a typed newline
-   (<br>, from kramdown's hard_wrap) stays tight, a blank line opens a gap. */
+/* Reading text. 17px on a phone, 18px on desktop, with room between lines
+   so a long read stays easy on the eyes; a typed newline (<br>, from
+   kramdown's hard_wrap) stays tight, a blank line opens a gap.
+   jm-studio/index.html (.preview-content) mirrors these sizes. */
 .jm-post .content {
   margin-top: 1.8rem;
   color: var(--jm-text);
-  font-size: 1rem;
-  line-height: 1.85;
+  font-size: 1.0625rem;
+  line-height: 1.9;
   letter-spacing: -0.005em;
   word-break: keep-all;
   overflow-wrap: break-word;
@@ -1244,12 +1246,12 @@ html[data-mode='dark'] .jm-cover {
 
 @media (min-width: 768px) {
   .jm-post .content {
-    font-size: 1.0625rem;
+    font-size: 1.125rem;
   }
 }
 
 .jm-post .content p {
-  margin: 0 0 1.3em;
+  margin: 0 0 1.45em;
 }
 
 .jm-post .content > :first-child {
@@ -1273,22 +1275,22 @@ html[data-mode='dark'] .jm-cover {
 
 .jm-post .content h1 {
   margin: 2.4em 0 0.8em;
-  font-size: 1.4rem;
+  font-size: 1.5rem;
 }
 
 .jm-post .content h2 {
   margin: 2.3em 0 0.75em;
-  font-size: 1.25rem;
+  font-size: 1.375rem;
 }
 
 .jm-post .content h3 {
   margin: 2em 0 0.65em;
-  font-size: 1.125rem;
+  font-size: 1.1875rem;
 }
 
 .jm-post .content h4 {
   margin: 1.8em 0 0.6em;
-  font-size: 1rem;
+  font-size: 1.0625rem;
 }
 
 .jm-post .content .anchor {
@@ -1333,7 +1335,7 @@ html[data-mode='dark'] .jm-cover {
 
 .jm-post .content ul,
 .jm-post .content ol {
-  margin: 0 0 1.3em;
+  margin: 0 0 1.45em;
   padding-left: 1.3em;
 }
 
@@ -1491,7 +1493,7 @@ html[data-mode='dark'] .jm-cover {
   border-radius: 4px;
   background: rgb(0 0 0 / 55%);
   color: #fff;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-variant-numeric: tabular-nums;
   line-height: 1.6;
   pointer-events: none;
@@ -1634,7 +1636,7 @@ html[data-mode='dark'] .jm-cover {
 
 .jm-actions-views {
   color: var(--jm-meta);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   white-space: nowrap;
 }
 
@@ -1705,7 +1707,7 @@ html[data-mode='dark'] .jm-cover {
 .jm-prevnext time {
   flex: 0 0 auto;
   color: var(--jm-meta);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-variant-numeric: tabular-nums;
 }
 
@@ -1713,7 +1715,7 @@ html[data-mode='dark'] .jm-cover {
   display: block;
   padding: 0.6rem 0 0.4rem;
   color: var(--jm-meta);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   text-align: right;
   text-decoration: none;
 }
@@ -1747,7 +1749,7 @@ html[data-mode='dark'] .jm-cover {
 .jm-prevnext span {
   flex: 0 0 auto;
   color: var(--jm-meta);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
 }
 
 .jm-prevnext strong {
@@ -1803,7 +1805,7 @@ html[data-mode='dark'] .jm-cover {
 
 #disqus_thread > p {
   color: var(--jm-meta);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
 }
 
 /* The table of contents only exists beside a post on wide screens. */
@@ -1819,7 +1821,7 @@ html[data-mode='dark'] .jm-cover {
 
 #toc-wrapper .panel-heading {
   color: var(--jm-meta);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 700;
 }
 
@@ -1966,7 +1968,7 @@ h1.dynamic-title {
   flex: 0 0 6rem;
   overflow: hidden;
   color: var(--jm-meta);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   text-align: right;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1975,14 +1977,14 @@ h1.dynamic-title {
 .jm-archive-row time {
   flex: 0 0 5.6rem;
   color: var(--jm-meta);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
 
 .jm-archive-cols {
   color: var(--jm-meta);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
 }
 
 @media (max-width: 575.98px) {
@@ -2053,7 +2055,7 @@ h1.dynamic-title {
 .jm-taglist small {
   margin-left: 0.15rem;
   color: var(--jm-meta);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
 }
 
 .jm-listpage {
@@ -2220,13 +2222,13 @@ html[data-mode='dark'] .subscribe-submit {
   min-height: 1.2rem;
   margin: 0.5rem 0 0;
   color: #c62828;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
 }
 
 .subscribe-note {
   margin: 0.15rem 0 0;
   color: var(--jm-meta);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
 }
 
 .subscribe-done[hidden],

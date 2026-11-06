@@ -271,6 +271,97 @@ try {
   }), { SUBSCRIBERS: largeKv, RESEND_API_KEY: 'resend-test', EMAIL_FROM: 'Blog <blog@example.com>', NOTIFY_SECRET: 'correct-secret' });
   assert.equal(paginatedNotify.status, 200);
   assert.deepEqual(largeRecipients, ['late@example.com'], 'KV pagination must not hide subscribers after 1,000 internal keys');
+
+  /* 공감 */
+  const likeData = new Map();
+  const likeKv = {
+    get: async (key) => likeData.get(key) ?? null,
+    put: async (key, value) => likeData.set(key, value),
+    delete: async (key) => likeData.delete(key),
+    list: async () => ({ keys: [...likeData.keys()].map((name) => ({ name })) }),
+  };
+  const reader = 'r'.repeat(22);
+  const other = 'o'.repeat(22);
+  const likeRequest = (method, query, body) => workerModule.default.fetch(new Request(`https://worker.example/likes${query}`, {
+    method,
+    headers: { 'Content-Type': 'application/json', Origin: 'https://jmchoi4u.github.io', 'CF-Connecting-IP': '198.51.100.7' },
+    body: body ? JSON.stringify(body) : undefined,
+  }), { SUBSCRIBERS: likeKv });
+  assert.deepEqual(await (await likeRequest('GET', `?path=%2Fposts%2F8%2F&visitor=${reader}`)).json(), { count: 0, liked: false });
+  assert.deepEqual(await (await likeRequest('POST', '', { path: '/posts/8/', like: true, visitor: reader })).json(), { count: 1, liked: true });
+  assert.deepEqual(await (await likeRequest('POST', '', { path: '/posts/8/', like: true, visitor: reader })).json(), { count: 1, liked: true }, 'pressing twice must count once');
+  assert.deepEqual(await (await likeRequest('GET', `?path=/posts/8&visitor=${other}`)).json(), { count: 1, liked: false }, 'readers sharing an address must not share a press');
+  assert.deepEqual(await (await likeRequest('POST', '', { path: '/posts/8', like: false, visitor: reader })).json(), { count: 0, liked: false });
+  assert.equal((await likeRequest('POST', '', { path: '/about/', like: true, visitor: reader })).status, 400, 'only posts can be liked');
+  assert.equal((await likeRequest('POST', '', { path: '/posts/8/', like: true })).status, 400, 'a press needs the browser ID');
+  assert.equal((await likeRequest('GET', '?path=TOTAL')).status, 400);
+
+  /* 글감 메모함 */
+  const memoData = new Map();
+  const memoKv = {
+    get: async (key) => memoData.get(key) ?? null,
+    put: async (key, value) => memoData.set(key, value),
+    delete: async (key) => memoData.delete(key),
+    list: async () => ({ keys: [...memoData.keys()].map((name) => ({ name })) }),
+  };
+  let githubUserCalls = 0;
+  globalThis.fetch = async (url, options = {}) => {
+    if (!String(url).includes('api.github.com/user')) throw new Error(`unexpected fetch: ${url}`);
+    githubUserCalls += 1;
+    const login = String(options.headers?.Authorization || '').endsWith('owner-token') ? 'jmchoi4u' : 'someone-else';
+    return new Response(JSON.stringify({ login }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  };
+  const memoRequest = (token, body) => workerModule.default.fetch(new Request('https://worker.example/memos', {
+    method: body ? 'POST' : 'GET',
+    headers: { 'Content-Type': 'application/json', Origin: 'https://jmchoi4u.github.io', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    body: body ? JSON.stringify(body) : undefined,
+  }), { SUBSCRIBERS: memoKv });
+  assert.equal((await memoRequest('', null)).status, 401, 'memos need a GitHub token');
+  assert.equal((await memoRequest('other-token', null)).status, 401, 'only the blog owner reads the memos');
+  const added = await (await memoRequest('owner-token', { action: 'add', id: 'memo-0001', text: '  글감 하나  ' })).json();
+  assert.equal(added.memos.length, 1);
+  assert.equal(added.memos[0].text, '글감 하나');
+  const again = await (await memoRequest('owner-token', { action: 'add', id: 'memo-0001', text: '글감 하나' })).json();
+  assert.equal(again.memos.length, 1, 'a change sent twice from the offline queue must apply once');
+  await memoRequest('owner-token', { action: 'add', id: 'memo-0002', text: '둘째' });
+  const afterDelete = await (await memoRequest('owner-token', { action: 'delete', id: 'memo-0001' })).json();
+  assert.deepEqual(afterDelete.memos.map((memo) => memo.id), ['memo-0002']);
+  assert.equal((await memoRequest('owner-token', { action: 'add', text: '   ' })).status, 400);
+  assert.equal(githubUserCalls, 2, 'a checked owner token must be trusted for a while instead of asking GitHub each time');
+
+  /* Likes and memos share the subscriber store; neither may look like a subscriber. */
+  const sharedToken = 'z'.repeat(43);
+  memoData.set('only@example.com', JSON.stringify({ email: 'only@example.com', active: true, unsubscribeToken: sharedToken }));
+  memoData.set(`unsub:${sharedToken}`, 'only@example.com');
+  for (const [key, value] of likeData) memoData.set(key, value);
+  memoData.set('likes:/posts/9', '3');
+  const sharedRecipients = [];
+  globalThis.fetch = async (url, options) => {
+    if (!String(url).includes('api.resend.com/emails')) throw new Error(`unexpected fetch: ${url}`);
+    sharedRecipients.push(JSON.parse(options.body).to[0]);
+    assert.match(JSON.parse(options.body).html, /#2F5D8A/, 'the new post e-mail must use the blog palette');
+    return new Response('{}', { status: 200 });
+  };
+  const sharedNotify = await workerModule.default.fetch(new Request('https://worker.example/notify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Notify-Secret': 'correct-secret' },
+    body: JSON.stringify({ title: 'Shared store', url: 'https://jmchoi4u.github.io/posts/shared/' }),
+  }), { SUBSCRIBERS: memoKv, RESEND_API_KEY: 'resend-test', EMAIL_FROM: 'Blog <blog@example.com>', NOTIFY_SECRET: 'correct-secret' });
+  assert.equal(sharedNotify.status, 200);
+  assert.deepEqual(sharedRecipients, ['only@example.com'], 'like and memo records must never be mailed');
+  assert.ok(memoData.has('memos:owner'), 'sending must leave the memos alone');
+
+  /* 예약 발행: the Worker's clock wakes the due check only once it has a token. */
+  const dispatches = [];
+  globalThis.fetch = async (url, options) => { dispatches.push({ url: String(url), body: JSON.parse(options.body) }); return new Response(null, { status: 204 }); };
+  const waits = [];
+  await workerModule.default.scheduled({}, {}, { waitUntil: (promise) => waits.push(promise) });
+  await Promise.all(waits);
+  assert.equal(dispatches.length, 0, 'without GH_DISPATCH_TOKEN the schedule must do nothing');
+  await workerModule.default.scheduled({}, { GH_DISPATCH_TOKEN: 'dispatch' }, { waitUntil: (promise) => waits.push(promise) });
+  await Promise.all(waits);
+  assert.equal(dispatches[0].url, 'https://api.github.com/repos/jmchoi4u/jmchoi4u.github.io/actions/workflows/pages-deploy.yml/dispatches');
+  assert.deepEqual(dispatches[0].body, { ref: 'main', inputs: { due_check: 'true' } });
 } finally {
   globalThis.fetch = originalFetch;
 }
@@ -354,7 +445,14 @@ assert.match(
 );
 assert.equal(appSandbox.parseFrontMatter('---\ntitle: t\nnotify: false\n---\n').notify, false);
 assert.equal(appSandbox.parseFrontMatter('---\ntitle: t\nnotify: false\n---\n')._extra, '', 'notify must not be duplicated as an unknown key');
-assert.deepEqual({ ...appSandbox.takeNotifyLine('a: 1\nnotify: false\nb: 2') }, { notify: false, extra: 'a: 1\nb: 2' });
+assert.deepEqual({ ...appSandbox.takeExtraLine('a: 1\nnotify: false\nb: 2', 'notify') }, { value: 'false', extra: 'a: 1\nb: 2' });
+assert.deepEqual({ ...appSandbox.takeExtraLine('series: "회고"\nnotify_me: x', 'series') }, { value: '회고', extra: 'notify_me: x' });
+
+/* 시리즈: one name per post, kept through a save and read back. */
+const seriesFile = appSandbox.buildFileContent({ title: 't', date: '2026-11-07 20:00:00 +0900', categories: [], tags: ['a'], series: '회고: 2026', toc: true, comments: true }, '');
+assert.match(seriesFile, /^series: "회고: 2026"$/m, 'a series name must be quoted YAML');
+assert.equal(appSandbox.parseFrontMatter(seriesFile).series, '회고: 2026');
+assert.equal(appSandbox.parseFrontMatter(seriesFile)._extra, '', 'series must not be duplicated as an unknown key');
 
 const dueCheck = JSON.parse(execFileSync('python3', ['-c', [
   'import importlib.util, json, pathlib',
@@ -362,14 +460,21 @@ const dueCheck = JSON.parse(execFileSync('python3', ['-c', [
   'due = importlib.util.module_from_spec(spec)',
   'spec.loader.exec_module(due)',
   'post = pathlib.Path("_posts/2026-11-07-12.md")',
-  'print(json.dumps([due.post_time("2026-11-07 20:00:00 +0900").isoformat(), due.post_time("2026-11-07").isoformat(), due.post_url(post, {}), due.post_url(post, {"permalink": "/posts/12/"})]))',
+  'now = due.post_time("2026-11-07 21:00:00 +0900")',
+  'print(json.dumps([due.post_time("2026-11-07 20:00:00 +0900").isoformat(), due.post_time("2026-11-07").isoformat(), due.post_url(post, {}), due.post_url(post, {"permalink": "/posts/12/"}),',
+  '  due.is_due({"date": "2026-11-07 20:00:00 +0900"}, now), due.is_due({"date": "2026-11-07 20:00:00 +0900", "hidden": "true"}, now),',
+  '  due.is_due({"date": "2026-11-07 22:00:00 +0900"}, now), due.is_due({"date": "2026-11-01 20:00:00 +0900"}, now)]))',
 ].join('\n')], { cwd: root, encoding: 'utf8' }));
 assert.deepEqual(dueCheck, [
   '2026-11-07T20:00:00+09:00',
   '2026-11-07T00:00:00+09:00',
   'https://jmchoi4u.github.io/posts/12/',
   'https://jmchoi4u.github.io/posts/12/',
-], 'the hourly due check must read dates and addresses as Jekyll does');
+  true,
+  false,
+  false,
+  false,
+], 'the hourly due check must read dates and addresses as Jekyll does, and never wait for a hidden post');
 const studioPostOrder = [...appSandbox.sortPostsForDisplay([
   { name: '2026-07-28-new.md', date: '2026-07-28', pin: false },
   { name: '2026-03-17-pinned.md', date: '2026-03-17', pin: true },
@@ -472,6 +577,47 @@ const writesBeforeCallback = swPutCalls;
 await runNavigation('https://jmchoi4u.github.io/jm-studio/?code=secret&state=random');
 assert.equal(swPutCalls, writesBeforeCallback, 'OAuth callback responses must never be cached');
 
+/* 갤러리에서 바로 글쓰기: a shared photo waits in its own cache, then Studio opens. */
+const shareCacheEntries = new Map();
+const shareCaches = {
+  open: async () => ({ put: async (key, response) => shareCacheEntries.set(key, response) }),
+  delete: async () => { shareCacheEntries.clear(); return true; },
+  keys: async () => [],
+  match: async () => null,
+};
+const shareListeners = {};
+new Function('self', 'caches', 'fetch', 'Request', 'Response', serviceWorker)(
+  {
+    location: { origin: 'https://jmchoi4u.github.io', href: 'https://jmchoi4u.github.io/jm-studio/sw.js' },
+    clients: { claim: async () => undefined },
+    skipWaiting: async () => undefined,
+    addEventListener: (type, handler) => { shareListeners[type] = handler; },
+  },
+  shareCaches,
+  async () => { throw new Error('a share must not reach the network'); },
+  Request,
+  Response,
+);
+const sharedForm = new FormData();
+sharedForm.append('title', '오늘 사진');
+sharedForm.append('photos', new File([new Uint8Array([1, 2, 3])], '바다.jpg', { type: 'image/jpeg' }));
+let shareResponse;
+shareListeners.fetch({
+  request: new Request('https://jmchoi4u.github.io/jm-studio/share-target', { method: 'POST', body: sharedForm }),
+  respondWith: (promise) => { shareResponse = Promise.resolve(promise); },
+  waitUntil: () => undefined,
+});
+shareResponse = await shareResponse;
+assert.equal(shareResponse.status, 303);
+assert.equal(shareResponse.headers.get('Location'), 'https://jmchoi4u.github.io/jm-studio/?share=1', 'a share must open Studio');
+assert.deepEqual([...shareCacheEntries.keys()].sort(), ['shared/0', 'shared/meta']);
+assert.equal(shareCacheEntries.get('shared/0').headers.get('X-File-Name'), encodeURIComponent('바다.jpg'));
+assert.deepEqual(JSON.parse(await shareCacheEntries.get('shared/meta').text()), { title: '오늘 사진', text: '', url: '', count: 1 });
+assert.equal(manifest.share_target.method, 'POST');
+assert.equal(manifest.share_target.action, './share-target');
+assert.deepEqual(manifest.share_target.params.files, [{ name: 'photos', accept: ['image/*'] }]);
+assert.match(html, /params\.get\('share'\) === '1'/, 'Studio must pick a share up after signing in');
+
 const ids = [...html.matchAll(/\sid="([^"]+)"/g)].map((match) => match[1]);
 const duplicateIds = ids.filter((id, index) => ids.indexOf(id) !== index);
 assert.deepEqual([...new Set(duplicateIds)], [], 'HTML IDs must be unique');
@@ -507,7 +653,11 @@ assert.doesNotMatch(worker, /path === ['"]\/unsubscribe['"]/, 'email-only unsubs
 assert.match(worker, /path === ['"]\/confirm['"]/, 'subscriptions must require an email confirmation route');
 assert.match(worker, /X-Notify-Secret/, 'automated notifications must use a dedicated secret');
 assert.match(workflow, /node tools\/test-jm-studio\.mjs/, 'Studio checks must run in CI');
-assert.match(workflow, /cron:\s*["']3 \* \* \* \*["']/, 'scheduled posts must be checked every hour by the main Pages workflow');
+assert.match(workflow, /cron:\s*["']17 \* \* \* \*["']/, 'scheduled posts must be checked every hour, away from the top of the hour');
+assert.match(workflow, /due_check:[\s\S]*?type: boolean/, 'the Worker must be able to ask for the due check alone');
+assert.match(workflow, /github\.event_name == 'schedule' \|\| inputs\.due_check/, 'a due-check dispatch must run the due job');
+assert.match(workflow, /python3 tools\/make-share-cards\.py --font/, 'the build must draw share cards');
+assert.match(workflow, /name: Draw share cards\s+continue-on-error: true/, 'a failed card must not stop a deploy');
 assert.match(workflow, /python3 tools\/due-posts\.py >> "\$GITHUB_OUTPUT"/, 'the hourly run must build only when a scheduled post is due');
 assert.match(workflow, /needs\.due\.outputs\.build == 'true'/, 'a quiet hour must skip the build');
 assert.match(workflow, /if: \$\{\{ !cancelled\(\) && needs\.build\.result == 'success' \}\}/, 'a push must still deploy although the due job is skipped');
@@ -547,6 +697,11 @@ assert.match(postLayout, /blog-post\.js/, 'the post layout must load its script'
 assert.match(postLayout, /\?edit=\{\{ page\.path \| url_encode \}\}"[^>]*data-owner-only/, 'a post must link straight to its editor, for the owner only');
 assert.doesNotMatch(postLayout, /post-floating-topbar|post-fab/, 'the hidden floating post controls were removed; any that return must be inert while hidden');
 assert.match(postScript, /target\.focus\(\{ preventScroll: true \}\)/, 'comment navigation must move keyboard focus');
+assert.match(postLayout, /data-like data-like-path="\{\{ page\.url \}\}"[^>]*hidden/, 'the like button must stay hidden until the Worker answers');
+assert.match(postLayout, /include post-series\.html/, 'a post must show its series');
+assert.match(postScript, /function setupLikes/, 'the post script must wire the like button');
+assert.match(blogHead, /\/assets\/img\/og\//, 'posts must share their own card');
+assert.match(blogHead, /site\.static_files \| where: 'path', share_card_path/, 'a card is used only when the build drew it');
 assert.match(postScript, /aria-label', '이전 사진'[\s\S]*aria-label', '다음 사진'/, 'photo slide arrows must be labelled buttons');
 assert.match(html, /function prepareImageForUpload[\s\S]*?PHOTO_MAX_WIDTH/, 'Studio must shrink photos before uploading them');
 assert.match(html, /inp\.multiple = true/, 'Studio must accept several photos at once for a slide');

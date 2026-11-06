@@ -9,13 +9,21 @@ on:
       - README.md
       - LICENSE
 
-  # Hourly, so a scheduled (future-dated) post goes up soon after its time.
-  # The due job skips the build when nothing has come due.
+  # Hourly, so a scheduled (future-dated) post goes up after its time. The
+  # due job skips the build when nothing has come due. GitHub delays and drops
+  # scheduled runs most at the top of the hour, hence :17; the Worker's clock
+  # (tools/oauth-worker.js, scheduled) is the steadier trigger when set up.
   schedule:
-    - cron: "3 * * * *"
+    - cron: "17 * * * *"
 
-  # Allows you to run this workflow manually from the Actions tab
+  # The Actions tab, or the Worker with due_check, which asks only for the
+  # due check.
   workflow_dispatch:
+    inputs:
+      due_check:
+        description: "Build only if a scheduled post is due"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -24,7 +32,7 @@ permissions:
 
 jobs:
   due:
-    if: github.event_name == 'schedule'
+    if: github.event_name == 'schedule' || inputs.due_check
     runs-on: ubuntu-latest
     outputs:
       build: ${{ steps.check.outputs.build }}
@@ -38,7 +46,7 @@ jobs:
 
   build:
     needs: due
-    if: ${{ !cancelled() && (github.event_name != 'schedule' || needs.due.outputs.build == 'true') }}
+    if: ${{ !cancelled() && ((github.event_name != 'schedule' && !inputs.due_check) || needs.due.outputs.build == 'true') }}
     # One build and deploy at a time; a newer one replaces one still running.
     # The due check stays outside the group, so a quiet hour cancels nothing.
     concurrency:
@@ -73,6 +81,15 @@ jobs:
 
       - name: Test home category rendering
         run: bundle exec ruby tools/test-home-categories.rb
+
+      # A card per post for links shared in KakaoTalk and elsewhere. If the
+      # font or Pillow is unavailable the posts keep the default picture.
+      - name: Draw share cards
+        continue-on-error: true
+        run: |
+          python3 -m pip install --quiet --user pillow
+          curl -fsSL --retry 2 -o "$RUNNER_TEMP/card-font.otf" "https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/packages/pretendard/dist/public/static/Pretendard-Bold.otf"
+          python3 tools/make-share-cards.py --font "$RUNNER_TEMP/card-font.otf"
 
       - name: Build site
         run: |
@@ -112,7 +129,7 @@ jobs:
   # A scheduled post that just went up was skipped by the push-time
   # notification (its date was still ahead), so e-mail the subscribers now.
   notify:
-    if: ${{ !cancelled() && github.event_name == 'schedule' && needs.deploy.result == 'success' }}
+    if: ${{ !cancelled() && (github.event_name == 'schedule' || inputs.due_check) && needs.deploy.result == 'success' }}
     needs: deploy
     runs-on: ubuntu-latest
     permissions:

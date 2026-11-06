@@ -29,7 +29,7 @@ layout: null
   "start_url": "{{ '/' | relative_url }}",
   "scope": "{{ '/' | relative_url }}",
   "lang": "ko-KR",
-  "theme_color": "#2d7a5a",
-  "background_color": "#fffdf7",
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff",
   "display": "standalone"
 }

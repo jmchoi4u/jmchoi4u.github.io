@@ -20,6 +20,14 @@
  * - POST /subscribe  { email: "..." }  → 확인 메일 발송 후 승인 대기
  * - GET  /confirm?token=... → 이메일 확인 및 구독 활성화
  * - GET  /subscribers → 구독자 목록 (GitHub 인증 필요)
+ *
+ * 같은 KV에 둔 것:
+ * - GET/POST /likes  글의 '공감' 수. 방문자는 브라우저가 만든 임의 ID로 구분한다.
+ * - GET/POST /memos  Studio 글감 메모함 (블로그 주인만, GitHub 토큰으로 확인)
+ *
+ * 예약 발행: wrangler.jsonc의 triggers.crons가 매시간 scheduled()를 부른다.
+ * GH_DISPATCH_TOKEN(이 저장소 하나에 Actions 읽기/쓰기 권한만 준 fine-grained
+ * 토큰)을 secret으로 넣으면 그때마다 Pages 워크플로의 예약 확인을 깨운다.
  */
 
 const ALLOWED_ORIGINS = [
@@ -41,7 +49,34 @@ const CONFIRM_KEY_PREFIX = 'confirm:';
 const RATE_KEY_PREFIX = 'rate:subscribe:';
 const NOTIFIED_KEY_PREFIX = 'notified:';
 const DELIVERED_KEY_PREFIX = 'delivered:';
+const LIKE_KEY_PREFIX = 'likes:';
+const LIKED_KEY_PREFIX = 'liked:';
+const LIKE_RATE_PREFIX = 'rate:like:';
+const MEMO_KEY = 'memos:owner';
+const OWNER_TOKEN_PREFIX = 'owner-token:';
+const MEMO_LIMIT = 300;
+const MEMO_TEXT_LIMIT = 2000;
+const VISITOR_PATTERN = /^[A-Za-z0-9_-]{16,64}$/;
+const SITE_REPO = 'jmchoi4u.github.io';
+const BLOG_NAME = "James Choi's Memo";
+const MAIL_FONT = '-apple-system,BlinkMacSystemFont,Apple SD Gothic Neo,Malgun Gothic,Noto Sans KR,sans-serif';
+/* Every KV key that is not a subscriber record starts with one of these. */
+const NON_SUBSCRIBER_PREFIXES = [
+  UNSUBSCRIBE_KEY_PREFIX,
+  CONFIRM_KEY_PREFIX,
+  'rate:',
+  NOTIFIED_KEY_PREFIX,
+  DELIVERED_KEY_PREFIX,
+  LIKE_KEY_PREFIX,
+  LIKED_KEY_PREFIX,
+  MEMO_KEY,
+  OWNER_TOKEN_PREFIX,
+];
 const PKCE_VERIFIER_PATTERN = /^[A-Za-z0-9._~-]{43,128}$/;
+
+function isSubscriberKey(name) {
+  return !NON_SUBSCRIBER_PREFIXES.some((prefix) => name.startsWith(prefix));
+}
 
 function isAllowedOrigin(origin) {
   return ALLOWED_ORIGINS.includes(origin);
@@ -217,14 +252,18 @@ async function listAllKeys(store) {
   return keys;
 }
 
-function unsubscribePage(message, status = 200) {
+/* The page an e-mail link opens: one card in the blog's sky palette. */
+function noticePage(title, message, status = 200) {
   return new Response(
-    '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
-    + '<title>구독 취소</title></head><body style="font-family:sans-serif;text-align:center;padding:60px 20px">'
-    + '<h2>구독 취소</h2>'
-    + '<p style="color:#666">' + escHtml(message) + '</p>'
-    + '<a href="https://jmchoi4u.github.io" style="color:#2d7a5a">블로그로 돌아가기</a>'
-    + '</body></html>',
+    '<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+    + '<title>' + escHtml(title) + '</title></head>'
+    + '<body style="margin:0;padding:64px 20px;background:#F4F7FA;color:#1B1F24;text-align:center;font-family:' + MAIL_FONT + '">'
+    + '<div style="max-width:420px;margin:0 auto;padding:32px 24px;border:1px solid #E6EAEF;border-radius:16px;background:#fff">'
+    + '<p style="margin:0 0 6px;color:#2F5D8A;font-size:13px;font-weight:700">' + escHtml(BLOG_NAME) + '</p>'
+    + '<h1 style="margin:0 0 10px;font-size:20px;letter-spacing:-0.02em">' + escHtml(title) + '</h1>'
+    + '<p style="margin:0 0 22px;color:#5D6670;line-height:1.7">' + escHtml(message) + '</p>'
+    + '<a href="https://jmchoi4u.github.io" style="display:inline-block;padding:11px 20px;border-radius:10px;background:#2F5D8A;color:#fff;text-decoration:none;font-weight:600">블로그로 돌아가기</a>'
+    + '</div></body></html>',
     {
       status,
       headers: {
@@ -235,29 +274,163 @@ function unsubscribePage(message, status = 200) {
       },
     }
   );
+}
+
+function unsubscribePage(message, status = 200) {
+  return noticePage('구독 취소', message, status);
 }
 
 function subscriptionPage(title, message, status = 200) {
-  return new Response(
-    '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
-    + '<title>' + escHtml(title) + '</title></head><body style="font-family:sans-serif;text-align:center;padding:60px 20px">'
-    + '<h2>' + escHtml(title) + '</h2>'
-    + '<p style="color:#666">' + escHtml(message) + '</p>'
-    + '<a href="https://jmchoi4u.github.io" style="color:#2d7a5a">블로그로 돌아가기</a>'
-    + '</body></html>',
+  return noticePage(title, message, status);
+}
+
+/* ── 공감 ──
+   A reader's press is remembered by a random ID their browser keeps, not by
+   their address: many phones share one address. The address only limits how
+   fast presses come in. */
+function normalizeLikePath(value) {
+  const path = normalizeCounterPath(value);
+  return /^\/posts\/[^/]+$/.test(path) ? path : '';
+}
+
+async function likeState(store, path, visitor) {
+  const visitorKey = LIKED_KEY_PREFIX + await sha256Hex(visitor + '\n' + path);
+  const [count, liked] = await Promise.all([
+    store.get(LIKE_KEY_PREFIX + path),
+    VISITOR_PATTERN.test(visitor) ? store.get(visitorKey) : null,
+  ]);
+  return { count: Math.max(0, Number(count) || 0), liked: Boolean(liked), visitorKey };
+}
+
+async function handleLikes(request, store, url, origin) {
+  if (request.method === 'GET') {
+    const path = normalizeLikePath(url.searchParams.get('path'));
+    if (!path) return jsonResponse({ error: 'invalid path' }, 400, origin);
+    const { count, liked } = await likeState(store, path, url.searchParams.get('visitor') || '');
+    return jsonResponse({ count, liked }, 200, origin);
+  }
+
+  let body = null;
+  try { body = await request.json(); } catch (e) {}
+  const path = normalizeLikePath(body && body.path);
+  const visitor = body && typeof body.visitor === 'string' ? body.visitor : '';
+  if (!path || !VISITOR_PATTERN.test(visitor) || typeof body.like !== 'boolean') {
+    return jsonResponse({ error: 'invalid like' }, 400, origin);
+  }
+
+  const clientAddress = request.headers.get('CF-Connecting-IP') || 'unknown';
+  const rateKey = LIKE_RATE_PREFIX + await sha256Hex(clientAddress);
+  const recentPresses = Number(await store.get(rateKey) || 0);
+  if (recentPresses >= 30) {
+    return jsonResponse({ error: '잠시 후 다시 눌러 주세요.' }, 429, origin, { 'Retry-After': '600' });
+  }
+  await store.put(rateKey, String(recentPresses + 1), { expirationTtl: 600 });
+
+  const state = await likeState(store, path, visitor);
+  if (body.like === state.liked) return jsonResponse({ count: state.count, liked: state.liked }, 200, origin);
+  const count = Math.max(0, state.count + (body.like ? 1 : -1));
+  await store.put(LIKE_KEY_PREFIX + path, String(count));
+  if (body.like) await store.put(state.visitorKey, '1', { expirationTtl: 365 * 24 * 60 * 60 });
+  else await store.delete(state.visitorKey);
+  return jsonResponse({ count, liked: body.like }, 200, origin);
+}
+
+/* ── Studio 글감 메모함 ──
+   Private notes, so they live here rather than in the public repository.
+   Only the blog's owner reads or changes them; a checked token is trusted
+   for ten minutes so every memo does not cost a GitHub call. */
+async function isOwnerToken(store, token) {
+  if (!token) return false;
+  const tokenKey = OWNER_TOKEN_PREFIX + await sha256Hex(token);
+  if (await store.get(tokenKey)) return true;
+  const userRes = await fetch('https://api.github.com/user', {
+    headers: {
+      'Authorization': 'Bearer ' + token,
+      'Accept': 'application/vnd.github+json',
+      'User-Agent': 'jm-studio',
+    },
+  });
+  if (!userRes.ok) return false;
+  let user = null;
+  try { user = await userRes.json(); } catch (e) {}
+  if (!user || String(user.login || '').toLowerCase() !== OWNER_LOGIN) return false;
+  await store.put(tokenKey, '1', { expirationTtl: 600 });
+  return true;
+}
+
+async function readMemos(store) {
+  try {
+    const memos = JSON.parse(await store.get(MEMO_KEY) || '[]');
+    return Array.isArray(memos) ? memos : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+/* One change at a time (add, update, delete), so a phone and a computer
+   writing at once do not overwrite each other's list. An add may carry the
+   ID the browser gave it while offline; adding it twice is harmless. */
+async function handleMemos(request, store, origin) {
+  const token = (request.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+  if (!await isOwnerToken(store, token)) return jsonResponse({ error: 'unauthorized' }, 401, origin);
+  const memos = await readMemos(store);
+  if (request.method === 'GET') return jsonResponse({ memos }, 200, origin);
+
+  let change = null;
+  try { change = await request.json(); } catch (e) {}
+  const action = change && change.action;
+  const id = change && typeof change.id === 'string' && /^[A-Za-z0-9_-]{6,40}$/.test(change.id) ? change.id : '';
+  const text = change && typeof change.text === 'string' ? change.text.trim().slice(0, MEMO_TEXT_LIMIT) : '';
+  const now = new Date().toISOString();
+  let next;
+  if (action === 'add') {
+    if (!text) return jsonResponse({ error: 'empty memo' }, 400, origin);
+    if (id && memos.some((memo) => memo.id === id)) return jsonResponse({ memos }, 200, origin);
+    if (memos.length >= MEMO_LIMIT) {
+      return jsonResponse({ error: '메모가 너무 많아요. 오래된 메모를 지워 주세요.' }, 400, origin);
+    }
+    next = [{ id: id || generateOpaqueToken().slice(0, 16), text, createdAt: now }, ...memos];
+  } else if (action === 'update') {
+    if (!id || !text) return jsonResponse({ error: 'invalid memo' }, 400, origin);
+    next = memos.map((memo) => (memo.id === id ? { ...memo, text, updatedAt: now } : memo));
+  } else if (action === 'delete') {
+    if (!id) return jsonResponse({ error: 'invalid memo' }, 400, origin);
+    next = memos.filter((memo) => memo.id !== id);
+  } else {
+    return jsonResponse({ error: 'unknown action' }, 400, origin);
+  }
+  await store.put(MEMO_KEY, JSON.stringify(next));
+  return jsonResponse({ memos: next }, 200, origin);
+}
+
+/* ── 예약 발행 ──
+   Cloudflare's clock runs on time; GitHub's scheduled runs are often late or
+   skipped. Without GH_DISPATCH_TOKEN this does nothing and the workflow's
+   own schedule is all there is. */
+async function dispatchDueCheck(env) {
+  if (!env.GH_DISPATCH_TOKEN) return;
+  const response = await fetch(
+    'https://api.github.com/repos/' + OWNER_LOGIN + '/' + SITE_REPO + '/actions/workflows/pages-deploy.yml/dispatches',
     {
-      status,
+      method: 'POST',
       headers: {
-        'Content-Type': 'text/html; charset=utf-8',
-        'Cache-Control': 'no-store',
-        'Referrer-Policy': 'no-referrer',
-        'X-Content-Type-Options': 'nosniff',
+        'Authorization': 'Bearer ' + env.GH_DISPATCH_TOKEN,
+        'Accept': 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+        'User-Agent': 'jm-studio',
+        'Content-Type': 'application/json',
       },
+      body: JSON.stringify({ ref: 'main', inputs: { due_check: 'true' } }),
     }
   );
+  if (!response.ok) console.log('due check dispatch failed: ' + response.status);
 }
 
 export default {
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(dispatchDueCheck(env));
+  },
+
   async fetch(request, env) {
     const origin = request.headers.get('Origin') || '';
     const url = new URL(request.url);
@@ -345,6 +518,16 @@ export default {
 
     if (request.method === 'GET' && path === '/views') {
       return proxyViewCounter(url, origin);
+    }
+
+    if (path === '/likes' && (request.method === 'GET' || request.method === 'POST')) {
+      if (!env.SUBSCRIBERS) return subscribersUnavailable(origin);
+      return handleLikes(request, env.SUBSCRIBERS, url, origin);
+    }
+
+    if (path === '/memos' && (request.method === 'GET' || request.method === 'POST')) {
+      if (!env.SUBSCRIBERS) return subscribersUnavailable(origin);
+      return handleMemos(request, env.SUBSCRIBERS, origin);
     }
 
     if (request.method === 'GET' && path === '/capabilities') {
@@ -502,12 +685,15 @@ export default {
             to: [normalizedEmail],
             reply_to: 'jmchoi4u@gmail.com',
             subject: '새 글 알림 구독 확인',
-            html: '<!DOCTYPE html><html><body style="font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Noto Sans KR,sans-serif;padding:32px;color:#252525">'
-              + '<h2>새 글 알림을 확인해 주세요</h2>'
-              + '<p style="line-height:1.7;color:#666">아래 버튼을 눌러야 구독이 시작됩니다. 요청하지 않았다면 이 메일을 무시해 주세요.</p>'
-              + '<p><a href="' + escHtml(confirmLink) + '" style="display:inline-block;padding:12px 22px;background:#2d7a5a;color:#fff;text-decoration:none;border-radius:10px">구독 확인</a></p>'
-              + '<p style="font-size:12px;color:#999">이 링크는 24시간 동안 유효합니다.</p>'
-              + '</body></html>',
+            html: '<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"></head>'
+              + '<body style="margin:0;padding:32px 16px;background:#F4F7FA;color:#1B1F24;font-family:' + MAIL_FONT + '">'
+              + '<div style="max-width:520px;margin:0 auto;padding:32px 28px;border:1px solid #E6EAEF;border-radius:16px;background:#fff">'
+              + '<p style="margin:0 0 8px;color:#2F5D8A;font-size:13px;font-weight:700">' + escHtml(BLOG_NAME) + '</p>'
+              + '<h1 style="margin:0 0 12px;font-size:22px;line-height:1.4;letter-spacing:-0.02em">새 글 알림을 확인해 주세요</h1>'
+              + '<p style="margin:0 0 24px;color:#5D6670;font-size:15px;line-height:1.7">아래 버튼을 눌러야 구독이 시작돼요. 신청하지 않았다면 이 메일은 무시해 주세요.</p>'
+              + '<a href="' + escHtml(confirmLink) + '" style="display:inline-block;padding:13px 24px;border-radius:10px;background:#2F5D8A;color:#fff;text-decoration:none;font-weight:600;font-size:15px">구독 확인</a>'
+              + '<p style="margin:24px 0 0;color:#8C95A0;font-size:12px">이 링크는 24시간 동안 쓸 수 있어요.</p>'
+              + '</div></body></html>',
           }),
         });
         if (!confirmationResponse.ok) {
@@ -558,11 +744,7 @@ export default {
       const list = [];
       const keys = await listAllKeys(env.SUBSCRIBERS);
       for (const key of keys) {
-        if (key.name.startsWith(UNSUBSCRIBE_KEY_PREFIX)
-          || key.name.startsWith(CONFIRM_KEY_PREFIX)
-          || key.name.startsWith(RATE_KEY_PREFIX)
-          || key.name.startsWith(NOTIFIED_KEY_PREFIX)
-          || key.name.startsWith(DELIVERED_KEY_PREFIX)) continue;
+        if (!isSubscriberKey(key.name)) continue;
         const val = await env.SUBSCRIBERS.get(key.name);
         if (val) {
           try {
@@ -619,11 +801,7 @@ export default {
         const keys = await listAllKeys(env.SUBSCRIBERS);
         const subscribers = [];
         for (const key of keys) {
-          if (key.name.startsWith(UNSUBSCRIBE_KEY_PREFIX)
-            || key.name.startsWith(CONFIRM_KEY_PREFIX)
-            || key.name.startsWith(RATE_KEY_PREFIX)
-            || key.name.startsWith(NOTIFIED_KEY_PREFIX)
-            || key.name.startsWith(DELIVERED_KEY_PREFIX)) continue;
+          if (!isSubscriberKey(key.name)) continue;
           const val = await env.SUBSCRIBERS.get(key.name);
           if (val) {
             let subscriber;
@@ -657,41 +835,30 @@ export default {
             continue;
           }
           const unsubLink = workerUrl + '/unsub?token=' + encodeURIComponent(subscriber.unsubscribeToken);
-          const htmlBody = '<!DOCTYPE html><html><head><meta charset="utf-8"></head>'
-            + '<body style="margin:0;padding:0;background:#f4f2ef;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Noto Sans KR,sans-serif">'
-            + '<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f2ef;padding:32px 16px"><tr><td align="center">'
+          const htmlBody = '<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"></head>'
+            + '<body style="margin:0;padding:0;background:#F4F7FA;font-family:' + MAIL_FONT + '">'
+            + '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F4F7FA;padding:32px 16px"><tr><td align="center">'
             + '<table width="520" cellpadding="0" cellspacing="0" style="max-width:520px;width:100%">'
 
-            + '<tr><td style="padding:24px 0;text-align:center">'
-            + '<span style="font-size:1.1rem;font-weight:700;color:#252525;letter-spacing:-0.02em">Jaemin Choi</span>'
-            + '<span style="color:#bbb;margin:0 8px">|</span>'
-            + '<span style="font-size:0.82rem;color:#888">블로그 새 글 알림</span>'
+            + '<tr><td style="padding:0 4px 14px;text-align:left">'
+            + '<span style="font-size:15px;font-weight:700;color:#1B1F24;letter-spacing:-0.02em">' + escHtml(BLOG_NAME) + '</span>'
+            + '<span style="margin-left:8px;font-size:13px;color:#5D6670">새 글 알림</span>'
             + '</td></tr>'
 
-            + '<tr><td style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.06)">'
-            + '<table width="100%" cellpadding="0" cellspacing="0">'
-
-            + '<tr><td style="background:linear-gradient(135deg,#8B9DC3 0%,#6B83A8 40%,#4A6B8A 100%);padding:40px 32px;text-align:center">'
-            + '<p style="margin:0 0 4px;font-size:0.78rem;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:0.1em">New Post</p>'
-            + '<h1 style="margin:0;font-size:1.5rem;font-weight:700;color:#fff;line-height:1.35;letter-spacing:-0.02em">' + escHtml(title) + '</h1>'
+            + '<tr><td style="padding:32px 28px;border:1px solid #E6EAEF;border-radius:16px;background:#ffffff">'
+            + '<p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#2F5D8A">새 글</p>'
+            + '<h1 style="margin:0 0 14px;font-size:22px;font-weight:700;color:#1B1F24;line-height:1.4;letter-spacing:-0.02em">' + escHtml(title) + '</h1>'
+            + (description ? '<p style="margin:0 0 24px;font-size:15px;line-height:1.7;color:#5D6670">' + escHtml(description) + '</p>' : '<div style="height:10px"></div>')
+            + '<a href="' + escHtml(normalizedPostUrl) + '" style="display:inline-block;padding:13px 26px;border-radius:10px;background:#2F5D8A;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px">글 읽으러 가기</a>'
             + '</td></tr>'
 
-            + '<tr><td style="padding:28px 32px 32px">'
-            + (description ? '<p style="margin:0 0 24px;font-size:0.95rem;line-height:1.7;color:#555">' + escHtml(description) + '</p>' : '')
-            + '<table cellpadding="0" cellspacing="0" width="100%"><tr>'
-            + '<td><a href="' + escHtml(normalizedPostUrl) + '" style="display:inline-block;padding:13px 32px;background:#2d7a5a;color:#fff;text-decoration:none;border-radius:10px;font-weight:600;font-size:0.9rem">글 읽으러 가기 &rarr;</a></td>'
-            + '</tr></table>'
+            + '<tr><td style="padding:20px 0 6px;text-align:center">'
+            + '<a href="https://ctee.kr/place/jmchoi4u" style="display:inline-block;padding:8px 16px;border:1px solid #E6EAEF;border-radius:999px;background:#ffffff;color:#5D6670;text-decoration:none;font-size:12px">&#9749; 커피 한 잔 후원하기</a>'
             + '</td></tr>'
 
-            + '</table></td></tr>'
-
-            + '<tr><td style="padding:20px 0;text-align:center">'
-            + '<a href="https://ctee.kr/place/jmchoi4u" style="display:inline-block;padding:8px 18px;background:#FFDD00;color:#000;text-decoration:none;border-radius:999px;font-size:0.78rem;font-weight:600">&#9749; 커피 한 잔 후원하기</a>'
-            + '</td></tr>'
-
-            + '<tr><td style="padding:8px 0 24px;text-align:center">'
-            + '<p style="margin:0 0 6px;font-size:0.72rem;color:#aaa">이 메일은 구독 신청에 의해 발송되었습니다.</p>'
-            + '<a href="' + unsubLink + '" style="font-size:0.72rem;color:#aaa;text-decoration:underline">구독 취소</a>'
+            + '<tr><td style="padding:12px 0 8px;text-align:center">'
+            + '<p style="margin:0 0 6px;font-size:12px;color:#8C95A0">구독을 신청해서 받는 메일이에요.</p>'
+            + '<a href="' + unsubLink + '" style="font-size:12px;color:#8C95A0;text-decoration:underline">구독 취소</a>'
             + '</td></tr>'
 
             + '</table></td></tr></table></body></html>';

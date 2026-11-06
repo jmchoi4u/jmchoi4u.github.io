@@ -11,14 +11,14 @@ sitemap: false
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data: blob: https://raw.githubusercontent.com; connect-src 'self' https://api.github.com https://jm-studio-auth.jmchoi4u.workers.dev; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self' https://github.com">
 <title>Blog Studio</title>
-<link rel="manifest" href="manifest.json?v=kindness-20260906-2">
+<link rel="manifest" href="manifest.json?v=sky-20261105">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css">
 <link rel="icon" href="../assets/img/favicons/favicon-96x96.png?v=kindness-20260906-2" type="image/png" sizes="96x96">
 <link rel="icon" href="../assets/img/favicons/favicon.svg?v=kindness-20260906-2" type="image/svg+xml">
 <link rel="shortcut icon" href="../assets/img/favicons/favicon.ico?v=kindness-20260906-2">
 <link rel="apple-touch-icon" href="../assets/img/favicons/apple-touch-icon.png?v=kindness-20260906-2" sizes="180x180">
-<meta name="theme-color" content="#B45335">
+<meta name="theme-color" content="#FFFFFF">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
@@ -352,6 +352,18 @@ textarea.editor-input.ed-body-input{min-height:55dvh;padding:4px 0;border:0;bord
 .status-scheduled{background:var(--point)}
 .card-status-label{font-size:.76rem;color:var(--muted)}
 .card-status-label.is-scheduled{color:var(--point);font-weight:600}
+/* 글감 메모함 */
+.memo-compose{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+/* The id outweighs the wide-screen min-height every editor textarea gets. */
+#view-memos textarea.memo-input{min-height:92px;resize:vertical;font-family:inherit;line-height:1.6}
+.memo-compose .btn{align-self:flex-end}
+.memo-sync{margin:0 0 12px;padding:10px 12px;border-radius:10px;background:var(--point-s);color:var(--point-h);font-size:.84rem;line-height:1.5}
+.memo-sync[hidden]{display:none}
+.memo-card{padding:14px 2px;border-bottom:1px solid var(--line)}
+.memo-text{white-space:pre-wrap;word-break:keep-all;overflow-wrap:anywhere;font-size:1rem;line-height:1.7;color:var(--text)}
+.memo-foot{display:flex;align-items:center;gap:6px;margin-top:8px;color:var(--muted);font-size:.8rem}
+.memo-foot span{margin-right:auto}
+.memo-foot .btn{min-height:34px;padding:4px 10px}
 .post-settings{position:fixed;inset:0;z-index:60}
 .post-settings[hidden]{display:none}
 .post-settings-backdrop{position:absolute;inset:0;background:rgba(27,31,36,.42)}
@@ -436,6 +448,9 @@ textarea.editor-input.ed-body-input{min-height:55dvh;padding:4px 0;border:0;bord
       </button>
       <button class="sidebar-btn" type="button" data-view="editor" data-new-post-action onclick="newPost()">
         <span class="sidebar-icon">&#9998;</span>새 글
+      </button>
+      <button class="sidebar-btn" type="button" data-view="memos" onclick="showView('memos')">
+        <span class="sidebar-icon">&#10000;</span>글감 메모
       </button>
       <button class="sidebar-btn" type="button" data-view="settings" onclick="showView('settings')">
         <span class="sidebar-icon">&#9881;</span>설정
@@ -557,6 +572,17 @@ textarea.editor-input.ed-body-input{min-height:55dvh;padding:4px 0;border:0;bord
       <button class="btn-fab" type="button" data-new-post-action onclick="newPost()" aria-label="새 글 작성">+</button>
     </div>
 
+    <!-- 글감 메모함: short notes to grow into posts (loadMemos). -->
+    <div class="view" id="view-memos">
+      <div class="memo-compose">
+        <label class="sr-only" for="memo-input">새 메모</label>
+        <textarea class="editor-input memo-input" id="memo-input" rows="3" placeholder="떠오른 생각을 적어 두세요. 나중에 글로 키울 수 있어요."></textarea>
+        <button class="btn btn-primary" type="button" onclick="addMemo()">메모 남기기</button>
+      </div>
+      <p class="memo-sync" id="memo-sync" role="status" hidden>아직 이 기기에만 저장돼 있어요. 연결되면 다른 기기와 맞춰져요.</p>
+      <div class="memo-list" id="memo-list"></div>
+    </div>
+
     <!-- Editor View -->
     <div class="view" id="view-editor">
       <div class="publish-status" id="publish-status" role="status" aria-live="polite">
@@ -661,6 +687,11 @@ textarea.editor-input.ed-body-input{min-height:55dvh;padding:4px 0;border:0;bord
               <div class="editor-meta" id="ed-tags-suggestions" style="margin-top:6px;gap:5px"></div>
             </div>
             <div class="editor-section">
+              <label class="editor-label" for="ed-series">시리즈 (같은 이름의 글끼리 글 끝에 묶여요)</label>
+              <input class="editor-input" id="ed-series" type="text" placeholder="예: 회고 · 비워 두면 시리즈 없음">
+              <div class="editor-meta" id="ed-series-suggestions" style="margin-top:6px;gap:5px"></div>
+            </div>
+            <div class="editor-section">
               <label class="editor-label" for="cover-file">표지 사진 (목록에서 글 옆에 작게)</label>
               <label class="img-upload" id="cover-upload" for="cover-file">
                 사진 고르기
@@ -679,7 +710,7 @@ textarea.editor-input.ed-body-input{min-height:55dvh;padding:4px 0;border:0;bord
             </div>
             <label class="ed-toggle"><span>댓글 받기</span><input type="checkbox" id="ed-comments" checked></label>
             <label class="ed-toggle"><span>맨 위에 고정</span><input type="checkbox" id="ed-pin"></label>
-            <label class="ed-toggle"><span>목록에서 숨기기<small>주소를 아는 사람만 볼 수 있어요</small></span><input type="checkbox" id="ed-hidden"></label>
+            <label class="ed-toggle"><span>블로그에서 숨기기<small>블로그에서 내려가요. 주소로도 열리지 않아요</small></span><input type="checkbox" id="ed-hidden"></label>
             <label class="ed-toggle"><span>임시저장으로 두기<small>블로그에 올리지 않고 저장만 해요</small></span><input type="checkbox" id="ed-draft"></label>
             <details class="post-settings-advanced">
               <summary>고급 설정 (날짜·주소·검색 설명)</summary>
@@ -951,6 +982,7 @@ textarea.editor-input.ed-body-input{min-height:55dvh;padding:4px 0;border:0;bord
     <div class="bottombar" id="bottombar" style="display:none">
       <button type="button" onclick="showView('list')" data-view="list"><span class="bar-icon" aria-hidden="true">&#9776;</span>글 목록</button>
       <button type="button" onclick="newPost()" data-new-post-action data-view="editor"><span class="bar-icon" aria-hidden="true">&#9998;</span>새 글</button>
+      <button type="button" onclick="showView('memos')" data-view="memos"><span class="bar-icon" aria-hidden="true">&#10000;</span>메모</button>
       <button type="button" onclick="showView('settings')" data-view="settings"><span class="bar-icon" aria-hidden="true">&#9881;</span>설정</button>
     </div>
 
@@ -1277,7 +1309,7 @@ window.addEventListener('DOMContentLoaded', function() {
   });
   setInterval(checkSession, 60000);
 
-  ['ed-title','ed-date','ed-desc','ed-cats','ed-tags','ed-hero-title','ed-summary','ed-permalink','ed-cover-alt'].forEach(function(id) {
+  ['ed-title','ed-date','ed-desc','ed-cats','ed-tags','ed-series','ed-hero-title','ed-summary','ed-permalink','ed-cover-alt'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.addEventListener('input', autoSave);
   });
@@ -1304,7 +1336,7 @@ window.addEventListener('DOMContentLoaded', function() {
       return;
     }
     var target = event.state && event.state.jmStudioView;
-    if (target && ['list', 'editor', 'preview', 'settings'].indexOf(target) !== -1) {
+    if (target && ['list', 'editor', 'preview', 'settings', 'memos'].indexOf(target) !== -1) {
       showView(target, { skipHistory: true });
     }
   });
@@ -1741,6 +1773,7 @@ function collectEditorState() {
     description: document.getElementById('ed-desc').value,
     categories: document.getElementById('ed-cats').value,
     tags: document.getElementById('ed-tags').value,
+    series: document.getElementById('ed-series').value,
     heroTitle: document.getElementById('ed-hero-title').value,
     summary: document.getElementById('ed-summary').value,
     permalink: document.getElementById('ed-permalink').value,
@@ -1770,6 +1803,7 @@ function applyEditorState(data) {
   document.getElementById('ed-desc').value = data.description || '';
   document.getElementById('ed-cats').value = Array.isArray(data.categories) ? data.categories.join(', ') : (data.categories || '');
   document.getElementById('ed-tags').value = data.tags || '';
+  document.getElementById('ed-series').value = data.series || '';
   document.getElementById('ed-hero-title').value = data.heroTitle || '';
   document.getElementById('ed-summary').value = data.summary || '';
   document.getElementById('ed-permalink').value = data.permalink || '';
@@ -2275,7 +2309,7 @@ function showPublishStatus(fm, isDraft, firstOut) {
   title.textContent = isDraft ? '임시저장 완료' : (scheduled ? '예약했어요' : (fm.hidden ? '숨김 글 저장 완료' : '저장했어요'));
   if (isDraft) copy.textContent = '아직 공개되지 않습니다.';
   else if (scheduled) copy.textContent = friendlyPostTime(fm.date) + '에 블로그에 올라가요. ' + (fm.notify === false ? '구독자 메일은 보내지 않아요.' : '구독자 메일도 그때 나가요.');
-  else if (fm.hidden) copy.textContent = '배포되지만 목록에서는 숨겨집니다.';
+  else if (fm.hidden) copy.textContent = '숨긴 글이라 블로그에는 보이지 않아요.';
   else copy.textContent = firstOut ? '1~2분 뒤 블로그에 올라가요. 올라가면 여기서 알려 드릴게요.' : '1~2분 뒤 블로그에 반영돼요.';
   link.style.display = canOpen ? 'inline-flex' : 'none';
   if (canOpen) link.href = new URL(fm.permalink, 'https://jmchoi4u.github.io').href;
@@ -2476,6 +2510,7 @@ function fillEditorFromData(data) {
   document.getElementById('ed-desc').value = data.description || '';
   document.getElementById('ed-cats').value = (data.categories || []).join(', ');
   document.getElementById('ed-tags').value = (data.tags || []).join(', ');
+  document.getElementById('ed-series').value = data.series || '';
   document.getElementById('ed-hero-title').value = data.heroTitle || '';
   document.getElementById('ed-summary').value = data.summary || '';
   document.getElementById('ed-permalink').value = data.permalink || '';
@@ -3008,6 +3043,7 @@ async function loadPostTitles() {
         p.description = fm.description || '';
         p.categories = fm.categories || [];
         p.tags = fm.tags || [];
+        p.series = fm.series || '';
         p.hidden = fm.hidden === true || fm.hidden === 'true';
         p.pin = fm.pin === true || fm.pin === 'true';
         p.permalink = fm.permalink || '';
@@ -3282,6 +3318,173 @@ function setListTab(tab, btn) {
   renderPosts();
 }
 
+/* ═══════ 글감 메모함 ═══════
+   Short notes to grow into posts. They are private, so they live in the
+   Worker's store (tools/oauth-worker.js, /memos), not the public repository.
+   This browser keeps a copy, and a queue of changes made while the Worker
+   could not be reached, sent in order the next time it can be. */
+var MEMO_CACHE_KEY = 'jm-studio-memos';
+var MEMO_QUEUE_KEY = 'jm-studio-memo-queue';
+
+function readStored(key, fallback) {
+  try {
+    var value = JSON.parse(localStorage.getItem(key) || 'null');
+    return value == null ? fallback : value;
+  } catch (e) {
+    return fallback;
+  }
+}
+
+function writeStored(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {}
+}
+
+function newMemoId() {
+  var bytes = new Uint8Array(9);
+  crypto.getRandomValues(bytes);
+  return Array.prototype.map.call(bytes, function(b) { return ('0' + b.toString(16)).slice(-2); }).join('');
+}
+
+/* The Worker's handling of one change, mirrored for the copy kept here. */
+function applyMemoChange(memos, change) {
+  if (change.action === 'add') {
+    if (memos.some(function(memo) { return memo.id === change.id; })) return memos;
+    return [{ id: change.id, text: change.text, createdAt: change.createdAt }].concat(memos);
+  }
+  if (change.action === 'delete') return memos.filter(function(memo) { return memo.id !== change.id; });
+  return memos;
+}
+
+async function memoRequest(change) {
+  var headers = { 'Authorization': 'Bearer ' + S.token };
+  if (change) headers['Content-Type'] = 'application/json';
+  var response = await fetch(WORKER_URL + '/memos', {
+    method: change ? 'POST' : 'GET',
+    headers: headers,
+    body: change ? JSON.stringify(change) : undefined
+  });
+  if (!response.ok) throw new Error('memo ' + response.status);
+  var data = await response.json();
+  return Array.isArray(data.memos) ? data.memos : [];
+}
+
+async function flushMemoQueue() {
+  var queue = readStored(MEMO_QUEUE_KEY, []);
+  try {
+    var memos = null;
+    while (queue.length) {
+      memos = await memoRequest(queue[0]);
+      queue.shift();
+      writeStored(MEMO_QUEUE_KEY, queue);
+    }
+    if (!memos) memos = await memoRequest(null);
+    S.memoSynced = true;
+    writeStored(MEMO_CACHE_KEY, memos);
+  } catch (e) {
+    S.memoSynced = false;
+  }
+  renderMemos(readStored(MEMO_CACHE_KEY, []));
+}
+
+function loadMemos() {
+  renderMemos(readStored(MEMO_CACHE_KEY, []));
+  return flushMemoQueue();
+}
+
+function sendMemoChange(change) {
+  writeStored(MEMO_CACHE_KEY, applyMemoChange(readStored(MEMO_CACHE_KEY, []), change));
+  writeStored(MEMO_QUEUE_KEY, readStored(MEMO_QUEUE_KEY, []).concat([change]));
+  renderMemos(readStored(MEMO_CACHE_KEY, []));
+  return flushMemoQueue();
+}
+
+function addMemo() {
+  var input = document.getElementById('memo-input');
+  var text = input.value.trim();
+  if (!text) return toast('메모할 내용을 적어 주세요', 'info');
+  input.value = '';
+  sendMemoChange({ action: 'add', id: newMemoId(), text: text, createdAt: new Date().toISOString() });
+}
+
+function deleteMemo(id) {
+  if (!confirm('이 메모를 지울까요?')) return;
+  sendMemoChange({ action: 'delete', id: id });
+}
+
+/* 글로 쓰기: the memo becomes the start of a new post's text. */
+function memoToPost(id) {
+  var memo = readStored(MEMO_CACHE_KEY, []).filter(function(item) { return item.id === id; })[0];
+  if (!memo) return;
+  newPost();
+  if (S.currentView !== 'editor') return;
+  var body = document.getElementById('ed-body');
+  body.value = memo.text + (body.value ? '\n\n' + body.value : '');
+  autoSave();
+  toast('메모를 새 글로 옮겼어요', 'success');
+}
+
+function renderMemos(memos) {
+  var list = document.getElementById('memo-list');
+  var sync = document.getElementById('memo-sync');
+  if (!list || !sync) return;
+  sync.hidden = S.memoSynced !== false && !readStored(MEMO_QUEUE_KEY, []).length;
+  if (!memos.length) {
+    list.innerHTML = '<div class="empty">아직 메모가 없어요. 떠오른 생각을 한 줄이라도 적어 두세요.</div>';
+    return;
+  }
+  list.innerHTML = memos.map(function(memo) {
+    var when = friendlyPostTime(formatPostDate(Date.parse(memo.createdAt) || Date.now()));
+    return '<div class="memo-card">'
+      + '<p class="memo-text">' + esc(memo.text) + '</p>'
+      + '<div class="memo-foot"><span>' + esc(when) + '</span>'
+      + '<button type="button" class="btn btn-sm btn-primary" data-memo-action="post" data-memo-id="' + esc(memo.id) + '">글로 쓰기</button>'
+      + '<button type="button" class="btn btn-sm" data-memo-action="delete" data-memo-id="' + esc(memo.id) + '">지우기</button>'
+      + '</div></div>';
+  }).join('');
+  list.onclick = function(event) {
+    var target = event.target.closest('[data-memo-action]');
+    if (!target || !list.contains(target)) return;
+    var id = target.getAttribute('data-memo-id');
+    if (target.getAttribute('data-memo-action') === 'post') memoToPost(id);
+    else deleteMemo(id);
+  };
+}
+
+/* ═══════ 갤러리에서 바로 글쓰기 ═══════
+   Photos and text shared to the installed app from another app arrive at
+   sw.js, which parks them in this cache and opens ?share=1. They become a
+   new post here: the text first, the photos uploaded as with 사진 (several
+   make a slide). */
+var SHARE_CACHE = 'studio-share';
+
+async function receiveSharedItems() {
+  if (!window.caches) return;
+  var cache = await caches.open(SHARE_CACHE);
+  var metaResponse = await cache.match('shared/meta');
+  if (!metaResponse) return;
+  var meta = {};
+  try { meta = await metaResponse.json(); } catch (e) {}
+  var files = [];
+  for (var i = 0; i < (meta.count || 0); i++) {
+    var response = await cache.match('shared/' + i);
+    if (!response) continue;
+    var blob = await response.blob();
+    var name = decodeURIComponent(response.headers.get('X-File-Name') || '') || ('photo-' + (i + 1) + '.jpg');
+    files.push(new File([blob], name, { type: blob.type || 'image/jpeg' }));
+  }
+
+  newPost();
+  if (S.currentView !== 'editor') return;
+  var words = [meta.title, meta.text, meta.url].filter(Boolean).join('\n');
+  if (words) {
+    var body = document.getElementById('ed-body');
+    body.value = words + (body.value ? '\n\n' + body.value : '');
+    autoSave();
+  }
+  if (files.length) await insertPhotos(files);
+  await caches.delete(SHARE_CACHE);
+}
+
 /* ═══════ Editor ═══════ */
 function renderSuggestions() {
   var catsWrap = document.getElementById('ed-cats-suggestions');
@@ -3308,6 +3511,21 @@ function renderSuggestions() {
 
   makeChips(catsWrap, categories, 'ed-cats');
   makeChips(tagsWrap, tags, 'ed-tags');
+
+  /* A post is in one series, so a chip replaces the value instead of adding to it. */
+  var seriesWrap = document.getElementById('ed-series-suggestions');
+  if (!seriesWrap) return;
+  var series = {};
+  S.posts.forEach(function(p) { if (p.series) series[p.series] = true; });
+  seriesWrap.innerHTML = Object.keys(series).sort().map(function(name) {
+    return '<button type="button" class="card-tag suggestion-chip" data-series-value="' + esc(name) + '">' + esc(name) + '</button>';
+  }).join('');
+  seriesWrap.onclick = function(event) {
+    var chip = event.target.closest('[data-series-value]');
+    if (!chip || !seriesWrap.contains(chip)) return;
+    document.getElementById('ed-series').value = chip.getAttribute('data-series-value');
+    autoSave();
+  };
 }
 
 function addTagSuggestion(inputId, value) {
@@ -3342,10 +3560,12 @@ function captureStudioIntent() {
   var intent = null;
   if (/^_(posts|drafts)\/[^/]+\.md$/.test(editPath)) intent = { type: 'edit', path: editPath };
   else if (params.get('new') === '1') intent = { type: 'new' };
+  else if (params.get('share') === '1') intent = { type: 'share' };
   if (!intent) return;
   try { sessionStorage.setItem(STUDIO_INTENT_KEY, JSON.stringify(intent)); } catch (e) {}
   params.delete('edit');
   params.delete('new');
+  params.delete('share');
   var rest = params.toString();
   window.history.replaceState({}, '', window.location.pathname + (rest ? '?' + rest : ''));
 }
@@ -3361,6 +3581,8 @@ function consumeStudioIntent() {
   try { intent = JSON.parse(raw); } catch (e) { return; }
   if (intent && intent.type === 'new') {
     newPost();
+  } else if (intent && intent.type === 'share') {
+    receiveSharedItems();
   } else if (intent && intent.type === 'edit') {
     if (S.posts.some(function(p) { return p.path === intent.path; })) editPost(intent.path);
     else toast('수정할 글을 찾지 못했어요. 목록에서 골라 주세요.', 'info');
@@ -3452,10 +3674,12 @@ async function editPost(path) {
       document.getElementById('ed-hero-image-position').value = localPost.heroImagePosition || '';
       document.getElementById('ed-image-extra').value = localPost.imageExtra || '';
       document.getElementById('ed-cover-alt').value = localPost.coverAlt || extractImageAlt(localPost.imageExtra || '');
-      /* The local server keeps unknown keys in `extra`; notify gets its own toggle. */
-      var localExtra = takeNotifyLine(localPost.extra || '');
-      document.getElementById('ed-extra-front-matter').value = localExtra.extra;
-      document.getElementById('ed-notify').checked = localExtra.notify;
+      /* The local server keeps unknown keys in `extra`; notify and series get their own fields. */
+      var notifyLine = takeExtraLine(localPost.extra || '', 'notify');
+      var seriesLine = takeExtraLine(notifyLine.extra, 'series');
+      document.getElementById('ed-extra-front-matter').value = seriesLine.extra;
+      document.getElementById('ed-notify').checked = notifyLine.value !== 'false';
+      document.getElementById('ed-series').value = seriesLine.value || '';
       document.getElementById('ed-toc').checked = localPost.toc !== false;
       document.getElementById('ed-comments').checked = localPost.comments !== false;
       document.getElementById('ed-pin').checked = localPost.pin === true;
@@ -3500,6 +3724,7 @@ async function editPost(path) {
     document.getElementById('ed-desc').value = fm.description || '';
     document.getElementById('ed-cats').value = (fm.categories || []).join(', ');
     document.getElementById('ed-tags').value = (fm.tags || []).join(', ');
+    document.getElementById('ed-series').value = fm.series || '';
     document.getElementById('ed-hero-title').value = (fm.hero_title || '').replace(/<br\s*\/?>/gi, '\n');
     document.getElementById('ed-summary').value = fm.summary || '';
     document.getElementById('ed-permalink').value = fm.permalink || '';
@@ -3582,6 +3807,7 @@ async function savePost() {
     description: document.getElementById('ed-desc').value.trim(),
     categories: parseList(document.getElementById('ed-cats').value),
     tags: parseList(document.getElementById('ed-tags').value),
+    series: document.getElementById('ed-series').value.trim(),
     toc: document.getElementById('ed-toc').checked,
     comments: document.getElementById('ed-comments').checked,
     pin: document.getElementById('ed-pin').checked,
@@ -3644,7 +3870,7 @@ async function savePost() {
           hidden: fm.hidden,
           mermaid: fm.mermaid,
           math: fm.math,
-          extra: [fm.extra_front_matter, fm.notify ? '' : 'notify: false'].filter(Boolean).join('\n'),
+          extra: [fm.extra_front_matter, fm.notify ? '' : 'notify: false', fm.series ? 'series: ' + yamlQuoted(fm.series) : ''].filter(Boolean).join('\n'),
           body: body,
           coverImage: fm.cover,
           coverAlt: document.getElementById('ed-cover-alt').value.trim(),
@@ -3767,7 +3993,7 @@ async function deletePost() {
 }
 
 function clearEditor() {
-  ['ed-title','ed-date','ed-desc','ed-cats','ed-tags','ed-hero-title','ed-summary','ed-permalink','ed-body','ed-cover','ed-cover-alt','ed-hero-image-position','ed-image-extra','ed-extra-front-matter'].forEach(function(id) {
+  ['ed-title','ed-date','ed-desc','ed-cats','ed-tags','ed-series','ed-hero-title','ed-summary','ed-permalink','ed-body','ed-cover','ed-cover-alt','ed-hero-image-position','ed-image-extra','ed-extra-front-matter'].forEach(function(id) {
     document.getElementById(id).value = '';
   });
   document.getElementById('ed-toc').checked = true;
@@ -4207,7 +4433,7 @@ function parseFrontMatter(text) {
 
   var lines = head.split('\n');
   var consumed = {};
-  var knownKeys = { title: true, date: true, description: true, categories: true, tags: true, toc: true, comments: true, pin: true, hidden: true, notify: true, mermaid: true, math: true, hero_title: true, summary: true, hero_image_position: true, permalink: true, image: true };
+  var knownKeys = { title: true, date: true, description: true, categories: true, tags: true, toc: true, comments: true, pin: true, hidden: true, notify: true, series: true, mermaid: true, math: true, hero_title: true, summary: true, hero_image_position: true, permalink: true, image: true };
   for (var i = 0; i < lines.length; i++) {
     var line = lines[i];
     var m = line.match(/^(\w[\w_]*)\s*:\s*(.*)$/);
@@ -4272,7 +4498,7 @@ function parseFrontMatter(text) {
       result[key] = val;
     }
   }
-  var knownKeyPattern = /^(title|date|description|categories|tags|toc|comments|pin|hidden|notify|mermaid|math|hero_title|summary|hero_image_position|permalink|image):/;
+  var knownKeyPattern = /^(title|date|description|categories|tags|toc|comments|pin|hidden|notify|series|mermaid|math|hero_title|summary|hero_image_position|permalink|image):/;
   result._extra = lines.filter(function(line, index) {
     return !consumed[index] && line.trim() && !knownKeyPattern.test(line.trim()) && !/^\s+path:/.test(line);
   }).join('\n');
@@ -4301,6 +4527,7 @@ function buildFileContent(fm, body) {
   if (fm.description) yaml += 'description: ' + yamlQuoted(fm.description) + '\n';
   if (fm.categories.length) yaml += 'categories: [' + fm.categories.map(yamlQuoted).join(', ') + ']\n';
   if (fm.tags.length) yaml += 'tags: [' + fm.tags.map(yamlQuoted).join(', ') + ']\n';
+  if (fm.series) yaml += 'series: ' + yamlQuoted(fm.series) + '\n';
   yaml += 'toc: ' + fm.toc + '\n';
   yaml += 'comments: ' + fm.comments + '\n';
   if (fm.pin) yaml += 'pin: true\n';
@@ -4333,13 +4560,13 @@ function showView(id, options) {
   if ((S.currentView === 'editor' || S.currentView === 'preview') && id !== 'editor' && id !== 'preview') {
     flushAutosave();
   }
-  var protectedViews = ['list', 'editor', 'preview', 'settings'];
+  var protectedViews = ['list', 'editor', 'preview', 'settings', 'memos'];
   if (protectedViews.indexOf(id) !== -1 && !isAuthenticated()) {
     var hasStored = localStorage.getItem(CRYPT_KEY);
     id = hasStored ? 'lock' : 'auth';
   }
 
-  var views = ['boot', 'auth', 'lock', 'list', 'editor', 'preview', 'settings'];
+  var views = ['boot', 'auth', 'lock', 'list', 'editor', 'preview', 'settings', 'memos'];
   views.forEach(function(v) {
     var el = document.getElementById('view-' + v);
     if (el) el.classList.toggle('active', v === id);
@@ -4361,9 +4588,9 @@ function showView(id, options) {
   if (id === 'editor' && previousView !== 'editor' && previousView !== 'preview') setEditorMode('write');
 
   var backBtn = document.getElementById('topbar-back');
-  var titles = { boot: 'Blog Studio', auth: 'Blog Studio', lock: 'Blog Studio', list: 'Blog Studio', editor: (S.editing && !S.editing.isNew ? '글 수정' : '새 글'), preview: '미리보기', settings: '설정' };
+  var titles = { boot: 'Blog Studio', auth: 'Blog Studio', lock: 'Blog Studio', list: 'Blog Studio', editor: (S.editing && !S.editing.isNew ? '글 수정' : '새 글'), preview: '미리보기', settings: '설정', memos: '글감 메모' };
   document.getElementById('topbar-title').textContent = titles[id] || 'Blog Studio';
-  backBtn.style.display = (id === 'boot' || id === 'list' || id === 'auth' || id === 'settings' || id === 'lock') ? 'none' : 'block';
+  backBtn.style.display = (id === 'boot' || id === 'list' || id === 'auth' || id === 'settings' || id === 'memos' || id === 'lock') ? 'none' : 'block';
 
   if (id !== S.viewStack[S.viewStack.length - 1]) {
     S.viewStack.push(id);
@@ -4372,7 +4599,7 @@ function showView(id, options) {
 
   document.getElementById('main-scroll').scrollTop = 0;
   S.currentView = id;
-  if (!options.skipHistory && isAuthenticated() && previousView && previousView !== id && ['list', 'editor', 'preview', 'settings'].indexOf(id) !== -1) {
+  if (!options.skipHistory && isAuthenticated() && previousView && previousView !== id && ['list', 'editor', 'preview', 'settings', 'memos'].indexOf(id) !== -1) {
     window.history.pushState({ jmStudioView: id }, '', window.location.pathname);
   }
   updateEditorDock(id);
@@ -4382,6 +4609,7 @@ function showView(id, options) {
     refreshLocalRuntime(false);
     loadSettingsWorkspace();
   }
+  if (id === 'memos') loadMemos();
 }
 
 function setTopbar(title, showBack) {
@@ -4460,16 +4688,15 @@ function friendlyPostTime(value) {
     + hourLabel(d.getUTCHours()) + (minutes ? ' ' + minutes + '분' : '');
 }
 
-/* Splits a `notify:` line out of the local server's extra front matter. */
-function takeNotifyLine(extra) {
-  var notify = true;
+/* Splits a top-level `key:` line out of the local server's extra front matter. */
+function takeExtraLine(extra, key) {
+  var value = null;
   var rest = String(extra || '').split('\n').filter(function(line) {
-    var m = line.match(/^notify:\s*(\S+)/);
-    if (!m) return true;
-    notify = m[1] !== 'false';
+    if (line.indexOf(key + ':') !== 0) return true;
+    value = parseYamlScalar(line.slice(key.length + 1));
     return false;
   });
-  return { notify: notify, extra: rest.join('\n') };
+  return { value: value, extra: rest.join('\n') };
 }
 
 function isValidPostDate(value) {

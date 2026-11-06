@@ -29,6 +29,7 @@
   --jm-cover: #afc4d7;
   --jm-photo-bg: #f1f3f5;
   --jm-mark: #fff2a8;
+  --jm-like: #d9485f;
 
   --jm-font: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo',
     'Malgun Gothic', '맑은 고딕', 'Noto Sans KR', 'Helvetica Neue', Arial,
@@ -55,6 +56,7 @@ html[data-mode='dark'] {
   --jm-cover: #4f5f6e;
   --jm-photo-bg: #1e2227;
   --jm-mark: rgb(255 214 0 / 26%);
+  --jm-like: #f07b8c;
 }
 
 /* Only reached when storage is blocked and the light bootstrap in head.html
@@ -76,6 +78,7 @@ html[data-mode='dark'] {
     --jm-cover: #4f5f6e;
     --jm-photo-bg: #1e2227;
     --jm-mark: rgb(255 214 0 / 26%);
+    --jm-like: #f07b8c;
   }
 }
 
@@ -1571,6 +1574,65 @@ html[data-mode='dark'] .jm-cover {
   }
 }
 
+/* The post's series, right after its text (_includes/post-series.html). */
+.jm-series {
+  margin: 2.6rem 0 0;
+  padding: 1.1rem 1.2rem 1.05rem;
+  border: 1px solid var(--jm-line);
+  border-radius: 12px;
+  background: var(--jm-bg-soft);
+}
+
+.jm-series h2 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem 0.45rem;
+  margin: 0 0 0.55rem;
+  color: var(--jm-title);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.jm-series-kicker {
+  color: var(--jm-accent);
+  font-size: 0.8125rem;
+}
+
+.jm-series h2 small {
+  margin-left: auto;
+  color: var(--jm-meta);
+  font-size: 0.8125rem;
+  font-weight: 400;
+}
+
+.jm-series ol {
+  margin: 0;
+  padding-left: 1.35rem;
+}
+
+.jm-series li {
+  margin: 0.3rem 0;
+  color: var(--jm-meta);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+.jm-series a {
+  color: var(--jm-text);
+  text-decoration: none;
+}
+
+.jm-series a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.jm-series li.is-current a {
+  color: var(--jm-accent);
+  font-weight: 700;
+}
+
 /* Bottom of the post: tags, then the action row. */
 .jm-post-foot {
   margin-top: 2.6rem;
@@ -1623,7 +1685,20 @@ html[data-mode='dark'] .jm-cover {
   color: var(--jm-body);
   font-size: 0.8125rem;
   text-decoration: none;
+  white-space: nowrap;
   cursor: pointer;
+}
+
+/* Four actions and the view count share a phone's width. */
+@media (max-width: 767.98px) {
+  .jm-actions {
+    flex-wrap: wrap;
+    gap: 0 1rem;
+  }
+
+  .jm-actions-main {
+    gap: 1rem;
+  }
 }
 
 .jm-action:hover {
@@ -1632,6 +1707,24 @@ html[data-mode='dark'] .jm-cover {
 
 .jm-action svg {
   flex: 0 0 auto;
+}
+
+.jm-action[hidden] {
+  display: none;
+}
+
+/* 공감: an outline heart that fills once pressed. */
+.jm-like[aria-pressed='true'] {
+  color: var(--jm-like);
+}
+
+.jm-like[aria-pressed='true'] .jm-like-heart {
+  fill: currentColor;
+}
+
+.jm-like-count:not(:empty) {
+  margin-left: 0.1rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .jm-actions-views {

@@ -16,6 +16,18 @@
 
   <!-- Setup Open Graph image -->
 
+  {%- comment -%}
+    A post without a cover shares the card tools/make-share-cards.py drew
+    for it before the build (assets/img/og/, named after the file). A build
+    that drew none falls back to social_preview_image.
+  {%- endcomment -%}
+  {%- assign share_card = nil -%}
+  {%- if page.layout == 'post' and page.path -%}
+    {%- assign share_card_name = page.path | split: '/' | last | replace: '.md', '' | slugify -%}
+    {%- assign share_card_path = '/assets/img/og/' | append: share_card_name | append: '.png' -%}
+    {%- assign share_card = site.static_files | where: 'path', share_card_path | first -%}
+  {%- endif -%}
+
   {% if page.image %}
     {% assign src = page.image.path | default: page.image %}
 
@@ -30,9 +42,10 @@
       {% assign seo_tags = seo_tags | replace: old_url, new_url %}
     {% endunless %}
 
-  {% elsif site.social_preview_image %}
+  {% elsif share_card or site.social_preview_image %}
+    {%- assign og_src = share_card.path | default: site.social_preview_image -%}
     {%- capture img_url -%}
-      {% include media-url.html src=site.social_preview_image absolute=true %}
+      {% include media-url.html src=og_src absolute=true %}
     {%- endcapture -%}
 
     {%- capture og_image -%}

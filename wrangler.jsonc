@@ -6,6 +6,11 @@
   "vars": {
     "EMAIL_FROM": "Jaemin Choi <onboarding@resend.dev>"
   },
+  // Wakes the Pages workflow's due check for scheduled posts each hour (see
+  // dispatchDueCheck in tools/oauth-worker.js; needs the GH_DISPATCH_TOKEN secret).
+  "triggers": {
+    "crons": ["2 * * * *"]
+  },
   "kv_namespaces": [
     {
       "binding": "SUBSCRIBERS",

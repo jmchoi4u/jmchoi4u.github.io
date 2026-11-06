@@ -1,7 +1,7 @@
-const CACHE_NAME = 'jm-studio-v6-kindness-20260906-2';
+const CACHE_NAME = 'jm-studio-v7-sky-20261105';
 const APP_SHELL = [
   './',
-  'manifest.json?v=kindness-20260906-2',
+  'manifest.json?v=sky-20261105',
   '../assets/img/favicons/favicon-96x96.png?v=kindness-20260906-2',
   '../assets/img/favicons/favicon.svg?v=kindness-20260906-2',
   '../assets/img/favicons/favicon.ico?v=kindness-20260906-2',
@@ -30,9 +30,42 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+/* Share target (manifest.json): photos and text sent from another app arrive
+   as a POST here. They wait in their own cache, which the jm-studio- cleanup
+   above leaves alone, until Studio opens them as a new post (?share=1). */
+const SHARE_CACHE = 'studio-share';
+const SHARE_LIMIT = 20;
+
+async function receiveShare(request) {
+  const form = await request.formData();
+  await caches.delete(SHARE_CACHE);
+  const cache = await caches.open(SHARE_CACHE);
+  const files = form.getAll('photos')
+    .filter((file) => file && typeof file === 'object' && file.size > 0)
+    .slice(0, SHARE_LIMIT);
+  await Promise.all(files.map((file, index) => cache.put('shared/' + index, new Response(file, {
+    headers: {
+      'Content-Type': file.type || 'application/octet-stream',
+      'X-File-Name': encodeURIComponent(file.name || ''),
+    },
+  }))));
+  const meta = {
+    title: String(form.get('title') || ''),
+    text: String(form.get('text') || ''),
+    url: String(form.get('url') || ''),
+    count: files.length,
+  };
+  await cache.put('shared/meta', new Response(JSON.stringify(meta), { headers: { 'Content-Type': 'application/json' } }));
+  return Response.redirect(new URL('./?share=1', self.location.href).href, 303);
+}
+
 self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
+  if (event.request.method === 'POST' && url.origin === self.location.origin && url.pathname.endsWith('/share-target')) {
+    event.respondWith(receiveShare(event.request).catch(() => Response.redirect(new URL('./', self.location.href).href, 303)));
+    return;
+  }
+  if (event.request.method !== 'GET') return;
   if (url.origin !== self.location.origin) return;
 
   if (event.request.mode === 'navigate') {

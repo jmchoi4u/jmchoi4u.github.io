@@ -7,8 +7,8 @@
   "scope": "./",
   "lang": "ko-KR",
   "display": "standalone",
-  "background_color": "#F5F0EB",
-  "theme_color": "#B45335",
+  "background_color": "#F4F7FA",
+  "theme_color": "#FFFFFF",
   "icons": [
     {
       "src": "../assets/img/favicons/pwa-192.png?v=kindness-20260906-2",
@@ -28,5 +28,23 @@
       "type": "image/png",
       "purpose": "maskable"
     }
-  ]
+  ],
+  "share_target": {
+    "action": "./share-target",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "photos",
+          "accept": [
+            "image/*"
+          ]
+        }
+      ]
+    }
+  }
 }

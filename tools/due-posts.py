@@ -4,8 +4,7 @@
 A post dated in the future (Studio's 예약 발행) stays out of the Jekyll build
 until its time. Every hour .github/workflows/pages-deploy.yml runs this: if a
 post's time came within the last two days but the live site does not serve
-its page yet, it prints build=true for $GITHUB_OUTPUT. Once a day (00 UTC,
-09 KST) it always builds, as the workflow did before it checked hourly.
+its page yet, it prints build=true for $GITHUB_OUTPUT, else build=false.
 """
 import http.client
 import re
@@ -47,6 +46,15 @@ def post_time(value):
     return None
 
 
+def is_due(data, now):
+    """Out by now and within the window. A hidden post is never built
+    (_plugins/hidden-posts-filter.rb), so it is never waited for."""
+    if str(data.get("hidden", "false")).lower() == "true":
+        return False
+    when = post_time(data.get("date", ""))
+    return when is not None and now - WINDOW <= when <= now
+
+
 def post_url(path, data):
     """The page address, by the same rule as notify-subscribers.yml."""
     permalink = data.get("permalink", "").strip()
@@ -67,14 +75,9 @@ def is_live(url):
 
 def main():
     now = datetime.now(timezone.utc)
-    if now.hour == 0:
-        print("build=true")
-        print("daily rebuild", file=sys.stderr)
-        return
     for path in sorted(Path("_posts").glob("*.md")):
         data = front_matter(path.read_text(encoding="utf-8"))
-        when = post_time(data.get("date", ""))
-        if when is None or when > now or when < now - WINDOW:
+        if not is_due(data, now):
             continue
         url = post_url(path, data)
         if not is_live(url):

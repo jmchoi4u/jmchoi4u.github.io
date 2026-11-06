@@ -207,20 +207,20 @@
     });
   }
 
+  /* The small notice at the bottom, for share and 공감. */
+  var toast = null;
+  var toastTimer = null;
+
+  function say(message) {
+    if (!toast) return;
+    toast.textContent = message;
+    toast.classList.add('show');
+    if (toastTimer) window.clearTimeout(toastTimer);
+    toastTimer = window.setTimeout(function () { toast.classList.remove('show'); }, 1600);
+  }
+
   /* Share sheet where the browser has one, otherwise copy the link. */
   function setupShare() {
-    var toast = document.querySelector('[data-toast]');
-    var timer = null;
-    if (toast) document.body.appendChild(toast);
-
-    function say(message) {
-      if (!toast) return;
-      toast.textContent = message;
-      toast.classList.add('show');
-      if (timer) window.clearTimeout(timer);
-      timer = window.setTimeout(function () { toast.classList.remove('show'); }, 1600);
-    }
-
     function track(name) {
       if (window.JMBlogAnalytics) {
         window.JMBlogAnalytics.trackEvent(name, { component: 'article_share', title: document.title });
@@ -273,10 +273,86 @@
     });
   }
 
+  /*
+   * 공감: a heart readers press without an account. The Worker
+   * (tools/oauth-worker.js, /likes) keeps the count and remembers a press by
+   * a random ID this browser keeps. The button stays hidden until the Worker
+   * answers, so nothing shows where it is unreachable.
+   */
+  var VISITOR_KEY = 'jm-visitor';
+
+  function visitorId() {
+    var id = '';
+    try { id = window.localStorage.getItem(VISITOR_KEY) || ''; } catch (_) {}
+    if (/^[A-Za-z0-9_-]{16,64}$/.test(id)) return id;
+    var bytes = new Uint8Array(16);
+    window.crypto.getRandomValues(bytes);
+    id = Array.prototype.map.call(bytes, function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');
+    try { window.localStorage.setItem(VISITOR_KEY, id); } catch (_) {}
+    return id;
+  }
+
+  function setupLikes() {
+    var button = document.querySelector('[data-like]');
+    if (!button || !window.fetch || !window.crypto) return;
+    var endpoint = button.getAttribute('data-like-endpoint');
+    var path = button.getAttribute('data-like-path');
+    var countEl = button.querySelector('[data-like-count]');
+    var visitor = visitorId();
+    var busy = false;
+
+    function render(state) {
+      button.setAttribute('aria-pressed', state.liked ? 'true' : 'false');
+      countEl.textContent = state.count > 0 ? String(state.count) : '';
+      button.hidden = false;
+    }
+
+    function readState(data) {
+      return { count: Math.max(0, Number(data && data.count) || 0), liked: Boolean(data && data.liked) };
+    }
+
+    fetch(endpoint + '?path=' + encodeURIComponent(path) + '&visitor=' + visitor, { cache: 'no-store' })
+      .then(function (response) { return response.ok ? response.json() : null; })
+      .then(function (data) { if (data) render(readState(data)); })
+      .catch(function () {});
+
+    button.addEventListener('click', function () {
+      if (busy) return;
+      busy = true;
+      var before = { count: Number(countEl.textContent) || 0, liked: button.getAttribute('aria-pressed') === 'true' };
+      var like = !before.liked;
+      render({ count: Math.max(0, before.count + (like ? 1 : -1)), liked: like });
+      fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: path, like: like, visitor: visitor }),
+      })
+        .then(function (response) {
+          if (!response.ok) throw new Error('like failed');
+          return response.json();
+        })
+        .then(function (data) {
+          render(readState(data));
+          if (like) say('공감했어요');
+          if (like && window.JMBlogAnalytics) {
+            window.JMBlogAnalytics.trackEvent('like', { component: 'article_actions', title: document.title });
+          }
+        })
+        .catch(function () {
+          render(before);
+          say('지금은 공감을 남길 수 없어요');
+        })
+        .then(function () { busy = false; });
+    });
+  }
+
   function init() {
+    toast = document.querySelector('[data-toast]');
+    if (toast) document.body.appendChild(toast);
     setupPhotoSlides();
     setupLongCodeBlocks();
     setupShare();
+    setupLikes();
     setupCommentJump();
   }
 

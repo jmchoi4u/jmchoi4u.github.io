@@ -1,0 +1,26 @@
+{%- comment -%}
+  A post's series (front matter `series`, set in Studio's 글 설정): every post
+  with the same name, oldest first, this one marked. Hidden and scheduled
+  posts are not built, so they never show up here. A series of one shows
+  nothing until its second post is out.
+{%- endcomment -%}
+{%- if page.series -%}
+  {%- assign _series = site.posts | where: 'series', page.series | sort: 'date' -%}
+  {%- if _series.size > 1 -%}
+    {%- assign _part = 0 -%}
+    {%- for _p in _series -%}
+      {%- if _p.url == page.url -%}{%- assign _part = forloop.index -%}{%- endif -%}
+    {%- endfor %}
+    {%- comment -%} No id on the heading: refactor-content.html would hang a # anchor on it. {%- endcomment %}
+    <section class="jm-series" aria-label="시리즈 {{ page.series | escape }}">
+      <h2><span class="jm-series-kicker">시리즈</span> {{ page.series }} <small>{{ _part }} / {{ _series.size }}편</small></h2>
+      <ol>
+        {%- for _p in _series %}
+          <li{% if _p.url == page.url %} class="is-current"{% endif %}>
+            <a href="{{ _p.url | relative_url }}"{% if _p.url == page.url %} aria-current="page"{% endif %}>{{ _p.title }}</a>
+          </li>
+        {%- endfor %}
+      </ol>
+    </section>
+  {%- endif -%}
+{%- endif -%}

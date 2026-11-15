@@ -5,10 +5,35 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <title>큐브 전쟁</title>
-<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#2b1330;color:#f6e8c8;font-family:sans-serif;text-align:center}a{color:#f5c542;font-size:22px}</style>
+<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#2b1330;color:#f6e8c8;font-family:sans-serif;text-align:center;font-size:18px;line-height:1.7;padding:24px}</style>
 </head>
 <body>
-<p>게임으로 이동하는 중...<br><br><a href="https://applicant-athletics-making-offering.trycloudflare.com">안 넘어가면 여기를 누르세요</a></p>
-<script>location.replace("https://applicant-athletics-making-offering.trycloudflare.com" + (location.hash === "#r" ? "/r" : ""));</script>
+<p id="msg">게임으로 이동하는 중...</p>
+<script>
+// 주소 끝의 표시: #r 은 리모컨, #p=... 은 끊겼던 참가자가 이어서 들어오는 경우
+var hash = location.hash.slice(1);
+var path = hash === 'r' ? '/r' : (/^p=[0-9a-f]{16}$/.test(hash) ? '/#' + hash : '');
+var tries = 0;
+function go() {
+  tries++;
+  // 터널 주소는 매번 새로 읽는다 (?t= 를 붙여 저장된 사본을 쓰지 않게 한다)
+  fetch('party-url.txt?t=' + Date.now(), { cache: 'no-store' })
+    .then(function (r) { return r.text(); })
+    .then(function (text) {
+      var url = text.trim();
+      if (!/^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/.test(url)) throw new Error('no url');
+      // 게임이 실제로 켜져 있는지 확인한 뒤에만 보낸다
+      return fetch(url + '/api/ping', { cache: 'no-store' }).then(function (p) {
+        if (!p.ok) throw new Error('down');
+        location.replace(url + path);
+      });
+    })
+    .catch(function () {
+      document.getElementById('msg').innerHTML = '게임을 준비하고 있어요.<br>켜지면 자동으로 넘어갑니다. (' + tries + ')';
+      setTimeout(go, 4000);
+    });
+}
+go();
+</script>
 </body>
 </html>

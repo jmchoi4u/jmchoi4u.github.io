@@ -1,1 +1,1 @@
-https://ideal-understanding-cons-promised.trycloudflare.com
+https://api.trycloudflare.com

@@ -1,1 +1,1 @@
-https://codes-reef-beverly-hughes.trycloudflare.com
+https://api.trycloudflare.com

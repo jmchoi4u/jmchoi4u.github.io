@@ -1,1 +1,1 @@
-https://camcorders-hypothesis-roller-hurricane.trycloudflare.com
+https://api.trycloudflare.com

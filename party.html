@@ -9,6 +9,12 @@
 </head>
 <body>
 <p id="msg">게임으로 이동하는 중...</p>
+<div id="kakao" style="display:none">
+  <p>카카오톡 안에서 열렸어요.<br>크롬, 사파리, 삼성 인터넷으로 열면 더 잘 돼요.</p>
+  <p><a id="out" href="#" style="display:block;background:#f5c542;color:#2a1a24;border-radius:12px;padding:14px;text-decoration:none;font-weight:bold">다른 브라우저로 열기 (추천)</a></p>
+  <p><a id="stay" href="#" style="color:#f6e8c8">카카오톡에서 그대로 하기</a></p>
+  <p style="font-size:14px;opacity:.7">안 열리면 화면 구석의 ⋮ 메뉴에서 "다른 브라우저로 열기"를 누르세요.</p>
+</div>
 <script>
 // 주소 끝의 표시: #r 은 리모컨, #p=... 은 끊겼던 참가자가 이어서 들어오는 경우
 var hash = location.hash.slice(1);
@@ -33,7 +39,15 @@ function go() {
       setTimeout(go, 4000);
     });
 }
-go();
+// 카카오톡 안의 브라우저면 먼저 물어보고, 아니면 바로 넘어간다
+if (/KAKAOTALK/i.test(navigator.userAgent)) {
+  document.getElementById('msg').style.display = 'none';
+  document.getElementById('kakao').style.display = 'block';
+  document.getElementById('out').onclick = function (e) { e.preventDefault(); location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(location.href); };
+  document.getElementById('stay').onclick = function (e) { e.preventDefault(); document.getElementById('kakao').style.display = 'none'; document.getElementById('msg').style.display = ''; go(); };
+} else {
+  go();
+}
 </script>
 </body>
 </html>

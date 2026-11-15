@@ -1,1 +1,1 @@
-https://upc-comparative-establishing-migration.trycloudflare.com
+https://api.trycloudflare.com

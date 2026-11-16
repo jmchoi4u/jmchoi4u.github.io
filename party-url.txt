@@ -1,1 +1,1 @@
-https://dramatic-virtual-associations-centered.trycloudflare.com
+https://api.trycloudflare.com

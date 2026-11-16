@@ -1,1 +1,1 @@
-https://reminder-genealogy-toolbox-pre.trycloudflare.com
+https://api.trycloudflare.com

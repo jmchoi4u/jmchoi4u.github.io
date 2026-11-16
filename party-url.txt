@@ -1,1 +1,1 @@
-https://digit-denver-firewall-nation.trycloudflare.com
+https://api.trycloudflare.com

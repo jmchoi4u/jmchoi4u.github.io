@@ -1,1 +1,1 @@
-https://api.trycloudflare.com
+https://proxy-cuisine-keys-reference.trycloudflare.com

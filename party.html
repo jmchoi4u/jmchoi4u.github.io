@@ -5,49 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <title>큐브 전쟁</title>
-<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#2b1330;color:#f6e8c8;font-family:sans-serif;text-align:center;font-size:18px;line-height:1.7;padding:24px}</style>
+<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#2b1330;color:#f6e8c8;font-family:sans-serif;text-align:center;font-size:18px;line-height:1.7;padding:24px}b{color:#f5c542;font-size:26px}small{opacity:.7}</style>
 </head>
 <body>
-<p id="msg">게임으로 이동하는 중...</p>
-<div id="kakao" style="display:none">
-  <p>카카오톡 안에서 열렸어요.<br>크롬, 사파리, 삼성 인터넷으로 열면 더 잘 돼요.</p>
-  <p><a id="out" href="#" style="display:block;background:#f5c542;color:#2a1a24;border-radius:12px;padding:14px;text-decoration:none;font-weight:bold">다른 브라우저로 열기 (추천)</a></p>
-  <p><a id="stay" href="#" style="color:#f6e8c8">카카오톡에서 그대로 하기</a></p>
-  <p style="font-size:14px;opacity:.7">안 열리면 화면 구석의 ⋮ 메뉴에서 "다른 브라우저로 열기"를 누르세요.</p>
+<div>
+  <p style="font-size:48px;margin:0">🐈‍⬛</p>
+  <p><b>큐브 전쟁은 끝났다냥</b></p>
+  <p>2026.11.15 · 12명 · 25판<br>와 줘서 고마워요.<br>결과 포스터는 단톡방에서 확인!</p>
+  <p><small>큐브 전쟁 지배인 드림</small></p>
 </div>
-<script>
-// 주소 끝의 표시: #r 은 리모컨, #p=... 은 끊겼던 참가자가 이어서 들어오는 경우
-var hash = location.hash.slice(1);
-var path = hash === 'r' ? '/r' : (/^p=[0-9a-f]{16}$/.test(hash) ? '/#' + hash : '');
-var tries = 0;
-function go() {
-  tries++;
-  // 터널 주소는 매번 새로 읽는다 (?t= 를 붙여 저장된 사본을 쓰지 않게 한다)
-  fetch('party-url.txt?t=' + Date.now(), { cache: 'no-store' })
-    .then(function (r) { return r.text(); })
-    .then(function (text) {
-      var url = text.trim();
-      if (!/^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/.test(url)) throw new Error('no url');
-      // 게임이 실제로 켜져 있는지 확인한 뒤에만 보낸다
-      return fetch(url + '/api/ping', { cache: 'no-store' }).then(function (p) {
-        if (!p.ok) throw new Error('down');
-        location.replace(url + path);
-      });
-    })
-    .catch(function () {
-      document.getElementById('msg').innerHTML = '게임을 준비하고 있어요.<br>켜지면 자동으로 넘어갑니다. (' + tries + ')';
-      setTimeout(go, 4000);
-    });
-}
-// 카카오톡 안의 브라우저면 먼저 물어보고, 아니면 바로 넘어간다
-if (/KAKAOTALK/i.test(navigator.userAgent)) {
-  document.getElementById('msg').style.display = 'none';
-  document.getElementById('kakao').style.display = 'block';
-  document.getElementById('out').onclick = function (e) { e.preventDefault(); location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(location.href); };
-  document.getElementById('stay').onclick = function (e) { e.preventDefault(); document.getElementById('kakao').style.display = 'none'; document.getElementById('msg').style.display = ''; go(); };
-} else {
-  go();
-}
-</script>
 </body>
 </html>

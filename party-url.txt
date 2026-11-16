@@ -1,1 +1,1 @@
-https://texts-wellington-shark-asylum.trycloudflare.com
+https://api.trycloudflare.com

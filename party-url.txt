@@ -1,1 +1,1 @@
-https://kennedy-structured-alexandria-members.trycloudflare.com
+https://api.trycloudflare.com
